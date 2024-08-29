@@ -1,0 +1,12 @@
+Á heimasíðu bókarinnar er sýniforritið gasket5. Það notar sleða (slider) 
+til að breyta fjölda uppskiptinga á endurkvæma þríhyrningi Sierpinskis. 
+
+Hér er gefið forritið circlefan.html (og circlefan.js) sem teiknar fylltan 
+rauðan hring. Hringurinn er nálgaður með því að reikna út tiltekinn fjölda 
+punkta á hringnum og teikna þá sem TRIANGLE_FAN í drawArraysfallinu. 
+
+Þið eigið að breyta circlefan þannig að hægt sé að nota sleða til að velja 
+fjölda punkta sem notaður er til að nálga hringinn. 
+Leyfið notanda að velja gildi frá 3 til 50. 
+
+Skilið skjámynd og hlekk á forritið.
