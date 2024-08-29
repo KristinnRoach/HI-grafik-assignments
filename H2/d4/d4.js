@@ -1,7 +1,7 @@
 var canvas;
 var gl;
 
-var maxNumCircles = 100;
+var maxNumCircles = 50;
 var numCirclePoints = 22;
 var index = 0;
 
