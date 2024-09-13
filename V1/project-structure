@@ -1,0 +1,15 @@
+/Users/kristinnroachgunnarsson/Desktop/Haust2024/Tölvugrafík/HI-grafik-assignments/
+  ├─ lib/
+  │  ├─ error.js
+  │  ├─ init-gl2.js
+  │  ├─ initShaders.js
+  │  ├─ MV.js
+  │  └─ webgl-utils.js
+  ├─ V1/
+  │  ├─ game-utils.js
+  │  ├─ game.js
+  │  ├─ game.old.txt
+  │  ├─ index.html
+  │  └─ setup.js
+  ├─ index.html
+  └─ README.md

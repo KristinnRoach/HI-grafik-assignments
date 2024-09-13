@@ -17,9 +17,10 @@ const scaleMax = 5.0;
 window.onload = function init() {
   var canvas = document.getElementById('gl-canvas');
 
-  gl = WebGLUtils.setupWebGL(canvas);
+  // gl = WebGLUtils.setupWebGL(canvas);
+  gl = canvas.getContext('webgl2');
   if (!gl) {
-    alert("WebGL isn't available");
+    alert('WebGL2 is not available');
   }
 
   // Initialize corners
