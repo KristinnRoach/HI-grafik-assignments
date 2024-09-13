@@ -15,9 +15,7 @@ const game = {
   gameOver: false,
   lastShotTime: 0,
   shootCooldown: 50, // milliseconds
-
   score: 0,
-  dashes: '',
   dashBuffer: null,
 };
 
@@ -67,7 +65,6 @@ function handleCollision(collidedBullet, collidedBird) {
   game.bullets = game.bullets.filter((b) => b !== collidedBullet);
   resetBird(collidedBird, level);
   game.score++;
-  game.dashes += '|';
   updateScoreDisplay();
 
   if (game.score % 5 === 0) {
@@ -75,15 +72,13 @@ function handleCollision(collidedBullet, collidedBird) {
     game.birds.forEach((bird) => resetBird(bird, level));
   }
 
-  if (game.dashes.length >= 20) {
+  if (game.score >= 20) {
     endGame();
   }
 }
 
 function updateScoreDisplay() {
-  document.getElementById(
-    'score'
-  ).textContent = `Score: ${game.score} ${game.dashes}`;
+  document.getElementById('score').textContent = `Score: ${game.score}`;
 }
 
 function endGame() {
@@ -175,7 +170,7 @@ function render() {
   // Draw score dashes
   const dashHeight = 0.1;
   const dashSpacing = 0.03;
-  for (let i = 0; i < game.dashes.length; i++) {
+  for (let i = 0; i < game.score; i++) {
     drawDash(-0.95 + i * dashSpacing, dashHeight);
   }
 }
