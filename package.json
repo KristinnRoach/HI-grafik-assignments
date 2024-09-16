@@ -1,9 +1,3 @@
 {
-  "name": "tolvugrafik-verkefni",
-  "scripts": {
-    "build": "tsc --watch"
-  },
-  "devDependencies": {
-    "typescript": "^5.6.2"
-  }
+  "name": "tolvugrafik-verkefni"
 }

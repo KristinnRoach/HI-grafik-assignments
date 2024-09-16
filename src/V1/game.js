@@ -46,7 +46,7 @@ const game = {
 
 // INITIALIZATION
 
-function initProgram() {
+function initProgram(gl) {
   try {
     const shaderProgram = initShaders(gl, 'vertex-shader', 'fragment-shader');
     if (!shaderProgram || !(shaderProgram instanceof WebGLProgram)) {
@@ -74,8 +74,16 @@ function initProgram() {
 }
 
 function init() {
-  initProgram();
-  game.gun = createObject(0.0, -1 + gunHeight, gunWidth, gunHeight, true);
+  initProgram(gl);
+
+  game.gun = {
+    x: 0.0,
+    y: -1 + gunHeight,
+    width: gunWidth,
+    height: gunHeight,
+    buffer: gl.createBuffer(),
+    radius: Math.max(gunWidth, gunHeight) / 2,
+  };
   createBirds(3);
   initBuffers(gl, game.gun, game.birds);
   gameLoop();
