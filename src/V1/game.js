@@ -7,11 +7,14 @@ import { initShaders } from '../lib/initShaders.js';
 // GLOBAL VARIABLES
 
 const MAX_BULLETS = 20;
-const WIN_SCORE = 5;
+const WIN_SCORE = 20;
 
 let bulletPositionsUniform;
 let activeBulletsUniform;
-let isBulletUniform = false;
+let isBulletUniform;
+
+let uColors;
+let uColorsIndex;
 
 const gunWidth = 0.2;
 const gunHeight = 0.2;
@@ -46,6 +49,24 @@ const game = {
 
 // INITIALIZATION
 
+function init() {
+  initProgram(gl);
+
+  game.gun = {
+    x: 0.0,
+    y: -1 + gunHeight,
+    width: gunWidth,
+    height: gunHeight,
+    buffer: gl.createBuffer(),
+    radius: Math.max(gunWidth, gunHeight) / 2,
+  };
+  createBirds(3);
+  initBuffers(gl, game.gun, game.birds);
+  gameLoop();
+}
+
+window.onload = init;
+
 function initProgram(gl) {
   try {
     const shaderProgram = initShaders(gl, 'vertex-shader', 'fragment-shader');
@@ -68,28 +89,29 @@ function initProgram(gl) {
     );
     activeBulletsUniform = gl.getUniformLocation(program, 'u_active_bullets');
     isBulletUniform = gl.getUniformLocation(program, 'u_is_bullet');
+    gl.uniform1i(isBulletUniform, 0);
+
+    uColors = gl.getUniformLocation(program, 'uColors');
+    gl.uniform4fv(uColors, [
+      1.0,
+      0.2,
+      0.0,
+      1.0, // Gun color
+      0.1,
+      0.5,
+      0.0,
+      1.0, // Bullet color
+      0.0,
+      0.0,
+      1.0,
+      1.0, // Bird color
+    ]);
+
+    uColorsIndex = gl.getUniformLocation(program, 'uColorsIndex');
   } catch (e) {
     throw new Error(`Initialization error: ${e}`);
   }
 }
-
-function init() {
-  initProgram(gl);
-
-  game.gun = {
-    x: 0.0,
-    y: -1 + gunHeight,
-    width: gunWidth,
-    height: gunHeight,
-    buffer: gl.createBuffer(),
-    radius: Math.max(gunWidth, gunHeight) / 2,
-  };
-  createBirds(3);
-  initBuffers(gl, game.gun, game.birds);
-  gameLoop();
-}
-
-window.onload = init;
 
 function initObjectBuffer(gl, obj, vertices) {
   if (!vertices) {
@@ -151,7 +173,7 @@ function createBullet() {
       y: game.gun.y,
       width: bulletWidth,
       height: bulletHeight,
-      speed: level * 0.035,
+      speed: 0.005 + level * 0.01,
       radius: Math.max(bulletWidth, bulletHeight) / 2,
     };
     game.bullets.push(bullet);
@@ -170,19 +192,25 @@ function updateGame() {
         break;
     }
 
-    bird.y -= level * (bird.speed / 2.5);
-    // reset if off screen
+    // move bird down randomly
+    if (Math.random() < 0.4) {
+      bird.y -= (level * bird.speed) / 2;
+    } else if (Math.random() < 0.2) {
+      bird.y += (level * bird.speed) / 2;
+    }
+
+    // reset bird if off screen
     const sideToCheck = bird.direction === 'right' ? 'right' : 'left';
     if (isOffScreen(bird, sideToCheck)) {
       resetBird(bird, level);
     }
 
-    // switch direction randomly
+    // switch bird direction randomly
     if (Math.random() < 0.01) {
       switchDirection(bird);
     }
 
-    // check for collision with gun
+    // check for bird collision with gun
     if (checkGunCollision(game.gun, bird)) {
       endGame();
     }
@@ -380,6 +408,8 @@ function render() {
   if (game.bullets.length > 0) {
     // set isBulletUniform to true
     gl.uniform1i(isBulletUniform, 1);
+    // set the color index to the bullet color
+    gl.uniform1i(uColorsIndex, 1);
     updateBulletUniforms();
 
     // bullet vertex data
@@ -422,6 +452,11 @@ function render() {
 }
 
 function drawObject(obj, mode, vertexCount) {
+  if (obj === game.gun) {
+    gl.uniform1i(uColorsIndex, 0);
+  } else if (game.birds.includes(obj)) {
+    gl.uniform1i(uColorsIndex, 2);
+  }
   gl.bindBuffer(gl.ARRAY_BUFFER, obj.buffer);
   gl.vertexAttribPointer(vPosLocation, 2, gl.FLOAT, false, 0, 0);
   gl.drawArrays(mode, 0, vertexCount);
@@ -444,6 +479,7 @@ function drawDash(x, height) {
   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
   gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
   gl.vertexAttribPointer(vPosLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform1i(uColorsIndex, 0);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 

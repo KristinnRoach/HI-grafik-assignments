@@ -52,11 +52,14 @@
     <script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
       precision mediump float;
 
-      out vec4 outputColor;
+      out vec4 fragColor;
+      
+      uniform int uColorsIndex;
+      uniform vec4 uColors[3];  
 
       void main()
       {
-        outputColor = vec4(1.0, 0.0, 0.0, 1.0); 
+        fragColor = uColors[uColorsIndex];
       }
   </script>
 

@@ -27,6 +27,6 @@ export function resetBird(bird, level) {
   bird.x = x;
   bird.y = y;
   bird.direction = x < 0 ? 'right' : 'left';
-  const speedFactor = (level * 0.01) / level;
-  bird.speed = (Math.random() * 0.5 + 2.5) * speedFactor;
+  const randomFactor = 0.01 * Math.random();
+  bird.speed = 0.005 + 0.01 * level * randomFactor;
 }
