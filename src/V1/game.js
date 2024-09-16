@@ -7,7 +7,7 @@ import { initShaders } from '../lib/initShaders.js';
 // GLOBAL VARIABLES
 
 const MAX_BULLETS = 20;
-const WIN_SCORE = 20;
+const WIN_SCORE = 5;
 
 let bulletPositionsUniform;
 let activeBulletsUniform;
@@ -183,7 +183,7 @@ function updateGame() {
     }
 
     // check for collision with gun
-    if (checkCollision(game.gun, bird)) {
+    if (checkGunCollision(game.gun, bird)) {
       endGame();
     }
   });
@@ -195,7 +195,7 @@ function updateGame() {
 
   game.bullets.forEach((b) => {
     game.birds.forEach((bird) => {
-      if (checkCollision(bird, b)) {
+      if (isBirdShot(bird, b)) {
         handleCollision(b, bird);
       }
     });
@@ -209,8 +209,17 @@ function switchDirection(bird) {
   bird.direction = bird.direction === 'right' ? 'left' : 'right';
 }
 
+function isBirdShot(obj1, obj2) {
+  return (
+    obj1.x <= obj2.x + obj2.width &&
+    obj1.x + obj1.width >= obj2.x &&
+    obj1.y <= obj2.y + obj2.height &&
+    obj1.y + obj1.height >= obj2.y
+  );
+}
+
 // update if shapes change !!
-function checkCollision(triangle, rectangle) {
+function checkGunCollision(triangle, rectangle) {
   const trianglePoints = [
     { x: triangle.x, y: triangle.y },
     { x: triangle.x - triangle.width / 2, y: triangle.y - triangle.height },
@@ -490,12 +499,3 @@ canvas.addEventListener('mousedown', shoot);
 
 window.addEventListener('load', resizeCanvas);
 window.addEventListener('resize', resizeCanvas);
-
-// function checkCollision(obj1, obj2) {
-//   return (
-//     obj1.x <= obj2.x + obj2.width &&
-//     obj1.x + obj1.width >= obj2.x &&
-//     obj1.y <= obj2.y + obj2.height &&
-//     obj1.y + obj1.height >= obj2.y
-//   );
-// }
