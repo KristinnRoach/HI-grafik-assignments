@@ -1,0 +1,431 @@
+// src/V1/game.js
+
+import { getGL, getCanvas } from '../lib/init-gl2.js';
+import { resetBird, isOffScreen } from './game-utils.js';
+import { initShaders } from '../lib/initShaders.js';
+
+const MAX_BULLETS = 20;
+const WIN_SCORE = 10;
+let bulletPositionsUniform;
+let activeBulletsUniform;
+let isBulletUniform = false;
+
+/** @type {HTMLCanvasElement|null} */
+const canvas = getCanvas();
+/** @type {WebGL2RenderingContext} */
+const gl = getGL();
+/** @type {WebGLProgram|null} */
+let program;
+/** @type {WebGLAttribLocation|null} */
+let vPosLocation;
+
+let level = 1;
+
+const game = {
+  gun: null,
+  birds: [],
+  bullets: [],
+  gameOver: false,
+  lastShotTime: 0,
+  shootCooldown: 50, // milliseconds
+  score: 0,
+  dashBuffer: null,
+  bulletBuffer: null,
+};
+
+function initProgram() {
+  try {
+    const shaderProgram = initShaders(gl, 'vertex-shader', 'fragment-shader');
+    if (!shaderProgram || !(shaderProgram instanceof WebGLProgram)) {
+      throw new Error('initShaders did not return a valid WebGLProgram');
+    }
+    program = shaderProgram;
+    gl.useProgram(program);
+
+    vPosLocation = gl.getAttribLocation(program, 'vPosition');
+    if (vPosLocation < 0) {
+      throw new Error('Failed to get attribute location for vPosition');
+    }
+
+    gl.enableVertexAttribArray(vPosLocation);
+
+    bulletPositionsUniform = gl.getUniformLocation(
+      program,
+      'u_bullet_positions'
+    );
+    activeBulletsUniform = gl.getUniformLocation(program, 'u_active_bullets');
+    isBulletUniform = gl.getUniformLocation(program, 'u_is_bullet');
+  } catch (e) {
+    throw new Error(`Initialization error: ${e}`);
+  }
+}
+
+function init() {
+  initProgram(gl);
+  const gunWidth = 0.15;
+  const gunHeight = 0.15;
+  game.gun = createObject(0.0, gunHeight - 1, gunWidth, gunHeight);
+  game.gun.buffer = gl.createBuffer();
+  createBirds(3);
+  initBuffers(gl, game.gun, game.birds);
+  gameLoop();
+}
+
+window.onload = init;
+
+function initObjectBuffer(gl, obj, vertices) {
+  if (!vertices) {
+    vertices = [
+      obj.x,
+      obj.y,
+      obj.x + obj.width,
+      obj.y,
+      obj.x,
+      obj.y - obj.height,
+      obj.x + obj.width,
+      obj.y - obj.height,
+    ];
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, obj.buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+}
+
+function initBuffers(gl, gun, birds) {
+  initObjectBuffer(gl, gun, [
+    0,
+    0,
+    -gun.width / 2,
+    -gun.height,
+    gun.width / 2,
+    -gun.height,
+  ]);
+
+  birds.forEach((bird) => initObjectBuffer(gl, bird));
+}
+
+document.addEventListener('keydown', handleKeydown);
+canvas.addEventListener('mousedown', shoot);
+
+// Refactor into separate files !!! (later)
+
+function endGame() {
+  game.gameOver = true;
+  console.log(`Game over! Final score: ${game.score}`);
+  createResetButton();
+}
+
+function resetGame() {
+  game.score = 0;
+  level = 1;
+  game.birds.forEach((bird) => resetBird(bird, level));
+  game.bullets = [];
+  game.gameOver = false;
+  document.body.removeChild(document.querySelector('button'));
+  gameLoop();
+}
+
+function createResetButton() {
+  const button = document.createElement('button');
+  button.textContent = 'Reset';
+  button.addEventListener('click', resetGame);
+  document.body.appendChild(button);
+}
+
+function updateBulletUniforms() {
+  const bulletPositions = new Float32Array(MAX_BULLETS * 2);
+  let activeBullets = 0;
+
+  game.bullets.forEach((bullet, index) => {
+    if (index < MAX_BULLETS) {
+      bulletPositions[index * 2] = bullet.x;
+      bulletPositions[index * 2 + 1] = bullet.y;
+      activeBullets++;
+    }
+  });
+
+  gl.uniform2fv(bulletPositionsUniform, bulletPositions);
+  gl.uniform1i(activeBulletsUniform, activeBullets);
+}
+
+function createObject(x, y, width, height) {
+  return {
+    buffer: null, // set in initGameObjects
+    x,
+    y,
+    width,
+    height,
+    speed: 0,
+    direction: 'right',
+  };
+}
+
+function createBirds(nrOfBirds) {
+  for (let i = 0; i < nrOfBirds; i++) {
+    const bird = createObject(-1.0, 0.7, 0.15, 0.05);
+    resetBird(bird, level);
+    bird.buffer = gl.createBuffer();
+    game.birds.push(bird);
+  }
+}
+
+function createBullet() {
+  if (game.bullets.length < MAX_BULLETS) {
+    const bullet = {
+      x: game.gun.x,
+      y: game.gun.y,
+      width: 0.02,
+      height: 0.03,
+      speed: 0.01 * level,
+    };
+    game.bullets.push(bullet);
+  }
+
+  // const bulletVertices = new Float32Array([
+  //   bullet.x,
+  //   bullet.y,
+  //   bullet.x + bullet.width,
+  //   bullet.y,
+  //   bullet.x,
+  //   bullet.y - bullet.height,
+  //   bullet.x + bullet.width,
+  //   bullet.y - bullet.height,
+  // ]);
+  // gl.bindBuffer(gl.ARRAY_BUFFER, bullet.buffer);
+  // gl.bufferData(gl.ARRAY_BUFFER, bulletVertices, gl.DYNAMIC_DRAW);
+
+  // game.bullets.push(bullet);
+}
+
+function updateBuffers() {
+  game.birds.forEach(updateObjectBuffer);
+  // game.bullets.forEach(updateObjectBuffer);
+  updateGunBuffer();
+}
+
+function updateObjectBuffer(obj) {
+  const vertices = new Float32Array([
+    obj.x,
+    obj.y,
+    obj.x + obj.width,
+    obj.y,
+    obj.x,
+    obj.y - obj.height,
+    obj.x + obj.width,
+    obj.y - obj.height,
+  ]);
+  gl.bindBuffer(gl.ARRAY_BUFFER, obj.buffer);
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, vertices);
+}
+
+function updateGunBuffer() {
+  const gunVertices = new Float32Array([
+    game.gun.x,
+    game.gun.y,
+    game.gun.x - game.gun.width / 2,
+    game.gun.y - game.gun.height,
+    game.gun.x + game.gun.width / 2,
+    game.gun.y - game.gun.height,
+  ]);
+  gl.bindBuffer(gl.ARRAY_BUFFER, game.gun.buffer);
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, gunVertices);
+}
+
+function render() {
+  gl.clearColor(0.8, 0.8, 0.8, 1.0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.useProgram(program);
+
+  game.birds.forEach((bird) => drawObject(bird, gl.TRIANGLE_STRIP, 4));
+
+  if (game.bullets.length > 0) {
+    // set isBulletUniform to true
+    gl.uniform1i(isBulletUniform, 1);
+    updateBulletUniforms();
+
+    // Set up the bullet vertex data
+    const bulletVertices = new Float32Array([
+      0,
+      0,
+      game.bullets[0].width,
+      0,
+      0,
+      -game.bullets[0].height,
+      game.bullets[0].width,
+      -game.bullets[0].height,
+    ]);
+
+    if (!game.bulletBuffer) {
+      game.bulletBuffer = gl.createBuffer();
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, game.bulletBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, bulletVertices, gl.STATIC_DRAW);
+
+    // Set up the attribute for the bullet vertices
+    gl.vertexAttribPointer(vPosLocation, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosLocation);
+
+    // Draw all bullets in one instanced draw call
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, game.bullets.length);
+
+    // set isBulletUniform back to false
+    gl.uniform1i(isBulletUniform, 0);
+  }
+
+  drawObject(game.gun, gl.TRIANGLES, 3);
+
+  // Draw score dashes
+  const dashHeight = 0.1;
+  const dashSpacing = 0.03;
+  for (let i = 0; i < game.score; i++) {
+    drawDash(-0.95 + i * dashSpacing, dashHeight);
+  }
+}
+
+function drawObject(obj, mode, vertexCount) {
+  gl.bindBuffer(gl.ARRAY_BUFFER, obj.buffer);
+  gl.vertexAttribPointer(vPosLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.drawArrays(mode, 0, vertexCount);
+}
+
+function drawDash(x, height) {
+  const dashWidth = 0.01;
+  const padding = 0.01;
+  const vertices = new Float32Array([
+    x,
+    1 - padding,
+    x + dashWidth,
+    1 - padding,
+    x,
+    1 - height,
+    x + dashWidth,
+    1 - height,
+  ]);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+  gl.vertexAttribPointer(vPosLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+function gameLoop() {
+  if (!game.gameOver) {
+    updateGame();
+    render();
+    requestAnimationFrame(gameLoop);
+  } else {
+    console.log(`Game over! Score: ${game.score}`);
+  }
+}
+
+function updateGame() {
+  game.birds.forEach((bird) => {
+    // move bird
+    switch (bird.direction) {
+      case 'right':
+        bird.x += bird.speed;
+        break;
+      case 'left':
+        bird.x -= bird.speed;
+        break;
+    }
+
+    bird.y -= level * (bird.speed / 2);
+    // reset if off screen
+    const sideToCheck = bird.direction === 'right' ? 'right' : 'left';
+    if (isOffScreen(bird, sideToCheck)) {
+      resetBird(bird, level);
+    }
+
+    // // check for collision with bottom of screen
+    // if (isOffScreen(bird, 'bottom')) {
+    //   game.score--;
+    //   resetBird(bird, level);
+    //   console.log(`Score: ${game.score}`);
+    // }
+
+    // switch direction randomly
+    if (Math.random() < 0.01) {
+      switchDirection(bird);
+    }
+
+    // check for collision with gun
+    if (checkCollision(game.gun, bird)) {
+      endGame();
+    }
+  });
+
+  game.bullets = game.bullets.filter((b) => {
+    b.y += b.speed;
+    return b.y <= 1;
+  });
+
+  game.bullets.forEach((b) => {
+    game.birds.forEach((bird) => {
+      if (checkCollision(bird, b)) {
+        handleCollision(b, bird);
+      }
+    });
+  });
+
+  updateBulletUniforms();
+  updateBuffers();
+}
+
+function switchDirection(bird) {
+  bird.direction = bird.direction === 'right' ? 'left' : 'right';
+}
+
+function checkCollision(obj1, obj2) {
+  return (
+    obj1.x <= obj2.x + obj2.width &&
+    obj1.x + obj1.width >= obj2.x &&
+    obj1.y <= obj2.y + obj2.height &&
+    obj1.y + obj1.height >= obj2.y
+  );
+}
+
+function handleCollision(collidedBullet, collidedBird) {
+  game.bullets = game.bullets.filter((b) => b !== collidedBullet);
+  game.score++;
+  resetBird(collidedBird, level);
+  console.log(`Score: ${game.score}`);
+
+  if (game.score % 5 === 0) {
+    level++;
+    game.birds.forEach((bird) => resetBird(bird, level));
+  }
+
+  if (game.score >= WIN_SCORE) {
+    endGame();
+  }
+}
+
+function handleKeydown(event) {
+  const key = event.key.toLowerCase();
+  if (key === 'arrowleft' || key === 'a') {
+    game.gun.x = Math.max(game.gun.x - 0.1, -1);
+  } else if (key === 'arrowright' || key === 'd') {
+    game.gun.x = Math.min(game.gun.x + 0.1, 1);
+  } else if (key === ' ' || key === 'arrowup' || key === 'w') {
+    shoot();
+  }
+}
+
+function shoot() {
+  const currentTime = Date.now();
+  if (currentTime - game.lastShotTime < game.shootCooldown) return;
+  createBullet();
+  game.lastShotTime = currentTime;
+}
+
+function resizeCanvas() {
+  const canvas = document.getElementById('gl-canvas');
+  const size = Math.min(1400, Math.min(window.innerWidth, window.innerHeight));
+  canvas.width = size;
+  canvas.height = size;
+  gl.viewport(0, 0, canvas.width, canvas.height);
+}
+
+window.addEventListener('load', resizeCanvas);
+window.addEventListener('resize', resizeCanvas);

@@ -1,0 +1,14 @@
+
+Breytið sýniforritinu gasket1 á heimasíðu kennslubókarinnar á eftirfarandi hátt (hvor
+breyting er sjálfstæð):
+
+
+a. Í stað þess að fyrsti punkturinn sé í miðju þríhyrningsins, látið hann vera vel fyrir utan
+þríhyrninginn, t.d. í (100, 100). Skilið mynd af útkomunni og hlekk á forritið.
+
+
+b. Látið hornpunkt 0 vera mun líklegri til að vera valinn en hina tvo punktana. Látið
+hann vera valinn í 90% tilvika, en hina tvo í 5% hvor. Fjölgið líka punktunum til þess
+að þið fáið skýra mynd. Skilið skjámynd og hlekk á forritið.
+Vísbending: Athugið að fallið Math.random() skilar fleytitölu á bilinu [0.0, 1.0). 
+Það eru því um 90% líkur á því að slembitalan sé minni en 0.9.

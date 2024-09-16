@@ -1,7 +1,0 @@
- Skrárnar clickpoints.html og clickpoints.js útfæra WebGL forrit sem leyfir notandanum að
-búa til punkta á striganum (canvas) með músarsmellum. Punktastærðin er sett sem 5 í
-hnútalitaranum í HTML-skránni til að punktarnir sjáist betur.
-Þið eigið að skrifa forritið clickcircles þar sem við hvern músarsmell er teiknaður fylltur
-hringur með miðju í skjápunktinum sem smellt var á. Stærð (þ.e. radíus) hringsins á að
-vera slembin, þannig að hringirnir séu allir misstórir. Nýtið ykkur sýniforritið circlefan úr
-dæmi 2 að ofan til að teikna hringina. Skilið skjámynd og hlekk á forritið ykkar.

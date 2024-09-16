@@ -1,5 +1,0 @@
-Hér er WebGL forrit (L-shape-fan.html og L-shape-fan.js) sem notar TRIANGLE_FAN til að
-teikna bókstafinn L með 6 hnútum. Skrifið nýja útgáfu af forritinu sem notar
-TRIANGLE_STRIP til að teikna sömu mynd. Athugið að þið gætuð þurft að hugsa röð
-hnútanna uppá nýtt og jafnvel að endurtaka einhverja hnúta. Skilið skjámynd og hlekk á
-forritið ykkar.
