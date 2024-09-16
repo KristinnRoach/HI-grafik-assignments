@@ -130,7 +130,7 @@ function createObject(x, y, width, height, createBuffer) {
     y,
     width,
     height,
-    speed: 0,
+    speed: 0.0,
     direction: 'right',
     radius: Math.max(width, height) / 2,
   };
@@ -139,7 +139,7 @@ function createObject(x, y, width, height, createBuffer) {
 function createBirds(nrOfBirds) {
   for (let i = 0; i < nrOfBirds; i++) {
     const bird = createObject(-1.0, 0.7, birdWidth, birdHeight, true);
-    resetBird(bird, level);
+    resetBird(bird, level || 1);
     game.birds.push(bird);
   }
 }
@@ -151,7 +151,7 @@ function createBullet() {
       y: game.gun.y,
       width: bulletWidth,
       height: bulletHeight,
-      speed: 0.01 * level,
+      speed: level * 0.035,
       radius: Math.max(bulletWidth, bulletHeight) / 2,
     };
     game.bullets.push(bullet);
@@ -170,7 +170,7 @@ function updateGame() {
         break;
     }
 
-    bird.y -= level * (bird.speed / 2);
+    bird.y -= level * (bird.speed / 2.5);
     // reset if off screen
     const sideToCheck = bird.direction === 'right' ? 'right' : 'left';
     if (isOffScreen(bird, sideToCheck)) {

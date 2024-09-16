@@ -13,7 +13,7 @@ export function isOffScreen(obj, side) {
   }
 }
 
-export function getBirdStartPos(level) {
+export function getBirdStartPos() {
   // get random boolean
   const fromLeft = Math.random() <= 0.5;
   const x = fromLeft ? -1 : 1;
@@ -23,10 +23,10 @@ export function getBirdStartPos(level) {
 }
 
 export function resetBird(bird, level) {
-  const { x, y } = getBirdStartPos(level);
+  const { x, y } = getBirdStartPos();
   bird.x = x;
   bird.y = y;
   bird.direction = x < 0 ? 'right' : 'left';
   const speedFactor = (level * 0.01) / level;
-  bird.speed = (Math.random() * 0.1 + 0.5) * speedFactor;
+  bird.speed = (Math.random() * 0.5 + 2.5) * speedFactor;
 }
