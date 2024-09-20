@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <title>Image Renderer</title>
+
+    <style>
+      body {
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      canvas {
+        width: 90vh;
+        height: 90vh;
+        margin: 0 auto;
+        border: 1px solid black;
+      }
+    </style>
+
+    <!-- prettier-ignore -->
+    <script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
+      precision mediump float;
+      
+      layout (location = 0) in vec3 aPos;
+      layout (location = 1) in vec2 aTexCoord;
+      
+      out vec2 texCoord;
+      
+      void main()
+      {
+          gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+          texCoord = aTexCoord;
+      }
+    </script>
+
+    <!-- prettier-ignore -->
+    <script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
+      precision mediump float;
+
+      in vec2 texCoord;
+      out vec4 fragColor;
+      
+      uniform sampler2D uImage;
+      
+      void main()
+      {
+          fragColor = texture(uImage, texCoord);
+      }
+    </script>
+
+    <script type="text/javascript" src="../../lib/webgl-utils.js"></script>
+    <script type="module" src="./script.js"></script>
+  </head>
+
+  <body>
+    <canvas id="gl-canvas" width="512" height="512">
+      Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+  </body>
+</html>

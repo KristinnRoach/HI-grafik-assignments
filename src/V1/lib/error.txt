@@ -1,0 +1,14 @@
+// src/lib/error.ts
+
+/** Helper method to output an error message to the screen */
+export function showError(errorText: string): void {
+  console.error(errorText);
+  const errorBoxDiv = document.getElementById('error-box');
+  if (!errorBoxDiv) {
+    console.error('Error box not found');
+    return;
+  }
+  const errorElement = document.createElement('p');
+  errorElement.innerText = errorText;
+  errorBoxDiv.appendChild(errorElement);
+}

@@ -1,13 +1,15 @@
 // IMPORTS AND CONSTANTS
 
-import { getGL, getCanvas } from '../lib/init-gl2.js';
-import { resetBird, isOffScreen } from './game-utils.js';
-import { initShaders } from '../lib/initShaders.js';
+import { getGL, getCanvas } from './lib/init-gl2.js';
+import { resetBirdPos, isOffScreen } from './game-logic.js';
+import { initShaders } from './lib/initShaders.js';
 
 // GLOBAL VARIABLES
 
 const MAX_BULLETS = 20;
 const WIN_SCORE = 20;
+const START_BULLET_SPEED = 0.001;
+const START_BIRD_SPEED = 0.001;
 
 let bulletPositionsUniform;
 let activeBulletsUniform;
@@ -42,10 +44,20 @@ const game = {
   bullets: [],
   gameOver: false,
   lastShotTime: 0,
-  shootCooldown: 50, // milliseconds
+  shootCooldown: 500, // milliseconds
   score: 0,
   bulletBuffer: null,
 };
+
+// temp getters
+
+export function getLevel() {
+  return level;
+}
+
+export function getStartBirdSpeed() {
+  return START_BIRD_SPEED;
+}
 
 // INITIALIZATION
 
@@ -153,7 +165,8 @@ function createObject(x, y, width, height, createBuffer) {
     width,
     height,
     speed: 0.0,
-    direction: 'right',
+    x_direction: 'right',
+    y_direction: '',
     radius: Math.max(width, height) / 2,
   };
 }
@@ -161,7 +174,7 @@ function createObject(x, y, width, height, createBuffer) {
 function createBirds(nrOfBirds) {
   for (let i = 0; i < nrOfBirds; i++) {
     const bird = createObject(-1.0, 0.7, birdWidth, birdHeight, true);
-    resetBird(bird, level || 1);
+    resetBirdPos(bird);
     game.birds.push(bird);
   }
 }
@@ -173,7 +186,7 @@ function createBullet() {
       y: game.gun.y,
       width: bulletWidth,
       height: bulletHeight,
-      speed: 0.005 + level * 0.01,
+      speed: START_BULLET_SPEED + level * 0.005,
       radius: Math.max(bulletWidth, bulletHeight) / 2,
     };
     game.bullets.push(bullet);
@@ -182,27 +195,9 @@ function createBullet() {
 
 function updateGame() {
   game.birds.forEach((bird) => {
-    // move bird
-    switch (bird.direction) {
-      case 'right':
-        bird.x += bird.speed;
-        break;
-      case 'left':
-        bird.x -= bird.speed;
-        break;
-    }
-
-    // move bird down randomly
-    if (Math.random() < 0.4) {
-      bird.y -= (level * bird.speed) / 2;
-    } else if (Math.random() < 0.2) {
-      bird.y += (level * bird.speed) / 2;
-    }
-
     // reset bird if off screen
-    const sideToCheck = bird.direction === 'right' ? 'right' : 'left';
-    if (isOffScreen(bird, sideToCheck)) {
-      resetBird(bird, level);
+    if (isOffScreen(bird)) {
+      resetBirdPos(bird);
     }
 
     // switch bird direction randomly
@@ -214,17 +209,43 @@ function updateGame() {
     if (checkGunCollision(game.gun, bird)) {
       endGame();
     }
+
+    // move bird
+    switch (bird.x_direction + '-' + bird.y_direction) {
+      case 'right-':
+        bird.x += bird.speed;
+        break;
+      case 'left-':
+        bird.x -= bird.speed;
+        break;
+      case 'right-down':
+        bird.x += bird.speed;
+        bird.y -= bird.speed / 2;
+        break;
+      case 'right-up':
+        bird.x += bird.speed;
+        bird.y += bird.speed / 2;
+        break;
+      case 'left-down':
+        bird.x -= bird.speed;
+        bird.y -= bird.speed / 2;
+        break;
+      case 'left-up':
+        bird.x -= bird.speed;
+        bird.y += bird.speed / 2;
+        break;
+    }
   });
 
-  game.bullets = game.bullets.filter((b) => {
-    b.y += b.speed;
-    return b.y <= 1;
+  game.bullets = game.bullets.filter((bull) => {
+    bull.y += bull.speed;
+    return bull.y <= 1;
   });
 
-  game.bullets.forEach((b) => {
+  game.bullets.forEach((bull) => {
     game.birds.forEach((bird) => {
-      if (isBirdShot(bird, b)) {
-        handleCollision(b, bird);
+      if (isBirdShot(bird, bull)) {
+        handleCollision(bull, bird);
       }
     });
   });
@@ -234,7 +255,8 @@ function updateGame() {
 }
 
 function switchDirection(bird) {
-  bird.direction = bird.direction === 'right' ? 'left' : 'right';
+  bird.x_direction = Math.random() < 0.5 ? 'left' : 'right';
+  bird.y_direction = Math.random() < 0.2 ? 'up' : 'down';
 }
 
 function isBirdShot(obj1, obj2) {
@@ -306,6 +328,7 @@ function pointInRectangle(point, rect) {
 
 // checks for collission using circles
 function checkCircleCollision(obj1, obj2) {
+  // unused for now
   const dx = obj1.x - obj2.x;
   const dy = obj1.y - obj2.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
@@ -315,27 +338,18 @@ function checkCircleCollision(obj1, obj2) {
 function handleCollision(collidedBullet, collidedBird) {
   game.bullets = game.bullets.filter((b) => b !== collidedBullet);
   game.score++;
-  resetBird(collidedBird, level);
+  resetBirdPos(collidedBird);
   console.log(`Score: ${game.score}`);
 
-  if (game.score % 5 === 0) {
+  if (game.score % 3 === 0) {
     level++;
-    game.birds.forEach((bird) => resetBird(bird, level));
+    game.shootCooldown /= level;
+    game.birds.forEach((bird) => resetBirdPos(bird));
+    console.log(`Level Up!: ${level}`);
   }
 
   if (game.score >= WIN_SCORE) {
     endGame();
-  }
-}
-
-function handleKeydown(event) {
-  const key = event.key.toLowerCase();
-  if (key === 'arrowleft' || key === 'a') {
-    game.gun.x = Math.max(game.gun.x - 0.1, -1);
-  } else if (key === 'arrowright' || key === 'd') {
-    game.gun.x = Math.min(game.gun.x + 0.1, 1);
-  } else if (key === ' ' || key === 'arrowup' || key === 'w') {
-    shoot();
   }
 }
 
@@ -344,6 +358,18 @@ function shoot() {
   if (currentTime - game.lastShotTime < game.shootCooldown) return;
   createBullet();
   game.lastShotTime = currentTime;
+}
+
+function handleKeydown(event) {
+  event.preventDefault();
+  const key = event.key.toLowerCase();
+  if (key === 'arrowleft' || key === 'a') {
+    game.gun.x = Math.max(game.gun.x - 0.1, -1);
+  } else if (key === 'arrowright' || key === 'd') {
+    game.gun.x = Math.min(game.gun.x + 0.1, 1);
+  } else if (key === ' ' || key === 'arrowup' || key === 'w') {
+    shoot();
+  }
 }
 
 // RENDERING STUFF
@@ -504,7 +530,7 @@ function endGame() {
 function resetGame() {
   game.score = 0;
   level = 1;
-  game.birds.forEach((bird) => resetBird(bird, level));
+  game.birds.forEach((bird) => resetBirdPos(bird));
   game.bullets = [];
   game.gameOver = false;
   document.body.removeChild(document.querySelector('button'));
