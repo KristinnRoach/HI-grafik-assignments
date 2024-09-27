@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <title>sinus circle</title>
+    <title>Billy</title>
 
     <style>
       body {
@@ -24,11 +24,17 @@
     <script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
       precision mediump float;
       
-      in vec4 vPosition;
+      in vec4 aPosition;
+      in vec4 aColor;
+      out vec4 vColor;
 
-      void main()
+      uniform mat4 uTransform;
+
+      void
+      main()
       {
-        gl_Position = vPosition;
+        gl_Position = uTransform * aPosition;
+        vColor = aColor;
       }
     </script>
 
@@ -36,33 +42,17 @@
     <script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
       precision mediump float;
 
+      in vec4 vColor;
       out vec4 fragColor;
-
-      uniform float uTime;
-      uniform vec2 uResolution;
 
       void main()
       {
-        vec4 color;
-        vec2 normCoords = gl_FragCoord.xy / uResolution.xy;
-        normCoords = 2.0 * normCoords - 1.0;
-
-        float xOffset = sin(uTime * 0.0005) * 0.9; 
-        float yOffset = sin(uTime * 0.003) * 0.5;
-        normCoords.x += xOffset;
-        normCoords.y -= yOffset;
-    
-        if (length(normCoords) < 0.1)
-            color = vec4(1.0, 1.0, 0.0, 1.0);   // Gulur
-        else
-            color = vec4(0.0, 0.0, 1.0, 1.0);   // Blár
-    
-        fragColor = color;
+        fragColor = vColor;
       }
     </script>
 
     <script type="text/javascript" src="../../lib/webgl-utils.js"></script>
-    <script type="module" src="./d2-exp.js"></script>
+    <script type="module" src="./billy.js"></script>
   </head>
 
   <body>
