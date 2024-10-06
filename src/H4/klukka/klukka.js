@@ -39,6 +39,9 @@ let isPaused = false;
 
 let scale = 1;
 
+let colorBuffer = gl.createBuffer();
+let randomColor = false;
+
 window.onload = function init() {
   colorCube();
 
@@ -50,7 +53,6 @@ window.onload = function init() {
   program = initShaders(gl, 'vertex-shader', 'fragment-shader');
   gl.useProgram(program);
 
-  const colorBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
 
@@ -134,10 +136,6 @@ window.onload = function init() {
         randomizeColor();
         break;
 
-      case 'KeyP':
-        isPaused = true;
-        break;
-
       case 'KeyR':
         speed = 100;
         scale = 1;
@@ -154,11 +152,22 @@ window.onload = function init() {
 };
 
 function randomizeColor() {
+  randomColor = true;
+  colors = [];
+  colorCube();
+  gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
+
+  randomizeUniform();
+}
+
+function randomizeUniform() {
+  let randIndx = Math.floor(Math.random() * 5);
   gl.uniform4fv(uRandomV4, [
-    Math.random(),
-    Math.random(),
-    Math.random(),
-    Math.random(),
+    randIndx === 0 ? 1.0 : Math.random(),
+    randIndx === 1 ? 1.0 : Math.random(),
+    randIndx === 2 ? 1.0 : Math.random(),
+    randIndx === 3 ? 1.0 : Math.random() + 0.7,
   ]);
 }
 
@@ -176,7 +185,7 @@ function colorCube() {
 }
 
 function quad(a, b, c, d) {
-  var vertices = [
+  let vertices = [
     vec3(-0.5, -0.5, 0.5),
     vec3(-0.5, 0.5, 0.5),
     vec3(0.5, 0.5, 0.5),
@@ -187,7 +196,7 @@ function quad(a, b, c, d) {
     vec3(0.5, -0.5, -0.5),
   ];
 
-  var vertexColors = [
+  let vertexColors = [
     [0.0, 0.0, 0.0, 1.0], // black
     [1.0, 0.0, 0.0, 1.0], // red
     [1.0, 1.0, 0.0, 1.0], // yellow
@@ -198,13 +207,9 @@ function quad(a, b, c, d) {
     [1.0, 1.0, 1.0, 1.0], // white
   ];
 
-  // We need to parition the quad into two triangles in order for
-  // WebGL to be able to render it.  In this case, we create two
-  // triangles from the quad indices
+  let indices = [a, b, c, a, c, d];
 
-  //vertex color assigned by the index of the vertex
-
-  var indices = [a, b, c, a, c, d];
+  if (randomColor) a = Math.floor(Math.random() * 5 + 1);
 
   for (var i = 0; i < indices.length; ++i) {
     points.push(vertices[indices[i]]);

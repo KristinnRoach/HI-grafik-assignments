@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <title>Klukka (Continue Time)</title>
+    <title>TRS</title>
 
     <style>
       body {
@@ -14,8 +14,8 @@
         align-items: center;
       }
       canvas {
-        width: 99vh;
-        height: 99vh;
+        /* width: 90vh;
+        height: 90vh; */
         margin: 0 auto;
       }
     </style>
@@ -28,13 +28,13 @@
       in vec4 aColor;
       out vec4 vColor;
 
-      uniform mat4 uMatRotation;
+      uniform mat4 uTransform;
 
       void
       main()
       {
+        gl_Position = uTransform * aPosition;
         vColor = aColor;
-        gl_Position = uMatRotation * aPosition;
       }
     </script>
 
@@ -45,16 +45,14 @@
       in vec4 vColor;
       out vec4 fragColor;
 
-      uniform vec4 uRandomV4;
-
       void main()
       {
-        fragColor = vColor * uRandomV4;
+        fragColor = vColor;
       }
     </script>
 
     <script type="text/javascript" src="../../lib/webgl-utils.js"></script>
-    <script type="module" src="./klukka.js"></script>
+    <script type="module" src="./trs.js"></script>
   </head>
 
   <body>
