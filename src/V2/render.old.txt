@@ -1,0 +1,118 @@
+// // render.js
+
+// import { mult, translate, scalem, flatten, vec3, mat4 } from '../lib/MV.js';
+// import { gl, glPos, program } from './gl-utils.js';
+// import { game } from './game-state.js';
+// import * as constants from './constants.js';
+// import * as camera from './camera.js';
+// import { instanceBuffer } from './main.js';
+
+// export function render() {
+//   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+//   camera.updatePosition();
+//   const viewMatrix = camera.getViewMatrix();
+
+//   const maxDimension = Math.max(...game.dimensions);
+//   const cellSpacing = (3 * game.gridScale) / maxDimension;
+
+//   const instanceData = [];
+//   let instanceCount = 0;
+
+//   for (let x = 0; x < game.dimensions[0]; x++) {
+//     for (let y = 0; y < game.dimensions[1]; y++) {
+//       for (let z = 0; z < game.dimensions[2]; z++) {
+//         if (game.grid_1[x][y][z] === 1) {
+//           instanceData.push(
+//             (x - game.dimensions[0] / 2 + 0.5) * cellSpacing,
+//             (y - game.dimensions[1] / 2 + 0.5) * cellSpacing,
+//             (z - game.dimensions[2] / 2 + 0.5) * cellSpacing
+//           );
+//           instanceCount++;
+//         }
+//       }
+//     }
+//   }
+
+//   // Update instance buffer
+//   gl.bindBuffer(gl.ARRAY_BUFFER, instanceBuffer);
+//   gl.bufferData(
+//     gl.ARRAY_BUFFER,
+//     new Float32Array(instanceData),
+//     gl.DYNAMIC_DRAW
+//   );
+
+//   // Set modelView matrix
+//   const modelViewMatrix = mult(
+//     viewMatrix,
+//     scalem(
+//       game.cellScale * cellSpacing,
+//       game.cellScale * cellSpacing,
+//       game.cellScale * cellSpacing
+//     )
+//   );
+
+//   gl.uniformMatrix4fv(glPos.uModelView, false, flatten(modelViewMatrix));
+
+//   // Draw instanced cubes
+//   gl.drawArraysInstanced(
+//     gl.TRIANGLES,
+//     0,
+//     constants.NUM_VERTICES,
+//     instanceCount
+//   );
+
+//   requestAnimationFrame(render);
+// }
+
+// // function calculateModelViewMatrix(x, y, z, viewMatrix, cellSpacing) {
+// //   const translateMatrix = translate(
+// //     (x - game.dimensions[0] / 2 + 0.5) * cellSpacing,
+// //     (y - game.dimensions[1] / 2 + 0.5) * cellSpacing,
+// //     (z - game.dimensions[2] / 2 + 0.5) * cellSpacing
+// //   );
+// //   const scaleMatrix = scalem(
+// //     game.cellScale * cellSpacing,
+// //     game.cellScale * cellSpacing,
+// //     game.cellScale * cellSpacing
+// //   );
+// //   return mult(viewMatrix, mult(translateMatrix, scaleMatrix));
+// // }
+
+// // function renderCube(x, y, z, modelViewMatrix, cellSpacing) {
+// //   let cellModelView = mult(
+// //     modelViewMatrix,
+// //     translate(
+// //       (x - game.dimensions[0] / 2 + 0.5) * cellSpacing,
+// //       (y - game.dimensions[1] / 2 + 0.5) * cellSpacing,
+// //       (z - game.dimensions[2] / 2 + 0.5) * cellSpacing
+// //     )
+// //   );
+// //   cellModelView = mult(
+// //     cellModelView,
+// //     scalem(
+// //       game.cellScale * cellSpacing,
+// //       game.cellScale * cellSpacing,
+// //       game.cellScale * cellSpacing
+// //     )
+// //   );
+// //   gl.uniformMatrix4fv(glPos.uModelView, false, flatten(cellModelView));
+// //   gl.drawArrays(gl.TRIANGLES, 0, constants.NUM_VERTICES);
+// // }
+
+// //  renderCube(x, y, z, viewMatrix, cellSpacing);
+
+// //   const modelViewMatrix = calculateModelViewMatrix(
+// //     x,
+// //     y,
+// //     z,
+// //     viewMatrix,
+// //     cellSpacing
+// //   );
+
+// //   gl.uniformMatrix4fv(
+// //     glPos.uModelView,
+// //     false,
+// //     flatten(modelViewMatrix)
+// //   );
+// //   gl.drawArrays(gl.TRIANGLES, 0, constants.NUM_VERTICES); // 36
