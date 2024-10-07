@@ -1,6 +1,7 @@
 // event-handlers.js
 import * as camera from './camera.js';
 import { game, restartGame } from './game-state.js';
+import { setFPS } from './main.js';
 
 export let isDragging = false;
 export let lastMouseX, lastMouseY;
@@ -56,10 +57,10 @@ function handleKeyDown(event) {
       camera.move('down', KEY_STEP);
       break;
     case 'arrowup':
-      game.genInterval = Math.max(50, game.genInterval - 50); // Decrease delay to speed up
+      if (game.fps < 60) setFPS(game.fps + 1);
       break;
     case 'arrowdown':
-      game.genInterval = Math.min(1000, game.genInterval + 50); // Increase delay to slow down
+      if (game.fps > 1) setFPS(game.fps - 1);
       break;
     case 'r':
       restartGame();

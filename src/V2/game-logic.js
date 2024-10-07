@@ -2,7 +2,7 @@
 
 import { game } from './game-state.js';
 
-export function initializeGameState(pattern = 'random') {
+export function initGrid(pattern = 'random') {
   switch (pattern) {
     case 'random':
       initializeRandom();
@@ -43,9 +43,13 @@ export function initializeGameState(pattern = 'random') {
   game.activeCells = game.currentGrid
     .flat(3)
     .filter((cell) => cell === 1).length;
+
+  console.log('rules', game.rules.birth, game.rules.survival);
+  console.log('fps', game.fps);
+  console.log('pattern', game.pattern);
 }
 
-export function updateGameState() {
+export function updateGrid() {
   let newCellCount = 0;
   const birth = game.rules.birth;
   const survive = game.rules.survival;
@@ -61,7 +65,7 @@ export function updateGameState() {
           (!game.currentGrid[x][y][z] && birth.includes(n))
         ) {
           game.nextGrid[x][y][z] = 1;
-          newCellCount += game.nextGrid[x][y][z];
+          newCellCount++;
         }
       }
     }

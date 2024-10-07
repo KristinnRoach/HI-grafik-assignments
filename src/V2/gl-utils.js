@@ -19,7 +19,12 @@ export function setupWebGL() {
   gl = getGL();
   gl.viewport(0, 0, canvas.width, canvas.height);
   gl.clearColor(bgColor[0], bgColor[1], bgColor[2], bgColor[3]);
+
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);
+  gl.frontFace(gl.CCW);
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.BACK);
 }
 
 export function createBuffer(data, attribute, size, usage = gl.STATIC_DRAW) {

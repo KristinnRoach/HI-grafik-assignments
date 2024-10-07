@@ -1,34 +1,46 @@
 // game-state.js
 
-import { initializeGameState } from './game-logic.js';
+import { initGrid, updateGrid } from './game-logic.js';
 
 export const game = {
   currentGrid: [],
   nextGrid: [],
   activeCells: 0,
-  gridScale: 10.0,
-  cellScale: 0.4,
+  gridScale: 8,
+  cellScale: 0.5,
   dimensions: [33, 33, 33],
 
   rules: {
-    birth: [6],
-    survival: [5, 6, 7],
+    birth: [5, 7],
+    survival: [2, 4, 7],
   },
 
-  genInterval: 300, // ms
   isPaused: false,
   wrapping: false,
 
-  startPattern: 'random',
+  pattern: 'glider',
+
+  fps: 18, // speed
 };
 
 export function restartGame() {
-  clearGrid();
-  initializeGameState(game.startPattern);
+  game.isPaused = true;
+  game.nextGrid = [];
+  game.currentGrid = [];
+  game.activeCells = 0;
+
+  initGrid(game.pattern);
+
+  console.log('rules', game.rules.birth, game.rules.survival);
+  console.log('fps', game.fps);
+  console.log('pattern', game.pattern);
+
+  // updateGameState();
+  game.isPaused = false;
 }
 
 export function setStartPattern(pattern) {
-  game.startPattern = pattern;
+  game.pattern = pattern;
 }
 
 export function togglePause() {
@@ -49,8 +61,11 @@ export function setGridDimensions(dimensions) {
 
 export function setRule(value, rule) {
   switch (rule) {
-    case 'birth':
-      game.rules.birth = value;
+    case 'birth-1':
+      game.rules.birth[0] = value;
+      break;
+    case 'birth-2':
+      game.rules.birth[1] = value;
       break;
     case 'survival-1':
       game.rules.survival[0] = value;

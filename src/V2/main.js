@@ -14,7 +14,7 @@ import {
   program,
 } from './gl-utils.js';
 import { createCubeGeometry, points, colors } from './geometry.js';
-import { initializeGameState, updateGameState } from './game-logic.js';
+import { initGrid, updateGrid } from './game-logic.js';
 import { setupEventListeners } from './event-handlers.js';
 import { game } from './game-state.js';
 
@@ -27,6 +27,7 @@ window.onload = function init() {
   setupWebGL();
   createCubeGeometry();
   setupShaders();
+  initHtmlValues();
 
   glPos.aColor = gl.getAttribLocation(program, 'aColor');
   glPos.aPosition = gl.getAttribLocation(program, 'aPosition');
@@ -55,21 +56,35 @@ window.onload = function init() {
   gl.uniformMatrix4fv(glPos.uProjection, false, flatten(projectionMatrix));
 
   setupEventListeners(gl.canvas);
-  initializeGameState(game.startPattern); // for the sphere pattern
-  cam.updatePosition(); // initializes camera
+  initGrid(game.pattern);
+  cam.updatePosition(); // init camera
+
+  console.log('rules', game.rules.birth, game.rules.survival);
 
   gameLoop();
 };
 
-function gameLoop() {
-  if (game.isPaused) {
-    setTimeout(gameLoop, game.genInterval);
-    return;
-  }
-  updateGameState();
-  render();
+let lastTimestamp = 0;
+let msPerFrame = 1000 / game.fps;
 
-  setTimeout(gameLoop, game.genInterval);
+export const setFPS = (fps) => {
+  game.fps = fps;
+  msPerFrame = 1000 / game.fps;
+};
+
+function gameLoop(timestamp) {
+  const elapsed = timestamp - lastTimestamp;
+
+  if (elapsed >= msPerFrame) {
+    lastTimestamp = timestamp - (elapsed % msPerFrame);
+
+    if (!game.isPaused) {
+      updateGrid();
+    }
+    render();
+  }
+
+  requestAnimationFrame(gameLoop);
 }
 
 export function render() {
@@ -121,32 +136,68 @@ export function render() {
 
   // Draw instanced cubes
   gl.drawArraysInstanced(gl.TRIANGLES, 0, NUM_VERTICES, instanceCount);
-
-  requestAnimationFrame(render);
 }
 
-document.getElementById('birth').addEventListener('input', function (e) {
-  game.rules.birth = [e.target.value].map(Number);
+function initHtmlValues() {
+  document.getElementById('grid-scale').value = game.gridScale;
+  // document.getElementById('cell-scale').value = game.cellScale;
+  document.getElementById('fps').value = game.fps;
+  document.getElementById('patternSelect').value = game.pattern;
+  document.getElementById('birth-1').value = game.rules.birth[0];
+  document.getElementById('birth-2').value = game.rules.birth[1];
+  document.getElementById('survival-1').value = game.rules.survival[0];
+  document.getElementById('survival-2').value = game.rules.survival[1];
+  document.getElementById('survival-3').value = game.rules.survival[2];
+}
+
+document.getElementById('grid-scale').addEventListener('input', function (e) {
+  if (parseInt(e.target.value) > 0.0 && !isNaN(e.target.value)) {
+    game.gridScale = parseFloat(e.target.value);
+  }
+});
+
+// document.getElementById('cell-scale').addEventListener('input', function (e) {
+//   if (parseInt(e.target.value) > 0.0 && !isNaN(e.target.value)) {
+//     game.cellScale = parseFloat(e.target.value);
+//   }
+// });
+
+document.getElementById('birth-1').addEventListener('input', function (e) {
+  if (parseInt(e.target.value) >= 0 && !isNaN(e.target.value)) {
+    game.rules.birth[0] = parseInt(e.target.value);
+  } else {
+    game.rules.birth = game.rules.birth.slice(1);
+  }
+});
+
+document.getElementById('birth-2').addEventListener('input', function (e) {
+  if (parseInt(e.target.value) >= 0 && !isNaN(e.target.value)) {
+    game.rules.birth[1] = parseInt(e.target.value);
+  } else {
+    game.rules.birth = game.rules.birth.slice(0, 1);
+  }
 });
 
 document.getElementById('survival-1').addEventListener('input', function (e) {
-  game.rules.survival[0] = e.target.value;
+  game.rules.survival[0] = parseInt(e.target.value);
 });
 
 document.getElementById('survival-2').addEventListener('input', function (e) {
-  game.rules.survival[1] = e.target.value;
+  game.rules.survival[1] = parseInt(e.target.value);
 });
 
 document.getElementById('survival-3').addEventListener('input', function (e) {
-  game.rules.survival[2] = e.target.value;
+  game.rules.survival[2] = parseInt(e.target.value);
 });
 
-document.getElementById('scaleSlider').addEventListener('input', function (e) {
-  game.gridScale = parseFloat(e.target.value) * 20;
+document.getElementById('fps').addEventListener('input', function (e) {
+  setFPS(parseFloat(e.target.value));
+  console.log(game.fps);
 });
 
 document
   .getElementById('patternSelect')
   .addEventListener('change', function (e) {
-    game.startPattern = e.target.value;
+    game.pattern = e.target.value;
+    console.log(game.pattern);
   });
