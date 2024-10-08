@@ -14,11 +14,23 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        background-color: black;
+
+        color: rgba(101, 255, 84, 0.603);
       }
       canvas {
-        width: 99vh;
+        width: 90vh; /* TODO: enable more width by compensating in js or glsl */
         height: 85vh;
         margin: 0 auto;
+      }
+
+      input,
+      select {
+        background-color: black;
+        color: rgba(101, 255, 84, 0.603);
+        border: 1px solid rgba(101, 255, 84, 0.603);
+        border-radius: 5px;
+        padding: 5px;
       }
 
       input[type='number'] {
@@ -49,19 +61,56 @@
       in vec4 aPosition;
       in vec4 aColor;
       in vec3 aOffset;
+      in vec3 aNormal;
 
-      out vec4 vColor;
+
+      uniform vec3 uLightDirection;
+
+      uniform mat4 uViewMatrix;
 
       uniform mat4 uModelView;
       uniform mat4 uProjection;
+      uniform mat3 uNormalMatrix;
+
+      uniform float uCellScale;
+     //  uniform float uCellSpacing;
+
+      out vec4 vColor;
+      out vec3 vNormal;
+
+      out vec3 vLightDirection;
+      // out vec3 vPosition;
 
       void
       main()
       {
-        vColor = aColor;
+        // Calculate per-instance model matrix
+        mat4 modelMatrix = mat4(
+          uCellScale, 0.0, 0.0, 0.0, // uCellScale * uCellSpacing
+          0.0, uCellScale, 0.0, 0.0, // uCellScale * uCellSpacing
+          0.0, 0.0, uCellScale, 0.0, // uCellScale * uCellSpacing
+          aOffset.x, aOffset.y, aOffset.z, 1.0
+        );
 
-        vec4 offsetPosition = aPosition + vec4(aOffset, 0.0);
-        gl_Position = uProjection * uModelView * offsetPosition;
+        // Calculate modelView matrix
+        mat4 modelViewMatrix = uViewMatrix * modelMatrix;
+      
+
+        // vec4 offsetPosition = aPosition + vec4(aOffset, 0.0);
+        // vec4 worldPosition = uModelView * offsetPosition;
+        gl_Position = uProjection * modelViewMatrix * aPosition;
+
+        // Calculate normal matrix
+        mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix)));
+        vNormal = normalize(normalMatrix * aNormal);
+
+        // vPosition = vec3(worldPosition);
+
+        vLightDirection = mat3(uModelView) * uLightDirection;
+
+        // vNormal = normalize(uNormalMatrix * aNormal);
+
+        vColor = aColor;
       }
     </script>
 
@@ -70,11 +119,35 @@
       precision mediump float;
 
       in vec4 vColor;
+      in vec3 vNormal;
+      in vec3 vLightDirection;
+
+      // uniform float uAmbientFactor;
+      // uniform float uDiffuseStrength;
+      // uniform vec3 uLightColor;
+
+
+      float uAmbientFactor = 0.45;
+      float uDiffuseStrength = 0.88;
+      vec3 uLightColor = vec3(1.0, 1.0, 1.0);
+
       out vec4 fragColor;
 
       void main()
       {
-        fragColor = vColor;
+        vec3 normal = normalize(vNormal);
+        vec3 lightDir = normalize(vLightDirection);
+
+        float diff = max(dot(normal, lightDir), 0.0); 
+        
+        vec3 ambient = uAmbientFactor * uLightColor;
+        vec3 diffuse = uDiffuseStrength * diff * uLightColor;
+        vec3 litColor = vColor.rgb * (ambient + diffuse);
+
+        fragColor = vec4(litColor, vColor.a);
+
+        // vec3 debugColor = 0.5 * normalize(vNormal) + 0.5;
+        // fragColor = vec4(debugColor, 1.0);
       }
     </script>
 
@@ -88,22 +161,22 @@
 
     <div class="controls">
       <div class="control-group">
-        <label for="birth">Birth Rule:</label>
+        <label for="birth">Birth:</label>
         <input type="number" min="0" id="birth-1" />
         <input type="number" min="0" id="birth-2" />
       </div>
       <div class="control-group">
-        <label for="survival">Survival Rule:</label>
+        <label for="survival">Survival:</label>
         <input type="number" id="survival-1" min="0" />
         <input type="number" id="survival-2" min="0" />
         <input type="number" id="survival-3" min="0" />
       </div>
 
       <div class="control-group">
-        <label for="fps">FPS:</label>
+        <label for="fps">Speed (FPS):</label>
         <input type="number" id="fps" min="1" max="60" step="1"" />
-        <label for="grid-scale">grid:</label>
-        <input type="number" id="grid-scale" min="0.5" step="0.5" />
+        <!-- <label for="grid-scale">grid:</label>
+        <input type="number" id="grid-scale" min="0.5" step="0.5" /> -->
         <!-- <label for="cell-scale">cells:</label>
         <input type="number" id="cell-scale" min="0.0001" step="0.1" /> -->
       </div>

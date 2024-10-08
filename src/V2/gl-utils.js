@@ -5,13 +5,19 @@ import { initShaders } from '../lib/initShaders.js';
 
 export let gl, program;
 
-const bgColor = [0.0, 0.0, 0.2, 1.0];
+const bgColor = [0.0, 0.0, 0.0, 0.5];
 
 export const glPos = {
   aColor: null,
   aPosition: null,
+  aNormal: null,
+  uNormalMatrix: null,
   uModelView: null,
   uProjection: null,
+  uLightDirection: null,
+  uViewMatrix: null,
+  uCellScale: null,
+  uCellSpacing: null,
 };
 
 export function setupWebGL() {

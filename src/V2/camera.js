@@ -2,19 +2,25 @@
 
 import { lookAt } from '../lib/MV.js';
 
-// TODO: Find out what/how/which to use  !!
+export const NEAR_PLANE = 7.0;
+export const FAR_PLANE = 500.0;
+export const FIELD_OF_VIEW = 55.0;
 
-export const NEAR_PLANE = 0.2;
-export const FAR_PLANE = 900.0;
-export const FIELD_OF_VIEW = 700.0;
-export const INIT_CAMERA_RADIUS = 100.0;
+const INIT_CAM = {
+  elevation: 0.515,
+  radius: 75,
+  angle: -0.666,
+  position: [0, 0, 0], // init position doesn't matter
+  target: [0, 1, 0],
+  upVector: [0, 1, 0], // skoða
+};
 
-export let elevation = 0;
-export let radius = 100;
-export let angle = 0;
-export let position = [1, 0, 5];
-export let target = [0, 0, 0];
-export let upVector = [0, 1, 0];
+export let elevation = INIT_CAM.elevation;
+export let radius = INIT_CAM.radius;
+export let angle = INIT_CAM.angle;
+export let position = INIT_CAM.position;
+export let target = INIT_CAM.target;
+export let upVector = INIT_CAM.upVector;
 
 export function updatePosition() {
   const theta = angle;
@@ -57,5 +63,16 @@ export function move(direction, step) {
       elevation = Math.max(elevation - step, -Math.PI / 2);
       break;
   }
+  updatePosition();
+}
+
+export function reset() {
+  elevation = INIT_CAM.elevation;
+  radius = INIT_CAM.radius;
+  angle = INIT_CAM.angle;
+  position = INIT_CAM.position;
+  target = INIT_CAM.target;
+  upVector = INIT_CAM.upVector;
+
   updatePosition();
 }

@@ -6,11 +6,14 @@ import { setFPS } from './main.js';
 export let isDragging = false;
 export let lastMouseX, lastMouseY;
 
+// TODO: Double click to reset camera position
+
 export function setupEventListeners(canvas) {
   canvas.addEventListener('mousedown', handleMouseDown);
   canvas.addEventListener('mouseup', handleMouseUp);
   canvas.addEventListener('mousemove', handleMouseMove);
   canvas.addEventListener('wheel', handleWheel);
+  canvas.addEventListener('dblclick', handleDoubleClick);
   window.addEventListener('keydown', handleKeyDown);
 }
 
@@ -18,6 +21,10 @@ function handleMouseDown(event) {
   isDragging = true;
   lastMouseX = event.offsetX;
   lastMouseY = event.offsetY;
+}
+
+function handleDoubleClick(event) {
+  camera.reset();
 }
 
 function handleMouseUp() {
@@ -56,12 +63,12 @@ function handleKeyDown(event) {
     case 's':
       camera.move('down', KEY_STEP);
       break;
-    case 'arrowup':
-      if (game.fps < 60) setFPS(game.fps + 1);
-      break;
-    case 'arrowdown':
-      if (game.fps > 1) setFPS(game.fps - 1);
-      break;
+    // case 'arrowup':
+    //   if (game.fps < 60) setFPS(game.fps + 1);
+    //   break;
+    // case 'arrowdown':
+    //   if (game.fps > 1) setFPS(game.fps - 1);
+    //   break;
     case 'r':
       restartGame();
       break;

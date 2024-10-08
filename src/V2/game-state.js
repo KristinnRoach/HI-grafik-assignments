@@ -6,8 +6,8 @@ export const game = {
   currentGrid: [],
   nextGrid: [],
   activeCells: 0,
-  gridScale: 8,
-  cellScale: 0.5,
+  gridScale: 8, // TODO: Implement grid scaling
+  cellScale: 0.95,
   dimensions: [33, 33, 33],
 
   rules: {
@@ -18,9 +18,9 @@ export const game = {
   isPaused: false,
   wrapping: false,
 
-  pattern: 'glider',
+  pattern: 'glider', // glider
 
-  fps: 18, // speed
+  fps: 16, // speed
 };
 
 export function restartGame() {
@@ -35,7 +35,6 @@ export function restartGame() {
   console.log('fps', game.fps);
   console.log('pattern', game.pattern);
 
-  // updateGameState();
   game.isPaused = false;
 }
 
