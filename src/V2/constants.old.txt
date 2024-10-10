@@ -1,8 +1,0 @@
-// // constants.js
-
-// const NEAR_PLANE = 0.2;
-// const FAR_PLANE = 900.0;
-// const FIELD_OF_VIEW = 800.0;
-// const INIT_CAMERA_RADIUS = 100.0;
-
-// export { NEAR_PLANE, FAR_PLANE, FIELD_OF_VIEW, INIT_CAMERA_RADIUS };

@@ -1,13 +1,14 @@
 // game-state.js
 
 import { initGrid, updateGrid } from './game-logic.js';
+import { gameLoop, getHtmlValues, setHtmlValues, setFPS } from './main.js';
 
 export const game = {
   currentGrid: [],
   nextGrid: [],
   activeCells: 0,
   gridScale: 8, // TODO: Implement grid scaling
-  cellScale: 0.95,
+  cellScale: 0.5,
   dimensions: [33, 33, 33],
 
   rules: {
@@ -18,24 +19,73 @@ export const game = {
   isPaused: false,
   wrapping: false,
 
-  pattern: 'glider', // glider
+  pattern: 'random', // glider
 
   fps: 16, // speed
+
+  shape: 'cube', // or sphere
+
+  boundariesKill: false,
+
+  isOver: false,
 };
 
-export function restartGame() {
+function interpolate(start, end, factor) {
+  return start + (end - start) * factor;
+}
+
+export function gameOver(reason) {
+  console.log('game over', reason);
+
+  if (reason === 'overPopulated') {
+    // setFPS(16);
+    game.rules.birth = [6, -1];
+    game.rules.survival = [15, 20, 10];
+    game.cellScale = interpolate(game.cellScale, 150.0, 0.0005); // ??
+  }
+
+  // game.rules.birth = [6, 9];
+  // game.rules.survival = [6, 10, 15];
+
+  // game.rules.birth = [0, 1];
+  // game.rules.survival = [12, 12, 12];
+  // game.cellScale = interpolate(game.cellScale, 100.0, 0.001);
+
+  if (game.cellScale < 0.01 || game.cellScale > 100.0 || game.activeCells < 1) {
+    resetGameState();
+  }
+}
+
+export function resetGameState() {
   game.isPaused = true;
+  game.isOver = true;
+
+  game.cellScale = 0.5;
+
+  const { fps, pattern, birth, survival } = getHtmlValues();
+  // setFPS(fps);
+  game.pattern = pattern;
+  game.rules.birth = birth;
+  game.rules.survival = survival;
+
   game.nextGrid = [];
   game.currentGrid = [];
   game.activeCells = 0;
+  setHtmlValues();
+
+  game.isOver = false;
+
+  console.log('reset game state', game.rules);
+}
+
+export function restartGame() {
+  game.isGameOver = false;
+  game.isPaused = false;
 
   initGrid(game.pattern);
 
-  console.log('rules', game.rules.birth, game.rules.survival);
-  console.log('fps', game.fps);
-  console.log('pattern', game.pattern);
-
-  game.isPaused = false;
+  console.log(game);
+  gameLoop();
 }
 
 export function setStartPattern(pattern) {

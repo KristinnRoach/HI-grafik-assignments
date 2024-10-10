@@ -68,47 +68,37 @@
 
       uniform mat4 uViewMatrix;
 
-      uniform mat4 uModelView;
       uniform mat4 uProjection;
       uniform mat3 uNormalMatrix;
 
       uniform float uCellScale;
-     //  uniform float uCellSpacing;
 
       out vec4 vColor;
       out vec3 vNormal;
 
       out vec3 vLightDirection;
-      // out vec3 vPosition;
 
       void
       main()
       {
         // Calculate per-instance model matrix
         mat4 modelMatrix = mat4(
-          uCellScale, 0.0, 0.0, 0.0, // uCellScale * uCellSpacing
-          0.0, uCellScale, 0.0, 0.0, // uCellScale * uCellSpacing
-          0.0, 0.0, uCellScale, 0.0, // uCellScale * uCellSpacing
+          uCellScale, 0.0, 0.0, 0.0, 
+          0.0, uCellScale, 0.0, 0.0, 
+          0.0, 0.0, uCellScale, 0.0, 
           aOffset.x, aOffset.y, aOffset.z, 1.0
         );
 
         // Calculate modelView matrix
         mat4 modelViewMatrix = uViewMatrix * modelMatrix;
       
-
-        // vec4 offsetPosition = aPosition + vec4(aOffset, 0.0);
-        // vec4 worldPosition = uModelView * offsetPosition;
         gl_Position = uProjection * modelViewMatrix * aPosition;
 
         // Calculate normal matrix
         mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix)));
         vNormal = normalize(normalMatrix * aNormal);
 
-        // vPosition = vec3(worldPosition);
-
-        vLightDirection = mat3(uModelView) * uLightDirection;
-
-        // vNormal = normalize(uNormalMatrix * aNormal);
+        vLightDirection = mat3(modelViewMatrix) * uLightDirection;
 
         vColor = aColor;
       }
@@ -122,13 +112,9 @@
       in vec3 vNormal;
       in vec3 vLightDirection;
 
-      // uniform float uAmbientFactor;
-      // uniform float uDiffuseStrength;
-      // uniform vec3 uLightColor;
 
-
-      float uAmbientFactor = 0.45;
-      float uDiffuseStrength = 0.88;
+      float uAmbientFactor = 0.2;
+      float uDiffuseStrength = 0.8;
       vec3 uLightColor = vec3(1.0, 1.0, 1.0);
 
       out vec4 fragColor;
@@ -174,7 +160,7 @@
 
       <div class="control-group">
         <label for="fps">Speed (FPS):</label>
-        <input type="number" id="fps" min="1" max="60" step="1"" />
+        <input type="number" id="fps" min="1" max="60" step="1" />
         <!-- <label for="grid-scale">grid:</label>
         <input type="number" id="grid-scale" min="0.5" step="0.5" /> -->
         <!-- <label for="cell-scale">cells:</label>

@@ -2,17 +2,17 @@
 
 import { lookAt } from '../lib/MV.js';
 
-export const NEAR_PLANE = 7.0;
-export const FAR_PLANE = 500.0;
-export const FIELD_OF_VIEW = 55.0;
+export const NEAR_PLANE = 0.5;
+export const FAR_PLANE = 700.0;
+export const FIELD_OF_VIEW = 50.0;
 
 const INIT_CAM = {
-  elevation: 0.515,
-  radius: 75,
-  angle: -0.666,
+  elevation: 0.515, // Math.PI / 4, // 45 degrees
+  radius: 45, // 75,
+  angle: -0.666, // -Math.PI / 4, // -45 degrees
   position: [0, 0, 0], // init position doesn't matter
-  target: [0, 1, 0],
-  upVector: [0, 1, 0], // skoða
+  target: [0, 0, 0], // [0, 1, 0],
+  upVector: [0, 1, 0],
 };
 
 export let elevation = INIT_CAM.elevation;

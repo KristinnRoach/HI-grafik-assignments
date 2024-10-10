@@ -1,6 +1,6 @@
 // game-logic.js
 
-import { game } from './game-state.js';
+import { game, gameOver } from './game-state.js';
 
 export function initGrid(pattern = 'random') {
   switch (pattern) {
@@ -44,12 +44,16 @@ export function initGrid(pattern = 'random') {
     .flat(3)
     .filter((cell) => cell === 1).length;
 
-  console.log('rules', game.rules.birth, game.rules.survival);
-  console.log('fps', game.fps);
-  console.log('pattern', game.pattern);
+  // console.log('rules', game.rules.birth, game.rules.survival);
+  // console.log('fps', game.fps);
+  // console.log('pattern', game.pattern);
 }
 
 export function updateGrid() {
+  if (game.isOver || game.isPaused) {
+    return;
+  }
+
   let newCellCount = 0;
   const birth = game.rules.birth;
   const survive = game.rules.survival;
@@ -63,6 +67,7 @@ export function updateGrid() {
         if (
           (game.currentGrid[x][y][z] && survive.includes(n)) ||
           (!game.currentGrid[x][y][z] && birth.includes(n))
+          // && !xyzOutOfBounds(x, y, z))
         ) {
           game.nextGrid[x][y][z] = 1;
           newCellCount++;
@@ -71,9 +76,23 @@ export function updateGrid() {
     }
   }
 
+  // console.log(newCellCount, game.activeCells);
+  const nrOfPossibleCells =
+    game.dimensions[0] * game.dimensions[1] * game.dimensions[2];
+
   [game.currentGrid, game.nextGrid] = [game.nextGrid, game.currentGrid];
+
+  if (newCellCount === 0 && game.activeCells === 1) {
+    // all cells are dead
+    // newCellCount === game.activeCells || // same as last generation ( optimize this to be if game has stabilized )
+    gameOver('allDead');
+  }
+
+  if (newCellCount >= nrOfPossibleCells / 5) {
+    gameOver('overPopulated');
+  }
+
   game.activeCells = newCellCount;
-  //   console.log('Active cubes:', newCellCount);
 }
 
 function countNeighbors(x, y, z) {
@@ -82,33 +101,44 @@ function countNeighbors(x, y, z) {
     for (let dy = -1; dy <= 1; dy++) {
       for (let dz = -1; dz <= 1; dz++) {
         if (dx === 0 && dy === 0 && dz === 0) continue;
-        let nx, ny, nz;
-        if (game.wrapping) {
-          nx = (x + dx + game.dimensions[0]) % game.dimensions[0];
-          ny = (y + dy + game.dimensions[1]) % game.dimensions[1];
-          nz = (z + dz + game.dimensions[2]) % game.dimensions[2];
-        } else {
-          nx = x + dx;
-          ny = y + dy;
-          nz = z + dz;
 
-          if (
-            // Skip if out of bounds
-            nx < 0 ||
-            nx >= game.dimensions[0] ||
-            ny < 0 ||
-            ny >= game.dimensions[1] ||
-            nz < 0 ||
-            nz >= game.dimensions[2]
-          ) {
-            continue;
+        let nx = x + dx;
+        let ny = y + dy;
+        let nz = z + dz;
+
+        if (game.wrapping) {
+          nx = (nx + game.dimensions[0]) % game.dimensions[0];
+          ny = (ny + game.dimensions[1]) % game.dimensions[1];
+          nz = (nz + game.dimensions[2]) % game.dimensions[2];
+          count += game.currentGrid[nx][ny][nz];
+        } else {
+          if (xyzOutOfBounds(nx, ny, nz)) {
+            if (game.boundariesKill) {
+              count++; // Count boundary as a living neighbor
+            }
+          } else {
+            count += game.currentGrid[nx][ny][nz];
           }
         }
-        count += game.currentGrid[nx][ny][nz];
       }
     }
   }
   return count;
+}
+
+function outOfBounds(value, axis) {
+  return value < 0 || value >= game.dimensions[axis];
+}
+
+function xyzOutOfBounds(x, y, z) {
+  return (
+    x < 0 ||
+    x >= game.dimensions[0] ||
+    y < 0 ||
+    y >= game.dimensions[1] ||
+    z < 0 ||
+    z >= game.dimensions[2]
+  );
 }
 
 /* Initializer patterns */
@@ -122,7 +152,7 @@ function initializeRandom() {
         .map(() =>
           Array(game.dimensions[2])
             .fill()
-            .map(() => (Math.random() < 0.25 ? 1 : 0))
+            .map(() => (Math.random() < 0.5 ? 1 : 0))
         )
     );
 }
@@ -256,3 +286,16 @@ function createEmptyGrid() {
         .map(() => Array(game.dimensions[2]).fill(0))
     );
 }
+
+// if (game.wrapping) {
+//   nx = (nx + game.dimensions[0]) % game.dimensions[0];
+//   ny = (ny + game.dimensions[1]) % game.dimensions[1];
+//   nz = (nz + game.dimensions[2]) % game.dimensions[2];
+// }
+
+// if (outOfBounds(nx, ny, nz)) {
+//   // if (boundariesKill) {
+//   //   count++;
+//   // }
+//   continue;
+// }

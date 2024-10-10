@@ -1,6 +1,0 @@
-
-
-dotted-line:
-
-    birth: 1
-    surv: 2, 3, 4

@@ -121,11 +121,11 @@ window.onload = function init() {
         break;
 
       case 'ArrowRight':
-        scale = Math.min(scale * 1.1, 3);
+        scale = Math.min(scale * 1.013, 3);
         break;
 
       case 'ArrowLeft':
-        scale = Math.max(scale / 1.1, 0.1);
+        scale = Math.max(scale / 1.013, 0.1);
         break;
 
       case 'Space':

@@ -1,0 +1,10 @@
+
+
+dotted-line:
+    birth: 1
+    surv: 2, 3, 4
+
+
+cross:      // Exploding spaceship
+    birth 5
+    surv  5, 8, 9
