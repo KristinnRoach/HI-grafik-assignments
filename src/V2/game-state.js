@@ -21,7 +21,7 @@ export const game = {
 
   pattern: 'random', // glider
 
-  fps: 16, // speed
+  fps: 12, // speed
 
   shape: 'cube', // or sphere
 

@@ -256,16 +256,16 @@ export function setHtmlValues() {
 
 export function getHtmlValues() {
   return {
-    fps: parseInt(document.getElementById('fps').value) || 16,
+    fps: parseInt(document.getElementById('fps').value),
     pattern: document.getElementById('patternSelect').value,
     birth: [
-      parseInt(document.getElementById('birth-1').value) || 4,
-      parseInt(document.getElementById('birth-2').value) || 5,
+      parseInt(document.getElementById('birth-1').value),
+      parseInt(document.getElementById('birth-2').value),
     ],
     survival: [
-      parseInt(document.getElementById('survival-1').value) || 2,
-      parseInt(document.getElementById('survival-2').value) || 4,
-      parseInt(document.getElementById('survival-3').value) || 7,
+      parseInt(document.getElementById('survival-1').value),
+      parseInt(document.getElementById('survival-2').value),
+      parseInt(document.getElementById('survival-3').value),
     ],
   };
 }
