@@ -14,14 +14,87 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
         background-color: black;
 
         color: rgba(101, 255, 84, 0.603);
+
+        /* min-height: 100vh; */
+        max-height: 100vh;
       }
       canvas {
+        /* position: relative; */
+
         width: 90vh; /* TODO: enable more width by compensating in js or glsl */
         height: 85vh;
         margin: 0 auto;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        z-index: -1;
+
+      }
+
+      #cells {
+        position: absolute;
+        top: 3%;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: row;
+        column-gap: 5rem;
+        font-size: 20px;
+        /* font-family: Arial, sans-serif; */
+        color: rgba(101, 255, 84, 0.603);
+
+        
+      }
+      #cell-count #max-cells {
+        display: none;
+        z-index: -1;
+      }
+
+      #count-down {
+        display: none;
+      }
+
+      #game-over {
+        position: absolute;
+
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        text-align: center;
+        /* font-family: Arial, sans-serif; */
+        font-size: 48px;
+        font-weight: bold;
+        /* color: red; */
+        color: white;
+        text-shadow: 2px 2px 4px #000000;
+        pointer-events: none; 
+        display: none;
+
+        mix-blend-mode: difference; /* hard-light;  */
+      }
+
+      #game-over-reason {
+        font-size: 24px;
+        /* color:rgb(225, 0, 0); */
+      }
+
+      #game-over p {
+        font-size: 24px;
+        /* color: rgb(255, 255, 255); */
       }
 
       input,
@@ -45,6 +118,7 @@
         flex-direction: row;
         align-items: center;
         justify-content: center;
+        flex-wrap: nowrap;
       }
       .control-group {
         margin: 5px 0;
@@ -63,19 +137,14 @@
       in vec3 aOffset;
       in vec3 aNormal;
 
-
       uniform vec3 uLightDirection;
-
       uniform mat4 uViewMatrix;
-
       uniform mat4 uProjection;
       uniform mat3 uNormalMatrix;
-
       uniform float uCellScale;
 
       out vec4 vColor;
       out vec3 vNormal;
-
       out vec3 vLightDirection;
 
       void
@@ -141,9 +210,28 @@
   </head>
 
   <body>
-    <canvas id="gl-canvas" width="512" height="512">
-      Oops ... your browser doesn't support the HTML5 canvas element
-    </canvas>
+    <div id="canvas-container">
+
+      <div id="cells">
+        <div style="visibility: hidden" id="cell-count"></div>
+        <div  style="visibility: hidden" id="count-down"></div>
+        <div style="visibility: hidden" id="max-cells"></div>
+      </div>
+      
+      <canvas id="gl-canvas" width="512" height="512">
+        Oops ... your browser doesn't support the HTML5 canvas element
+      </canvas>
+
+      <div id="game-over-container">
+        <div id="game-over">
+          <h2>GAME OVER</h2>
+          <h3 id="game-over-reason"></h3>
+          <p>Press r to restart</p>
+        </div>
+      </div>
+
+    <div id="canvas-container">
+
 
     <div class="controls">
       <div class="control-group">
@@ -161,9 +249,8 @@
       <div class="control-group">
         <label for="fps">Speed (FPS):</label>
         <input type="number" id="fps" min="1" max="60" step="1" />
-        <!-- <label for="grid-scale">grid:</label>
-        <input type="number" id="grid-scale" min="0.5" step="0.5" /> -->
-        <!-- <label for="cell-scale">cells:</label>
+       
+        <!-- <label for="cell-scale">Scale:</label>
         <input type="number" id="cell-scale" min="0.0001" step="0.1" /> -->
       </div>
 
@@ -180,6 +267,15 @@
           <option value="pulsar">Pulsar</option>
         </select>
       </div>
+
+      <div class="control-group">
+        <label for="shapeSelect">Shape:</label>
+        <select id="shapeSelect">
+          <option value="cube">Cubes</option>
+          <option value="sphere">Spheres</option>
+        </select>
+      </div>
+
     </div>
   </body>
 </html>

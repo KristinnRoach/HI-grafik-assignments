@@ -27,22 +27,72 @@ import {
 import { createGeometry } from './geometry.js';
 import { initGrid, updateGrid } from './game-logic.js';
 import { setupEventListeners } from './event-handlers.js';
-import { game } from './game-state.js';
+import { game, setShape, updateCellCountDisplay } from './game-state.js';
 
+export let geometry;
 export let geometryBuffers;
 export let instanceBuffer;
+
+export function setupGeometry() {
+  try {
+    geometry = createGeometry(game.shape, {
+      size: 1,
+      color: [0.34, 0.8, 0.1, 1.0],
+    });
+
+    console.log('Geometry created:', geometry);
+
+    geometryBuffers = {
+      vertices: createBuffer(
+        new Float32Array(flatten(geometry.vertices)),
+        glPos.aPosition,
+        3
+      ),
+      colors: createBuffer(
+        new Float32Array(flatten(geometry.colors)),
+        glPos.aColor,
+        4
+      ),
+      normals: createBuffer(
+        new Float32Array(flatten(geometry.normals)),
+        glPos.aNormal,
+        3
+      ),
+      indices: gl.createBuffer(),
+      numIndices: geometry.numIndices,
+    };
+
+    console.log('Geometry buffers created:', geometryBuffers);
+
+    if (!gl) {
+      console.error('WebGL context is not available');
+      return;
+    }
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, gl.STATIC_DRAW);
+
+    const initialInstanceData = new Float32Array(
+      game.dimensions[0] * game.dimensions[1] * game.dimensions[2] * 3
+    );
+
+    instanceBuffer = createInstancedBuffer(
+      initialInstanceData,
+      glPos.aOffset,
+      3
+    );
+
+    console.log('Instance buffer created:', instanceBuffer);
+    console.log('Shape set to: ', game.shape);
+  } catch (error) {
+    console.error('Error in setShape:', error);
+  }
+}
 
 // window.onload = function init() {
 export function init() {
   setHtmlValues();
-
   setupWebGL();
-
-  const geometry = createGeometry(game.shape, {
-    size: 1,
-    color: [0.34, 0.8, 0.1, 1.0],
-  });
-
   setupShaders();
 
   glPos.aColor = gl.getAttribLocation(program, 'aColor');
@@ -59,42 +109,7 @@ export function init() {
   glPos.uViewMatrix = gl.getUniformLocation(program, 'uViewMatrix');
   glPos.uCellScale = gl.getUniformLocation(program, 'uCellScale');
 
-  geometryBuffers = {
-    vertices: createBuffer(
-      new Float32Array(flatten(geometry.vertices)),
-      glPos.aPosition,
-      3
-    ),
-    colors: createBuffer(
-      new Float32Array(flatten(geometry.colors)),
-      glPos.aColor,
-      4
-    ),
-    normals: createBuffer(
-      new Float32Array(flatten(geometry.normals)),
-      glPos.aNormal,
-      3
-    ),
-    indices: gl.createBuffer(),
-    numIndices: geometry.numIndices, // Add this line
-  };
-
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);
-  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, gl.STATIC_DRAW);
-
-  const initialInstanceData = new Float32Array(
-    game.dimensions[0] * game.dimensions[1] * game.dimensions[2] * 3
-  );
-
-  instanceBuffer = createInstancedBuffer(initialInstanceData, glPos.aOffset, 3);
-
-  // createBuffer(new Float32Array(flatten(colors)), glPos.aColor, 4);
-  // createBuffer(new Float32Array(flatten(points)), glPos.aPosition, 3);
-  // normalBuffer = createBuffer(
-  //   new Float32Array(flatten(normals)),
-  //   glPos.aNormal,
-  //   3
-  // );
+  setupGeometry(game.shape);
 
   const aspect = 1; // gl.canvas.width / gl.canvas.height;
   const projectionMatrix = perspective(
@@ -132,8 +147,9 @@ export function gameLoop(timestamp) {
 
   if (elapsed >= msPerFrame) {
     lastTimestamp = timestamp - (elapsed % msPerFrame);
+    updateCellCountDisplay();
 
-    if (true) {
+    if (!game.isOver && !game.isPaused) {
       updateGrid();
     }
     render();
@@ -154,6 +170,7 @@ export function render() {
   let instanceCount = 0;
 
   const gridCenter = game.dimensions.map((d) => (d - 1) / 2);
+  const baseScale = 20 / Math.max(...game.dimensions);
 
   for (let x = 0; x < game.dimensions[0]; x++) {
     for (let y = 0; y < game.dimensions[1]; y++) {
@@ -162,15 +179,10 @@ export function render() {
           continue;
         }
         if (game.currentGrid[x][y][z] === 1) {
-          // instanceData.push(
-          //   x - game.dimensions[0] / 2 + 0.5 * game.cellScale,
-          //   y - game.dimensions[1] / 2 + 0.5 * game.cellScale,
-          //   z - game.dimensions[2] / 2 + 0.5 * game.cellScale
-          // );
           instanceData.push(
-            (x - gridCenter[0]) * game.cellScale,
-            (y - gridCenter[1]) * game.cellScale,
-            (z - gridCenter[2]) * game.cellScale
+            (x - gridCenter[0]) * baseScale,
+            (y - gridCenter[1]) * baseScale,
+            (z - gridCenter[2]) * baseScale
           );
           instanceCount++;
         }
@@ -187,7 +199,7 @@ export function render() {
   );
 
   // Set cell scale uniform
-  gl.uniform1f(glPos.uCellScale, game.cellScale);
+  gl.uniform1f(glPos.uCellScale, baseScale);
 
   // Set view matrix
   gl.uniformMatrix4fv(glPos.uViewMatrix, false, flatten(viewMatrix));
@@ -226,26 +238,15 @@ export function render() {
   );
 }
 
-// // Draw instanced cubes
-// gl.drawArraysInstanced(gl.TRIANGLES, 0, NUM_VERTICES, instanceCount);
-
-// function transformLightDirection(lightDir, viewMatrix) {
-//   // Convert light direction to vec4 for matrix multiplication
-//   const lightDirVec4 = vec4(lightDir[0], lightDir[1], lightDir[2], 0.0);
-
-//   // Transform light direction to view space
-//   const inverseViewMatrix = inverse(viewMatrix);
-//   const transformedLightDir = normalize(
-//     vec3(mult(inverseViewMatrix, lightDirVec4))
-//   );
-
-//   return transformedLightDir;
-// }
-
 export function setHtmlValues() {
+  document.getElementById('max-cells').textContent = `Max: ${Math.round(
+    (game.maxCells / 5 / 10) * 10
+  )}`;
+  // document.getElementById('count-down').textContent = `${game.countDown}`;
   // document.getElementById('grid-scale').value = game.gridScale;
   // document.getElementById('cell-scale').value = game.cellScale;
   document.getElementById('fps').value = game.fps;
+  document.getElementById('shapeSelect').value = game.shape;
   document.getElementById('patternSelect').value = game.pattern;
   document.getElementById('birth-1').value = game.rules.birth[0];
   document.getElementById('birth-2').value = game.rules.birth[1];
@@ -258,6 +259,7 @@ export function getHtmlValues() {
   return {
     fps: parseInt(document.getElementById('fps').value),
     pattern: document.getElementById('patternSelect').value,
+    shape: document.getElementById('shapeSelect').value,
     birth: [
       parseInt(document.getElementById('birth-1').value),
       parseInt(document.getElementById('birth-2').value),
@@ -269,18 +271,6 @@ export function getHtmlValues() {
     ],
   };
 }
-
-// document.getElementById('grid-scale').addEventListener('input', function (e) {
-//   if (parseInt(e.target.value) > 0.0 && !isNaN(e.target.value)) {
-//     game.gridScale = parseFloat(e.target.value);
-//   }
-// });
-
-// document.getElementById('cell-scale').addEventListener('input', function (e) {
-//   if (parseInt(e.target.value) > 0.0 && !isNaN(e.target.value)) {
-//     game.cellScale = parseFloat(e.target.value);
-//   }
-// });
 
 document.getElementById('birth-1').addEventListener('input', function (e) {
   if (isNaN(e.target.value)) {
@@ -327,17 +317,10 @@ document
     game.pattern = e.target.value;
   });
 
-// from render function
-// Define world-space light direction
-//const worldLightDir = normalize([1.0, 0.0, 0.0]);
-
-// Transform light direction to view space
-// const viewSpaceLightDir = transformLightDirection(worldLightDir, viewMatrix);
-
-// console.log('View space light direction:', viewSpaceLightDir);
-
-// console.log('Cell size:', game.cellScale * cellSpacing);
-// console.log('Instance count:', instanceCount);
-
-// console.log('View Matrix:', viewMatrix);
-// console.log('Model View Matrix:', modelViewMatrix);
+document.getElementById('shapeSelect').addEventListener('change', function (e) {
+  if (e.target.value === 'Cubes') {
+    setShape('cube');
+  } else if (e.target.value === 'Spheres') {
+    setShape('sphere');
+  }
+});

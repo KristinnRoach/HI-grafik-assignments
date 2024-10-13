@@ -1,0 +1,32 @@
+
+//   if (reason === 'OVERPOPULATED') {
+//     // setFPS(16);
+//     game.rules.birth = [6, -1];
+//     game.rules.survival = [15, 20, 10];
+//     game.cellScale = interpolate(game.cellScale, 150.0, 0.0005); // ??
+
+//     if (
+//       game.cellScale <= 0.01 ||
+//       game.cellScale >= 100.0 ||
+//       game.activeCells < 1
+//     ) {
+//       game.isOver = true;
+//       return;
+//     }
+//   } else if (reason === 'UNDERPOPULATED') {
+//     game.isOver = true;
+//     return;
+//   } else if (reason === 'STABILIZED') {
+//     game.isOver = true;
+//     return;
+//   }
+// }
+
+// if (reason === 'underPopulated') {
+
+// game.rules.birth = [6, 9];
+// game.rules.survival = [6, 10, 15];
+
+// game.rules.birth = [0, 1];
+// game.rules.survival = [12, 12, 12];
+// game.cellScale = interpolate(game.cellScale, 100.0, 0.001);

@@ -1,70 +1,128 @@
 // game-state.js
 
 import { initGrid, updateGrid } from './game-logic.js';
-import { gameLoop, getHtmlValues, setHtmlValues, setFPS } from './main.js';
+import {
+  gameLoop,
+  setupGeometry,
+  getHtmlValues,
+  setHtmlValues,
+  setFPS,
+} from './main.js';
+
+export const GRID_DIMENSIONS = [33, 33, 33];
+export const INIT_COUNT_DOWN = 5;
 
 export const game = {
   currentGrid: [],
   nextGrid: [],
+
   activeCells: 0,
-  gridScale: 8, // TODO: Implement grid scaling
-  cellScale: 0.5,
-  dimensions: [33, 33, 33],
+  outOfBoundsCells: 0,
+
+  dimensions: GRID_DIMENSIONS,
+  maxCells: GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1] * GRID_DIMENSIONS[2],
 
   rules: {
     birth: [5, 7],
     survival: [2, 4, 7],
   },
 
-  isPaused: false,
-  wrapping: false,
+  boundariesKill: false,
+  infiniteGrid: false,
+  stabilized: false,
+  overpopulated: false,
+  underpopulated: false,
 
-  pattern: 'random', // glider
+  isCountDown: false,
 
   fps: 12, // speed
+  // possibly useful
+  generation: 0,
+  lastUpdateTime: 0,
 
-  shape: 'cube', // or sphere
-
-  boundariesKill: false,
+  cellScale: 0.5,
+  pattern: 'glider', // or random, glider, spaceship, etc.
+  shape: 'cube', // cube or sphere
 
   isOver: false,
+  isPaused: false,
 };
+
+export function setShape(shape) {
+  if (shape !== 'cube' && shape !== 'sphere') {
+    console.error(`Invalid shape: ${shape}. Must be 'cube' or 'sphere'.`);
+    return;
+  }
+  console.log(`Setting shape for next game to: ${shape}`);
+  game.shape = shape;
+}
+
+export function updateCellCountDisplay() {
+  const cellCountElement = document.getElementById('cell-count');
+  cellCountElement.textContent = `Count: ${game.activeCells}`;
+}
+
+let timer;
+let countdownValue;
+
+export function countDown() {
+  if (timer) return; // Prevent multiple timers
+
+  game.isCountDown = true;
+
+  const countdownElement = document.getElementById('count-down');
+  countdownElement.style.display = 'block';
+
+  countdownValue = INIT_COUNT_DOWN;
+  countdownElement.innerText = countdownValue;
+
+  timer = setInterval(() => {
+    countdownValue--;
+
+    if (countdownValue <= 0) {
+      clearInterval(timer);
+      timer = null;
+      gameOver('OVERPOPULATED');
+      return;
+    }
+    console.log(countdownValue);
+    countdownElement.innerText = countdownValue;
+  }, 1000);
+}
+
+export function abortCountDown() {
+  if (!timer) return;
+
+  console.log('aborting count down');
+  clearInterval(timer);
+  timer = null;
+  document.getElementById('count-down').style.display = 'none';
+}
 
 function interpolate(start, end, factor) {
   return start + (end - start) * factor;
 }
 
 export function gameOver(reason) {
+  game.isOver = true;
+
   console.log('game over', reason);
-
-  if (reason === 'overPopulated') {
-    // setFPS(16);
-    game.rules.birth = [6, -1];
-    game.rules.survival = [15, 20, 10];
-    game.cellScale = interpolate(game.cellScale, 150.0, 0.0005); // ??
-  }
-
-  // game.rules.birth = [6, 9];
-  // game.rules.survival = [6, 10, 15];
-
-  // game.rules.birth = [0, 1];
-  // game.rules.survival = [12, 12, 12];
-  // game.cellScale = interpolate(game.cellScale, 100.0, 0.001);
-
-  if (game.cellScale < 0.01 || game.cellScale > 100.0 || game.activeCells < 1) {
-    resetGameState();
-  }
+  document.getElementById('game-over-reason').textContent = reason;
+  document.getElementById('game-over').style.display = 'block';
 }
 
 export function resetGameState() {
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('count-down').style.display = 'none';
+
   game.isPaused = true;
   game.isOver = true;
-
   game.cellScale = 0.5;
 
-  const { fps, pattern, birth, survival } = getHtmlValues();
+  const { fps, pattern, shape, birth, survival } = getHtmlValues();
   // setFPS(fps);
   game.pattern = pattern;
+  game.shape = shape;
   game.rules.birth = birth;
   game.rules.survival = survival;
 
@@ -73,18 +131,20 @@ export function resetGameState() {
   game.activeCells = 0;
   setHtmlValues();
 
-  game.isOver = false;
+  setupGeometry();
 
-  console.log('reset game state', game.rules);
+  game.isOver = false;
 }
 
 export function restartGame() {
+  document.getElementById('game-over').style.display = 'none';
+
   game.isGameOver = false;
   game.isPaused = false;
 
   initGrid(game.pattern);
+  updateCellCountDisplay();
 
-  console.log(game);
   gameLoop();
 }
 
@@ -97,7 +157,7 @@ export function togglePause() {
 }
 
 export function toggleWrapping() {
-  game.wrapping = !game.wrapping;
+  game.infiniteGrid = !game.infiniteGrid;
 }
 
 export function setGenInterval(interval) {

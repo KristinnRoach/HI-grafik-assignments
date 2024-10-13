@@ -1,0 +1,6 @@
+* add display for cell count and a max cell count that makes sense
+
+* clean up game state, game over logic
+
+* fix underpopulated
+* fix stabilized logic 

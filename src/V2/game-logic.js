@@ -1,6 +1,6 @@
 // game-logic.js
 
-import { game, gameOver } from './game-state.js';
+import { countDown, abortCountDown, game, gameOver } from './game-state.js';
 
 export function initGrid(pattern = 'random') {
   switch (pattern) {
@@ -43,10 +43,6 @@ export function initGrid(pattern = 'random') {
   game.activeCells = game.currentGrid
     .flat(3)
     .filter((cell) => cell === 1).length;
-
-  // console.log('rules', game.rules.birth, game.rules.survival);
-  // console.log('fps', game.fps);
-  // console.log('pattern', game.pattern);
 }
 
 export function updateGrid() {
@@ -55,10 +51,14 @@ export function updateGrid() {
   }
 
   let newCellCount = 0;
+  game.outOfBoundsCells = 0; // Reset out of bounds cells count
+
   const birth = game.rules.birth;
   const survive = game.rules.survival;
 
-  game.nextGrid = game.nextGrid.map((x) => x.map((y) => y.fill(0)));
+  const newGrid = (game.nextGrid = game.nextGrid.map((x) =>
+    x.map((y) => y.fill(0))
+  ));
 
   for (let x = 0; x < game.dimensions[0]; x++) {
     for (let y = 0; y < game.dimensions[1]; y++) {
@@ -69,34 +69,40 @@ export function updateGrid() {
           (!game.currentGrid[x][y][z] && birth.includes(n))
           // && !xyzOutOfBounds(x, y, z))
         ) {
-          game.nextGrid[x][y][z] = 1;
+          newGrid[x][y][z] = 1;
           newCellCount++;
+          // Check if the current cell is active and out of bounds
+          if (xyzOutOfBounds(x, y, z)) {
+            game.outOfBoundsCells++;
+          }
         }
       }
     }
   }
 
-  // console.log(newCellCount, game.activeCells);
-  const nrOfPossibleCells =
-    game.dimensions[0] * game.dimensions[1] * game.dimensions[2];
-
-  [game.currentGrid, game.nextGrid] = [game.nextGrid, game.currentGrid];
-
-  if (newCellCount === 0 && game.activeCells === 1) {
-    // all cells are dead
-    // newCellCount === game.activeCells || // same as last generation ( optimize this to be if game has stabilized )
-    gameOver('allDead');
-  }
-
-  if (newCellCount >= nrOfPossibleCells / 5) {
-    gameOver('overPopulated');
-  }
+  console.log('out of bounds cells', game.outOfBoundsCells);
 
   game.activeCells = newCellCount;
+
+  [game.currentGrid, game.nextGrid] = [game.nextGrid, game.currentGrid];
 }
+
+// if (newCellCount > 4492) {
+//   game.isPaused = true;
+// }
+
+// if (newCellCount >= game.maxCells / 5 && !game.isPaused) {
+//   countDown();
+// }
+
+// if (game.isCountDown && newCellCount < game.maxCells / 5) {
+//   abortCountDown();
+// }
 
 function countNeighbors(x, y, z) {
   let count = 0;
+  let outOfBoundsSet = new Set();
+
   for (let dx = -1; dx <= 1; dx++) {
     for (let dy = -1; dy <= 1; dy++) {
       for (let dz = -1; dz <= 1; dz++) {
@@ -106,7 +112,7 @@ function countNeighbors(x, y, z) {
         let ny = y + dy;
         let nz = z + dz;
 
-        if (game.wrapping) {
+        if (game.infiniteGrid) {
           nx = (nx + game.dimensions[0]) % game.dimensions[0];
           ny = (ny + game.dimensions[1]) % game.dimensions[1];
           nz = (nz + game.dimensions[2]) % game.dimensions[2];
@@ -123,11 +129,8 @@ function countNeighbors(x, y, z) {
       }
     }
   }
-  return count;
-}
 
-function outOfBounds(value, axis) {
-  return value < 0 || value >= game.dimensions[axis];
+  return count;
 }
 
 function xyzOutOfBounds(x, y, z) {
@@ -139,6 +142,15 @@ function xyzOutOfBounds(x, y, z) {
     z < 0 ||
     z >= game.dimensions[2]
   );
+}
+
+function isGridStabilized(grid1, grid2) {
+  // TEMP make if same over x iterations
+  return grid1 == grid2;
+}
+
+function outOfBounds(value, axis) {
+  return value < 0 || value >= game.dimensions[axis];
 }
 
 /* Initializer patterns */
