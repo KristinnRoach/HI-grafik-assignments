@@ -80,7 +80,7 @@ export function updateGrid() {
     }
   }
 
-  console.log('out of bounds cells', game.outOfBoundsCells);
+  // console.log('out of bounds cells', game.outOfBoundsCells);
 
   game.activeCells = newCellCount;
 

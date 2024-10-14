@@ -34,26 +34,35 @@ function createCubeGeometry(options = {}) {
     [-1, 0, 0], // Left
   ];
 
+  const uvs = [
+    [0, 0], // Bottom-left
+    [0, 1], // Top-left
+    [1, 1], // Top-right
+    [1, 0], // Bottom-right
+  ];
+
   const faces = [
-    [1, 0, 3, 2],
-    [2, 3, 7, 6],
-    [3, 0, 4, 7],
-    [6, 5, 1, 2],
-    [4, 5, 6, 7],
-    [5, 4, 0, 1],
+    [1, 0, 3, 2], // Front
+    [2, 3, 7, 6], // Right
+    [3, 0, 4, 7], // Bottom
+    [6, 5, 1, 2], // Top
+    [4, 5, 6, 7], // Back
+    [5, 4, 0, 1], // Left
   ];
 
   const vertexArray = [];
   const normalArray = [];
   const colorArray = [];
   const indexArray = [];
+  const uvArray = [];
 
-  faces.forEach((face, faceIndex) => {
+  faces.forEach((face, i) => {
     const [a, b, c, d] = face;
-    [a, b, c, a, c, d].forEach((vertexIndex) => {
+    [a, b, c, a, c, d].forEach((vertexIndex, i) => {
       vertexArray.push(...vertices[vertexIndex]);
-      normalArray.push(...normals[faceIndex]);
+      normalArray.push(...normals[i]);
       colorArray.push(...color);
+      uvArray.push(...uvs[i % 4]);
     });
   });
 
@@ -64,9 +73,10 @@ function createCubeGeometry(options = {}) {
   return {
     vertices: new Float32Array(vertexArray),
     normals: new Float32Array(normalArray),
+    uvs: new Float32Array(uvArray),
     colors: new Float32Array(colorArray),
     indices: new Uint16Array(indexArray),
-    numIndices: indexArray.length, // Add this line
+    numIndices: indexArray.length,
   };
 }
 
@@ -82,6 +92,7 @@ function createSphereGeometry(options = {}) {
   const normalArray = [];
   const colorArray = [];
   const indexArray = [];
+  const uvArray = [];
 
   for (let lat = 0; lat <= latitudeBands; lat++) {
     const theta = (lat * Math.PI) / latitudeBands;
@@ -100,6 +111,8 @@ function createSphereGeometry(options = {}) {
       vertexArray.push(radius * x, radius * y, radius * z);
       normalArray.push(x, y, z);
       colorArray.push(...color);
+      // uv mapping
+      uvArray.push(1 - long / longitudeBands, 1 - lat / latitudeBands);
     }
   }
 
@@ -115,6 +128,7 @@ function createSphereGeometry(options = {}) {
     vertices: new Float32Array(vertexArray),
     normals: new Float32Array(normalArray),
     colors: new Float32Array(colorArray),
+    uvs: new Float32Array(uvArray),
     indices: new Uint16Array(indexArray),
     numIndices: indexArray.length, // Add this line
   };

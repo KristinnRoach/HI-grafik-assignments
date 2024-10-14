@@ -3,13 +3,14 @@
 import { initGrid, updateGrid } from './game-logic.js';
 import {
   gameLoop,
-  setupGeometry,
+  initGeoBuffers,
   getHtmlValues,
   setHtmlValues,
   setFPS,
+  initGeometry,
 } from './main.js';
 
-export const GRID_DIMENSIONS = [33, 33, 33];
+export const GRID_DIMENSIONS = [75, 75, 75]; // [33, 33, 33];
 export const INIT_COUNT_DOWN = 5;
 
 export const game = {
@@ -41,12 +42,17 @@ export const game = {
   lastUpdateTime: 0,
 
   cellScale: 0.5,
-  pattern: 'glider', // or random, glider, spaceship, etc.
-  shape: 'cube', // cube or sphere
+  cellSpacing: 1.0,
+  pattern: 'random', // or random, glider, spaceship, etc.
+  shape: 'sphere', // cube or sphere
 
   isOver: false,
   isPaused: false,
 };
+
+export function setCellSpacing(spacing) {
+  game.cellSpacing = spacing;
+}
 
 export function setShape(shape) {
   if (shape !== 'cube' && shape !== 'sphere') {
@@ -55,6 +61,10 @@ export function setShape(shape) {
   }
   console.log(`Setting shape for next game to: ${shape}`);
   game.shape = shape;
+
+  // Re-initialize geometry buffers // JUST TEST
+  initGeometry(shape);
+  initGeoBuffers(shape);
 }
 
 export function updateCellCountDisplay() {
@@ -117,7 +127,6 @@ export function resetGameState() {
 
   game.isPaused = true;
   game.isOver = true;
-  game.cellScale = 0.5;
 
   const { fps, pattern, shape, birth, survival } = getHtmlValues();
   // setFPS(fps);
@@ -131,7 +140,8 @@ export function resetGameState() {
   game.activeCells = 0;
   setHtmlValues();
 
-  setupGeometry();
+  initGeometry(game.shape);
+  initGeoBuffers(game.shape);
 
   game.isOver = false;
 }

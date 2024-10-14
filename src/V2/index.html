@@ -132,36 +132,43 @@
     <script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
       precision mediump float;
       
-      in vec4 aPosition;
-      in vec4 aColor;
-      in vec3 aOffset;
+      in vec4 aColor; // if using blinn phong to get color , remove aColor stuff
+
+      in vec4 aVertPos;
+      in vec3 aVertOffset;
+      in vec2 aTexPos;
       in vec3 aNormal;
+
 
       uniform vec3 uLightDirection;
       uniform mat4 uViewMatrix;
       uniform mat4 uProjection;
       uniform mat3 uNormalMatrix;
+
       uniform float uCellScale;
+      uniform vec2 uResolution;
+      uniform mat3 uTexMatrix;
 
       out vec4 vColor;
       out vec3 vNormal;
       out vec3 vLightDirection;
+      out vec2 vTexPos;
 
       void
-      main()
-      {
+      main() {
+
+        // vTexPos = aTexPos;
+        vTexPos = (uTexMatrix * vec3(aTexPos, 1.0)).xy;
         // Calculate per-instance model matrix
         mat4 modelMatrix = mat4(
           uCellScale, 0.0, 0.0, 0.0, 
           0.0, uCellScale, 0.0, 0.0, 
           0.0, 0.0, uCellScale, 0.0, 
-          aOffset.x, aOffset.y, aOffset.z, 1.0
+          aVertOffset.x, aVertOffset.y, aVertOffset.z, 1.0
         );
 
         // Calculate modelView matrix
         mat4 modelViewMatrix = uViewMatrix * modelMatrix;
-      
-        gl_Position = uProjection * modelViewMatrix * aPosition;
 
         // Calculate normal matrix
         mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix)));
@@ -170,6 +177,8 @@
         vLightDirection = mat3(modelViewMatrix) * uLightDirection;
 
         vColor = aColor;
+
+        gl_Position = uProjection * modelViewMatrix * aVertPos;
       }
     </script>
 
@@ -180,30 +189,42 @@
       in vec4 vColor;
       in vec3 vNormal;
       in vec3 vLightDirection;
+      in vec2 vTexPos;
 
+      uniform vec2 uResolution;
+      uniform sampler2D uSampler;
 
       float uAmbientFactor = 0.2;
       float uDiffuseStrength = 0.8;
-      vec3 uLightColor = vec3(1.0, 1.0, 1.0);
+      vec3 uLightColor = vec3(.5, 1.0, .5);
 
       out vec4 fragColor;
-
+      
       void main()
-      {
+      { 
+        // Sample the texture
+        vec4 texColor = texture(uSampler, vTexPos);  
+
+        // Calculate lighting
         vec3 normal = normalize(vNormal);
         vec3 lightDir = normalize(vLightDirection);
-
         float diff = max(dot(normal, lightDir), 0.0); 
         
         vec3 ambient = uAmbientFactor * uLightColor;
         vec3 diffuse = uDiffuseStrength * diff * uLightColor;
-        vec3 litColor = vColor.rgb * (ambient + diffuse);
 
+        // Output color NO texture
+        vec3 litColor = vColor.rgb * (ambient + diffuse);
         fragColor = vec4(litColor, vColor.a);
+
+        // Output color with texture
+        // vec3 litColor = texColor.rgb * (ambient + diffuse);
+       // fragColor = vec4(litColor, texColor.a);
+
 
         // vec3 debugColor = 0.5 * normalize(vNormal) + 0.5;
         // fragColor = vec4(debugColor, 1.0);
-      }
+  }
     </script>
 
     <script type="module" src="./main.js"></script>
