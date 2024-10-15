@@ -163,13 +163,7 @@ function initNodes(Id) {
         m,
         rotateX(theta[head1Id] * bounceOffset + 5 * (headBounce / 1.5))
       );
-      console.log(
-        theta[head1Id],
-        'bounceOffset: ',
-        bounceOffset,
-        'headbounce: ',
-        headBounce
-      );
+
       m = mult(m, rotateY(theta[head2Id]));
       figure[headId] = createNode(m, head, leftUpperArmId, null);
       break;
@@ -501,22 +495,46 @@ window.onload = function init() {
   render();
 };
 
+let audio = new Audio();
+audio.src = '../../assets/audio/chariots-loop-1.wav';
+audio.loop = true;
+audio.volume = 0.3;
+audio.pause();
+// audio.preservesPitch = false;
+
+function togglePause() {
+  paused = !paused;
+  if (paused) {
+    animationSpeed = 0;
+  } else {
+    animationSpeed = baseSpeed;
+  }
+}
+
+function toggleAudio() {
+  if (paused) {
+    audio.pause();
+  } else {
+    audio.play();
+  }
+}
+
 document.addEventListener('keydown', function (e) {
   switch (e.key) {
     case ' ': // space
       togglePause();
       break;
     case 'ArrowUp':
-      animationSpeed += 0.01;
+      animationSpeed = Math.min(animationSpeed + 0.01, 10);
       break;
     case 'ArrowDown':
-      animationSpeed -= 0.01;
+      animationSpeed = Math.max(animationSpeed - 0.01, 0);
       break;
     case 'ArrowRight':
-      animationSpeed += 0.1;
+      animationSpeed = Math.min(animationSpeed + 0.1, 10);
       break;
     case 'ArrowLeft':
-      animationSpeed -= 0.1;
+      animationSpeed = Math.max(animationSpeed - 0.1, 0);
       break;
     case 'r':
       animationSpeed = baseSpeed;
@@ -526,6 +544,7 @@ document.addEventListener('keydown', function (e) {
       break;
     case 'p':
       togglePause();
+      toggleAudio();
       break;
     case 'm':
       animationSpeed = slowmo;
@@ -539,15 +558,6 @@ document.addEventListener('keyup', function (e) {
     animationSpeed = baseSpeed;
   }
 });
-
-function togglePause() {
-  paused = !paused;
-  if (paused) {
-    animationSpeed = 0;
-  } else {
-    animationSpeed = baseSpeed;
-  }
-}
 
 const render = function () {
   gl.clear(gl.COLOR_BUFFER_BIT);
@@ -587,6 +597,11 @@ const render = function () {
   console.log(theta.length);
 
   for (let i = 0; i < theta.length; i++) initNodes(i);
+
+  if (paused || animationSpeed === 0) {
+    audio.pause();
+  }
+  audio.playbackRate = 0.5 + Math.abs(animationSpeed * (4.0 - 0.5));
 
   modelViewMatrix = mv;
   traverse(torsoId);
