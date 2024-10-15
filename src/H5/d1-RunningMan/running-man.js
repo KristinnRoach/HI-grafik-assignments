@@ -504,16 +504,12 @@ audio.pause();
 
 function togglePause() {
   paused = !paused;
-  if (paused) {
-    animationSpeed = 0;
-  } else {
-    animationSpeed = baseSpeed;
-  }
 }
 
 function toggleAudio() {
-  if (paused) {
+  if (!audio.paused) {
     audio.pause();
+    audio.currentTime = 0;
   } else {
     audio.play();
   }
@@ -543,7 +539,6 @@ document.addEventListener('keydown', function (e) {
       animationSpeed = slowmo;
       break;
     case 'p':
-      togglePause();
       toggleAudio();
       break;
     case 'm':
@@ -564,7 +559,7 @@ const render = function () {
 
   // staðsetja áhorfanda og meðhöndla músarhreyfingu
   let mv = lookAt(
-    vec3(0.0, 0.0, zDist), // zDist),
+    vec3(0.0, 0.0, zDist),
     vec3(0.0, 0.0, 0.0),
     vec3(0.0, 1.0, 0.0)
   );
@@ -573,40 +568,60 @@ const render = function () {
   mv = mult(mv, rotateX(spinX));
   mv = mult(mv, rotateY(spinY));
 
-  time += animationSpeed;
+  if (!paused) {
+    time += animationSpeed;
 
-  // Animate upper limbs
-  theta[leftUpperArmId] = 45 * Math.sin(time) + 190;
-  theta[rightUpperArmId] = 45 * Math.sin(time + Math.PI) + 160;
-  theta[leftUpperLegId] = 45 * Math.sin(time + Math.PI) + 25;
-  theta[rightUpperLegId] = 45 * Math.sin(time) + 25;
+    // Animate upper limbs
+    theta[leftUpperArmId] = 45 * Math.sin(time) + 190;
+    theta[rightUpperArmId] = 45 * Math.sin(time + Math.PI) + 160;
+    theta[leftUpperLegId] = 45 * Math.sin(time + Math.PI) + 25;
+    theta[rightUpperLegId] = 45 * Math.sin(time) + 25;
 
-  // Animate lower limbs
-  theta[rightLowerArmId] = -45 * Math.sin(time) + 70;
-  theta[leftLowerArmId] = -45 * Math.sin(time + Math.PI) + 70;
-  theta[rightLowerLegId] = -30 * Math.sin(time) - 50;
-  theta[leftLowerLegId] = -30 * Math.sin(time + Math.PI) - 50;
+    // Animate lower limbs
+    theta[rightLowerArmId] = -45 * Math.sin(time) + 70;
+    theta[leftLowerArmId] = -45 * Math.sin(time + Math.PI) + 70;
+    theta[rightLowerLegId] = -30 * Math.sin(time) - 50;
+    theta[leftLowerLegId] = -30 * Math.sin(time + Math.PI) - 50;
 
-  // Animate head to look around
-  theta[head2Id] = 30 * Math.cos(time * 0.1 + Math.PI);
-  theta[head1Id] = 10 * Math.sin(time * 0.1) + Math.PI;
+    // Animate head to look around
+    theta[head2Id] = 30 * Math.cos(time * 0.1 + Math.PI);
+    theta[head1Id] = 10 * Math.sin(time * 0.1) + Math.PI;
 
-  headBounce = bounceAmplitude * Math.sin(time * 1.0);
-  bounceOffset = bounceAmplitude * Math.abs(Math.sin(time * 1.0));
+    headBounce = bounceAmplitude * Math.sin(time * 1.0);
+    bounceOffset = bounceAmplitude * Math.abs(Math.sin(time * 1.0));
 
-  console.log(theta.length);
-
-  for (let i = 0; i < theta.length; i++) initNodes(i);
-
-  if (paused || animationSpeed === 0) {
-    audio.pause();
+    for (let i = 0; i < theta.length; i++) initNodes(i);
   }
-  audio.playbackRate = 0.5 + Math.abs(animationSpeed * (4.0 - 0.5));
 
   modelViewMatrix = mv;
   traverse(torsoId);
   requestAnimFrame(render);
+
+  // Audio
+  if (animationSpeed === 0) {
+    audio.pause();
+  }
+
+  audio.playbackRate = 0.5 + Math.abs(animationSpeed * (4.0 - 0.5));
+
+  if (animationSpeed <= slowmo || animationSpeed >= 4) {
+    audio.preservesPitch = false;
+  } else {
+    audio.preservesPitch = true;
+  }
 };
+
+function lerp(a, b, t) {
+  return a + t * (b - a);
+}
+
+function interpolateLogarithmic(t) {
+  return Math.log10(t + 1);
+}
+
+function interpolateSmoothstep(t) {
+  return t * t * (3 - 2 * t);
+}
 
 // // Event listener for keyboard
 // window.addEventListener('keydown', function (e) {
