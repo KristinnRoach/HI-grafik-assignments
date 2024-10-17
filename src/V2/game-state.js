@@ -9,7 +9,7 @@ import {
   setFPS,
 } from './main.js';
 
-export const GRID_DIMENSIONS = [33, 33, 33];
+export const GRID_DIMENSIONS = [155, 155, 55];
 export const INIT_COUNT_DOWN = 5;
 
 export const game = {
@@ -41,7 +41,7 @@ export const game = {
   lastUpdateTime: 0,
 
   cellScale: 0.5,
-  pattern: 'glider', // or random, glider, spaceship, etc.
+  pattern: 'random', // or random, glider, spaceship, etc.
   shape: 'cube', // cube or sphere
 
   isOver: false,

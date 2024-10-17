@@ -5,10 +5,17 @@
 
 attribute  vec4 vPosition;
 attribute vec4 vColor;
+
 varying vec4 fColor;
+// varying vec3 N, L, E;
+
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
+/*
+uniform vec4 lightPosition;
+uniform mat3 normalMatrix;
+*/
 
 float random(vec2 st) {
   return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -19,6 +26,19 @@ void main()
     vec4 random = vec4(random(vPosition.xy), random(vPosition.yz), random(vPosition.zx), 1.0);
     fColor = random;
     gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+/*
+    // TEST NONPHOTOREAL LIGHT (cartoony)
+    vec3 pos = (modelViewMatrix * vPosition).xyz;
+
+    // check for directional light
+    if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
+    else L = normalize( lightPosition.xyz - pos );
+
+    E =  -normalize(pos);
+    N = normalize( normalMatrix*vNormal.xyz);
+
+    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+*/
 }
 </script>
 
@@ -28,10 +48,36 @@ precision mediump float;
 
 varying vec4 fColor;
 
+uniform float time;
+/*
+uniform vec4 ambientProduct;
+uniform vec4 diffuseProduct;
+uniform vec4 specularProduct;
+uniform float shininess;
+varying vec3 N, L, E;
+*/
 void main()
 {
     gl_FragColor = fColor;
+/*
+    // TEST NONPHOTOREAL LIGHT (cartoony)
+    vec3 H = normalize( L + E );
 
+    vec4 ambient = ambientProduct;
+    vec4 diffuse = max( dot(L, N), 0.0 )*diffuseProduct;
+    vec4 specular = specularProduct * pow( max(dot(N, H), 0.0), shininess );
+
+    if( dot(L, N) < 0.0 ) specular = vec4(0.0, 0.0, 0.0, 1.0);
+
+//  Do nonphoto realistic shading:
+    if( max(dot(L, N), 0.0) > 0.6 )
+        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+    else
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+
+    if( max(dot(E,N), 0.0) < 0.1 )
+        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+*/
 }
 </script>
 
