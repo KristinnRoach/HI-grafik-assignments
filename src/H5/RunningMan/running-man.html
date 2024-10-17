@@ -1,143 +1,149 @@
 <html>
+  <script id="vertex-shader" type="x-shader/x-vertex">
+
+    attribute  vec4 vPosition;
+    attribute vec4 vColor;
+
+    varying vec4 fColor;
+    // varying vec3 N, L, E;
 
 
-<script id="vertex-shader" type="x-shader/x-vertex">
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+    /*
+    uniform vec4 lightPosition;
+    uniform mat3 normalMatrix;
+    */
 
-attribute  vec4 vPosition;
-attribute vec4 vColor;
+    float random(vec2 st) {
+      return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+    }
 
-varying vec4 fColor;
-// varying vec3 N, L, E;
+    void main()
+    {
+        vec4 random = vec4(random(vPosition.xy), random(vPosition.yz), random(vPosition.zx), 1.0);
+        fColor = random;
 
+        // fColor = vColor;
+        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+    /*
+        // TEST NONPHOTOREAL LIGHT (cartoony)
+        vec3 pos = (modelViewMatrix * vPosition).xyz;
 
-uniform mat4 modelViewMatrix;
-uniform mat4 projectionMatrix;
-/*
-uniform vec4 lightPosition;
-uniform mat3 normalMatrix;
-*/
+        // check for directional light
+        if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
+        else L = normalize( lightPosition.xyz - pos );
 
-float random(vec2 st) {
-  return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
-}
+        E =  -normalize(pos);
+        N = normalize( normalMatrix*vNormal.xyz);
 
-void main()
-{
-    vec4 random = vec4(random(vPosition.xy), random(vPosition.yz), random(vPosition.zx), 1.0);
-    fColor = random;
-    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-/*
-    // TEST NONPHOTOREAL LIGHT (cartoony)
-    vec3 pos = (modelViewMatrix * vPosition).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+    */
+    }
+  </script>
 
-    // check for directional light
-    if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
-    else L = normalize( lightPosition.xyz - pos );
+  <script id="fragment-shader" type="x-shader/x-fragment">
 
-    E =  -normalize(pos);
-    N = normalize( normalMatrix*vNormal.xyz);
+    precision mediump float;
 
-    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-*/
-}
-</script>
+    varying vec4 fColor;
 
-<script id="fragment-shader" type="x-shader/x-fragment">
+    uniform float time;
+    /*
+    uniform vec4 ambientProduct;
+    uniform vec4 diffuseProduct;
+    uniform vec4 specularProduct;
+    uniform float shininess;
+    varying vec3 N, L, E;
+    */
 
-precision mediump float;
+    void main()
+    {
+        gl_FragColor = fColor;
+    /*
+        // TEST NONPHOTOREAL LIGHT (cartoony)
+        vec3 H = normalize( L + E );
 
-varying vec4 fColor;
+        vec4 ambient = ambientProduct;
+        vec4 diffuse = max( dot(L, N), 0.0 )*diffuseProduct;
+        vec4 specular = specularProduct * pow( max(dot(N, H), 0.0), shininess );
 
-uniform float time;
-/*
-uniform vec4 ambientProduct;
-uniform vec4 diffuseProduct;
-uniform vec4 specularProduct;
-uniform float shininess;
-varying vec3 N, L, E;
-*/
-void main()
-{
-    gl_FragColor = fColor;
-/*
-    // TEST NONPHOTOREAL LIGHT (cartoony)
-    vec3 H = normalize( L + E );
+        if( dot(L, N) < 0.0 ) specular = vec4(0.0, 0.0, 0.0, 1.0);
 
-    vec4 ambient = ambientProduct;
-    vec4 diffuse = max( dot(L, N), 0.0 )*diffuseProduct;
-    vec4 specular = specularProduct * pow( max(dot(N, H), 0.0), shininess );
+    //  Do nonphoto realistic shading:
+        if( max(dot(L, N), 0.0) > 0.6 )
+            gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+        else
+            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 
-    if( dot(L, N) < 0.0 ) specular = vec4(0.0, 0.0, 0.0, 1.0);
+        if( max(dot(E,N), 0.0) < 0.1 )
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    */
+    }
+  </script>
 
-//  Do nonphoto realistic shading:
-    if( max(dot(L, N), 0.0) > 0.6 )
-        gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
-    else
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+  <script type="text/javascript" src="../../lib/webgl-utils.js"></script>
+  <script type="module" src="../../lib/initShaders.js"></script>
+  <script type="module" src="../../lib/MV.js"></script>
+  <script type="module" src="running-man.js"></script>
 
-    if( max(dot(E,N), 0.0) < 0.1 )
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-*/
-}
-</script>
+  <style>
+    body {
+      position: relative;
 
-<script type="text/javascript" src="../../lib/webgl-utils.js"></script>
-<script type="module" src="../../lib/initShaders.js"></script>
-<script type="module" src="../../lib/MV.js"></script>
-<script type="module" src="running-man.js"></script>
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      background-color: black;
 
-<style>
-  body {
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: nowrap;
-    background-color: rgba(51, 229.5, 255, 255);
+      min-height: 100vh;
+      max-height: 100vh;
 
-    /* min-height: 100vh; */
-    max-height: 100vh;
-  }
-  canvas {
-    /* position: relative; */
+      overflow: hidden;
+    }
+    canvas {
+      width: 100vw;
+      margin: 0 auto;
 
-    width: 100vh; /* TODO: enable more width by compensating in js or glsl */
-    height: 100vh;
-    margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
 
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    #instructions {
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-evenly;
+      flex-wrap: nowrap;
+      align-items: center;
+      font-size: 1rem;
+      color: rgb(255, 0, 0);
+      row-gap: 5px;
+      height: 7vh;
+    }
 
-    z-index: -1;
+    #instructions p {
+      /* margin: 0; */
+    }
+  </style>
 
-  }
-</style>
+  <body>
+    <canvas id="gl-canvas" width="600" height="600"></canvas>
+    <div id="instructions">
+      <p>'s': slowmo</p>
+      <p>'r': normal speed</p>
+      <p>'p': pause/play ♪</p>
 
-<body>
-<table style="width:100%">
-  <!-- <tr> -->
-    <td>
-	<canvas id="gl-canvas" width="600" height="600">
-    </td>
-
-    <!-- <td>
-        <button id = "btnTorso">Torso angle</button><p></p>
-        <button id = "btnHead2">Head2 angle</button><p></p>
-        <button id = "btnHead1">Head1 angle</button><p></p>
-        <button id = "btnLeftUpperArm">Left upper arm angle</button><p></p>
-        <button id = "btnLeftLowerArm">Left lower arm angle</button><p></p>
-        <button id = "btnRightUpperArm">Right upper arm angle</button><p></p>
-        <button id = "btnRightLowerArm">Right lower arm angle</button><p></p>
-        <button id = "btnLeftUpperLeg">Left upper leg angle</button><p></p>
-        <button id = "btnLeftLowerLeg">Left lower leg angle</button><p></p>
-        <button id = "btnRightUpperLeg">Right upper leg angle</button><p></p>
-        <button id = "btnRightLowerLeg">Right lower leg angle</button><p></p>
-        Current angle: <div id="currAngle"></div>
-    </td> -->
-  <!-- </tr> -->
-</table>
-</body>
+      <p>Speed: Left & Right</p>
+      <p>Bounce: Up & Down</p>
+    </div>
+  </body>
 </html>
