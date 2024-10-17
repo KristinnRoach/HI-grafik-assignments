@@ -270,6 +270,19 @@ window.onload = function init() {
   canvas.addEventListener('mouseup', stopMovement);
   canvas.addEventListener('mouseleave', stopMovement);
 
+  // If the mouse button is still pressed when re-entering,
+  canvas.addEventListener('mouseenter', function (e) {
+    // update the last position to prevent jumps
+    if (e.buttons & 1) {
+      // Checks if left mouse button is pressed
+      isMouseDown = true;
+      lastMouseX = e.offsetX;
+      lastMouseY = e.offsetY;
+    } else {
+      isMouseDown = false;
+    }
+  });
+
   canvas.addEventListener('mousemove', function (e) {
     if (isMouseDown) {
       const deltaX = e.offsetX - lastMouseX;

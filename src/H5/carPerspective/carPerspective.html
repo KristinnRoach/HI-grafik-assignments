@@ -1,4 +1,59 @@
-<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>car perspectives</title>
+
+    <style>
+
+        body * {
+          margin: 0 auto;
+          padding: 0;
+        }
+    
+        body {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: nowrap;
+          background-color: #000;
+      
+          height: 100vh;
+          max-height: 100vh;
+        }
+        canvas {  
+          height: 85vh; 
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        
+        }
+    
+        #instructions {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          font-size: 1rem;
+          color: white;
+          row-gap: 5px;
+          height: 7vh;
+        }
+    
+        #current-status {
+          display: flex;
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          font-size: 1rem;
+          color: white;
+          column-gap: 2rem;
+          height: 3vh;
+        }
+        
+      </style>
+</head>
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 
@@ -30,56 +85,6 @@ void main()
 <script type="module" src="../../lib/MV.js"></script>
 <script type="module" src="carPerspective.js"></script>
 
-<style>
-
-    body * {
-      margin: 0 auto;
-      padding: 0;
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: nowrap;
-      background-color: #000;
-  
-      height: 100vh;
-      max-height: 100vh;
-    }
-    canvas {  
-      height: 85vh; 
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    
-    }
-
-    #instructions {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-size: 1rem;
-      color: white;
-      row-gap: 5px;
-      height: 7vh;
-    }
-
-    #current-status {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-      font-size: 1rem;
-      color: white;
-      column-gap: 2rem;
-      height: 3vh;
-    }
-
-  </style>
 
 <body>
 <div id="instructions">
