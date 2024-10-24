@@ -9,7 +9,7 @@ import {
   setFPS,
 } from './main.js';
 
-export const GRID_DIMENSIONS = [155, 155, 55];
+export const GRID_DIMENSIONS = [33, 33, 33];
 export const INIT_COUNT_DOWN = 5;
 
 export const game = {
