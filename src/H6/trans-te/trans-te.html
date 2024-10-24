@@ -1,0 +1,130 @@
+<html>
+
+
+<style>
+    body {
+      position: relative;
+
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      background-color: rgb(255, 255, 255);
+
+      min-height: 100vh;
+      max-height: 100vh;
+
+      overflow: hidden;
+    }
+    canvas {
+      width: 100vw;
+      margin: 0 auto;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #instructions {
+      position: absolute;
+      bottom: 5px;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-evenly;
+      flex-wrap: nowrap;
+      align-items: center;
+      font-size: 1rem;
+      color: rgb(255, 0, 0);
+      row-gap: 5px;
+      height: 7vh;
+    }
+
+    /* #instructions p {
+    } */
+  </style>
+
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+  attribute vec4 vPosition;
+  attribute vec4 vNormal;
+  varying vec3 N, L, E;
+  uniform mat4 modelViewMatrix;
+  uniform mat4 projectionMatrix;
+  uniform vec4 lightPosition;
+  uniform mat3 normalMatrix;
+  
+  void main()
+  {
+      vec3 pos = (modelViewMatrix * vPosition).xyz;
+  
+      // check for directional light
+      if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
+      else L = normalize( lightPosition.xyz - pos );
+  
+      E =  -normalize(pos);
+      N = normalize( normalMatrix*vNormal.xyz);
+  
+      gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+  
+  }
+  </script>
+
+  
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+  precision mediump float;
+  
+  uniform vec4 ambientProduct;
+  uniform vec4 diffuseProduct;
+  uniform vec4 specularProduct;
+  uniform float shininess;
+
+  uniform float threshold;
+
+  varying vec3 N, L, E;
+  
+  void main()
+  {
+      vec4 fColor;
+  
+      vec3 H = normalize( L + E );
+  
+      vec4 ambient = ambientProduct;
+      vec4 diffuse = max( dot(L, N), 0.0 )*diffuseProduct;
+      vec4 specular = specularProduct * pow( max(dot(N, H), 0.0), shininess );
+  
+      if( dot(L, N) < 0.0 ) specular = vec4(0.0, 0.0, 0.0, 1.0);
+  
+      vec4 color = ambient + diffuse + specular;
+      color.a = 1.0;
+
+  //  Throw away if too bright:
+      if( length(color) > threshold)
+          discard;
+      else
+          gl_FragColor = color;
+          
+  }
+  </script>
+
+<script type="text/javascript" src="../../lib/notModules/wegl-utils-old.js"></script>
+<script type="text/javascript" src="../../lib/notModules/initShaders-old.js"></script>
+<script type="text/javascript" src="../../lib/notModules/MV-old.js"></script>
+<script type="text/javascript" src="teapotData.js"></script>
+<script type="text/javascript" src="trans-te.js"></script>
+
+<body>
+<canvas id="gl-canvas" width="512"" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+   
+<br/>
+
+</body>
+</html>
