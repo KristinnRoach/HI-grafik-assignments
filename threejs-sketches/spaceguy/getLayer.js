@@ -24,7 +24,7 @@ function getLayer({
   hue = 0.0,
   numSprites = 10,
   opacity = 1,
-  path = './rad-grad.png',
+  path = '../assets/spaceguy/rad-grad.png',
   radius = 1,
   sat = 0.5,
   size = 1,

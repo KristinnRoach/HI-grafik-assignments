@@ -1,0 +1,37 @@
+name: Deploy Frogger Vite Project
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/v3-frogger-vite/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install and Build
+        working-directory: ./src/v3-frogger-vite
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'github-actions@users.noreply.github.com'
+
+          # Copy the built files to the correct location in the repo
+          cp -r src/v3-frogger-vite/dist/* src/v3-frogger-vite/
+
+          # Commit and push to main
+          git add -A
+          git commit -m 'Deploy Frogger Vite project' || echo "No changes to commit"
+          git push origin main

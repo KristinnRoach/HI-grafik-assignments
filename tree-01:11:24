@@ -1,0 +1,210 @@
+/Users/kristinnroachgunnarsson/Desktop/Haust2024/Tölvugrafík/HI-grafik-assignments/
+├── .DS_Store
+├── README.md
+├── cheatsheets/
+│   └── targets.html
+├── index.html
+├── src/
+│   ├── .DS_Store
+│   ├── F3/
+│   │   ├── twoTri.html
+│   │   └── twoTri.js
+│   ├── H2/
+│   │   ├── .DS_Store
+│   │   ├── Tölvugrafík - H2 - krg47@hi.pdf
+│   │   ├── d1/
+│   │   │   ├── a.js
+│   │   │   ├── abasic.js
+│   │   │   ├── b.js
+│   │   │   ├── d1-a.html
+│   │   │   ├── d1-b.html
+│   │   │   ├── d1.txt
+│   │   │   └── drafting.js
+│   │   ├── d2/
+│   │   │   ├── circlefan.html
+│   │   │   ├── circlefan.js
+│   │   │   └── d2.txt
+│   │   ├── d3/
+│   │   │   ├── d3.html
+│   │   │   ├── d3.js
+│   │   │   └── d3.txt
+│   │   ├── d4/
+│   │   │   ├── d4.html
+│   │   │   ├── d4.js
+│   │   │   └── d4.txt
+│   │   ├── d5/
+│   │   │   ├── sierpinskiCarpet.html
+│   │   │   └── sierpinskiCarpet.js
+│   │   ├── examples/
+│   │   │   ├── L-shape-fan.html
+│   │   │   ├── L-shape-fan.js
+│   │   │   ├── circlefan.html
+│   │   │   ├── circlefan.js
+│   │   │   ├── clickpoints.html
+│   │   │   ├── clickpoints.js
+│   │   │   ├── gasket1.js
+│   │   │   ├── gasket2.html
+│   │   │   └── gasket2.js
+│   │   ├── index.html
+│   │   └── lib/
+│   │       ├── MV.js
+│   │       ├── initShaders.js
+│   │       └── webgl-utils.js
+│   ├── H3/
+│   │   ├── .DS_Store
+│   │   ├── H3-krg47@hi.pdf
+│   │   ├── Heimadæmi 3.pdf
+│   │   ├── d1/
+│   │   │   ├── d1.html
+│   │   │   └── d1.js
+│   │   ├── d2/
+│   │   │   ├── d2-exp.js
+│   │   │   ├── d2.html
+│   │   │   └── d2.js
+│   │   └── index.html
+│   ├── H4/
+│   │   ├── Heimadæmi 4.pdf
+│   │   ├── TRS-playground/
+│   │   │   ├── trs.html
+│   │   │   └── trs.js
+│   │   ├── billy/
+│   │   │   ├── billy.html
+│   │   │   └── billy.js
+│   │   ├── d2.jpg
+│   │   ├── index.html
+│   │   └── klukka/
+│   │       ├── klukka.html
+│   │       └── klukka.js
+│   ├── H5/
+│   │   ├── .DS_Store
+│   │   ├── Heimadæmi 5.pdf
+│   │   ├── RunningMan/
+│   │   │   ├── running-man.html
+│   │   │   └── running-man.js
+│   │   ├── carPerspective/
+│   │   │   ├── carPerspective.html
+│   │   │   └── carPerspective.js
+│   │   └── index.html
+│   ├── H6/
+│   │   ├── Heimadæmi 6.pdf
+│   │   ├── billy-phong/
+│   │   │   ├── billy-phong.html
+│   │   │   └── billy-phong.js
+│   │   ├── index.html
+│   │   ├── reverse-vert/
+│   │   │   ├── reverse-vert.html
+│   │   │   └── reverse-vert.js
+│   │   └── trans-te/
+│   │       ├── teapotData.js
+│   │       ├── trans-te.html
+│   │       └── trans-te.js
+│   ├── V1/
+│   │   ├── game-logic.js
+│   │   ├── game.js
+│   │   ├── index.html
+│   │   ├── lib/
+│   │   │   ├── MV.js
+│   │   │   ├── error.txt
+│   │   │   ├── init-gl2.js
+│   │   │   ├── initShaders.js
+│   │   │   └── webgl-utils.js
+│   │   ├── project-structure
+│   │   └── test1/
+│   │       ├── game.js
+│   │       ├── index.html
+│   │       └── index.txt
+│   ├── V2/
+│   │   ├── Verkefni_2.pdf
+│   │   ├── camera.js
+│   │   ├── event-handlers.js
+│   │   ├── for later.txt
+│   │   ├── game-logic.js
+│   │   ├── game-state.js
+│   │   ├── geometry.js
+│   │   ├── gl-utils.js
+│   │   ├── index.html
+│   │   ├── main.js
+│   │   ├── render.old.txt
+│   │   ├── todo.txt
+│   │   └── use-patterns.txt
+│   ├── V3-FROGGER-vite/
+│   │   ├── .gitignore
+│   │   ├─] node_modules/ (ignored)
+│   │   ├── package-lock.json
+│   │   ├── package.json
+│   │   ├── public/
+│   │   │   ├── audio/
+│   │   │   └── models/
+│   │   │       └── Astronaut_Frog.fbx
+│   │   ├── src/
+│   │   │   ├── css/
+│   │   │   │   ├── style.css
+│   │   │   │   └── styles.css
+│   │   │   ├── index.html
+│   │   │   ├── main.ts
+│   │   │   ├── mesh/
+│   │   │   │   ├── Astronaut_Frog.fbx
+│   │   │   │   ├── frog.ts
+│   │   │   │   ├── ground.ts
+│   │   │   │   └── powerup.ts
+│   │   │   ├── types/
+│   │   │   │   └── cannon-es-debugger.d.ts
+│   │   │   ├── utility/
+│   │   │   │   ├── GridSystem.ts
+│   │   │   │   ├── loadModel.ts
+│   │   │   │   └── position.ts
+│   │   │   └── vite-env.d.ts
+│   │   ├── tsconfig.json
+│   │   └── vite.config.js
+│   ├── assets/
+│   │   ├── .DS_Store
+│   │   ├── 3D-models/
+│   │   │   ├── .DS_Store
+│   │   │   ├── Astronaut_Frog.7z
+│   │   │   ├── Astronaut_Frog.fbx
+│   │   │   ├── Frog-Blender.zip
+│   │   │   ├── Frog-Fbx.zip
+│   │   │   └── Frog-Obj.zip
+│   │   ├── audio/
+│   │   │   ├── .DS_Store
+│   │   │   ├── chariots-loop-1.mp3
+│   │   │   ├── chariots-loop-1.wav
+│   │   │   ├── chariots.wav
+│   │   │   └── chariots.wav.asd
+│   │   └── img/
+│   │       ├── boltiRight.png
+│   │       └── kitten.png
+│   ├── experiments/
+│   │   └── imageTest1/
+│   │       ├── imageTest1.html
+│   │       ├── kitten.html
+│   │       ├── kitten.js
+│   │       └── script.js
+│   └── lib/
+│       ├── MV.js
+│       ├── basic-utils.js
+│       ├── error.txt
+│       ├── init-gl2.js
+│       ├── initShaders.js
+│       ├── notModules/
+│       │   ├── MV-old.js
+│       │   ├── initShaders-old.js
+│       │   └── wegl-utils-old.js
+│       ├── texture-utils.js
+│       └── webgl-utils.js
+├── test.frag
+└── threejs-sketches/
+    ├── .DS_Store
+    ├── assets/
+    │   ├── .DS_Store
+    │   └── spaceguy/
+    │       ├── Astronaut.glb
+    │       ├── circle-star.png
+    │       ├── new-star.png
+    │       └── rad-grad.png
+    ├── lib/
+    │   └── getStarfield.js
+    └── spaceguy/
+        ├── getLayer.js
+        ├── index.html
+        └── index.js

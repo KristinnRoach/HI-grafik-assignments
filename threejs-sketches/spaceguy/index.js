@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import getLayer from './getLayer.js';
-import getStarfield from './lib/getStarfield.js';
+import getStarfield from '../lib/getStarfield.js';
 import { OrbitControls } from 'jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'jsm/loaders/GLTFLoader.js';
 
