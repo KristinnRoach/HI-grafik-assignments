@@ -1,102 +1,178 @@
 import * as THREE from 'three';
 
-// import { scene } from '../main';
-
-/* Create the frog mesh and Group object */
-
-export function createFrog(): THREE.Mesh {
-  // const frogger = new THREE.Group();
-  const frogMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 0.5, 0.5),
-    new THREE.MeshBasicMaterial({ color: 0x00ff00 })
-  );
-  frogMesh.position.y = 0.25;
-  return frogMesh;
+// Make the interface exported so we can use it for type checking
+export interface IFrog extends THREE.Group {
+  update(deltaTime: number): void;
+  startJump(): void;
+  isJumping(): boolean;
+  setInitialRotation(): void;
 }
 
-// const loader = new FBXLoader();
+export class Frog extends THREE.Group implements IFrog {
+  private state = {
+    isJumping: false,
+    jumpProgress: 0,
+    jumpHeight: 1,
+    initialY: 0.25,
+    jumpDuration: 500,
+  };
 
-// loader.load(
-//   './Astronaut_Frog.fbx',
-//   (object) => {
-//     // Handle the loaded object
-//     object.scale.setScalar(0.1);
-//     scene.add(object);
-//   },
-//   (xhr) => {
-//     // Optional: Handle loading progress
-//     console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
-//   },
-//   (error) => {
-//     // Optional: Handle errors
-//     console.error('An error occurred:', error);
-//   }
-// );
+  private body: THREE.Mesh;
+  private head: THREE.Mesh;
+  private legs: THREE.Mesh[];
 
-// /* Load the frog model */
+  constructor() {
+    super();
 
-// // Create an AnimationMixer
-// let mixer;
-// let frogModel;
+    // Colors
+    const bodyColor = 0x2ecc71;
+    const eyeColor = 0xf1c40f;
 
-// // Load the FBX model
-// const loader = new FBXLoader();
-// interface FBXLoaderProgressEvent extends ProgressEvent {
-//   loaded: number;
-//   total: number;
-// }
+    // Body
+    this.body = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 0.3, 0.7),
+      new THREE.MeshBasicMaterial({ color: bodyColor })
+    );
 
-// interface FBXLoaderErrorEvent extends ErrorEvent {
-//   message: string;
-// }
+    // Head
+    this.head = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6, 0.25, 0.3),
+      new THREE.MeshBasicMaterial({ color: bodyColor })
+    );
+    this.head.position.z = -0.4;
+    this.head.position.y = 0.05;
 
-// loader.load(
-//   './Astronaut_Frog.fbx',
-//   function (fbx: THREE.Group) {
-//     frogModel = fbx;
+    // Eyes
+    const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
+    const eyeMaterial = new THREE.MeshBasicMaterial({ color: eyeColor });
 
-//     // FBX models are often very large, you might need to scale them down
-//     frogModel.scale.setScalar(0.01);
+    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    leftEye.position.set(0.2, 0.15, -0.4);
+    leftEye.scale.set(0.4, 0.4, 0.4);
 
-//     // Check if the model has animations
-//     if (fbx.animations && fbx.animations.length) {
-//       console.log('Model has', fbx.animations.length, 'animations:');
-//       fbx.animations.forEach((clip: THREE.AnimationClip, index: number) => {
-//         console.log(`Animation ${index}: ${clip.name}`);
-//         console.log('Duration:', clip.duration, 'seconds');
-//         console.log('Tracks:', clip.tracks.length);
+    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+    rightEye.position.set(-0.2, 0.15, -0.4);
+    rightEye.scale.set(0.4, 0.4, 0.4);
 
-//         // Log what parts of the model can be animated
-//         clip.tracks.forEach((track: THREE.KeyframeTrack) => {
-//           console.log('Animated property:', track.name);
-//         });
-//       });
+    // Legs
+    this.legs = [];
+    const legMaterial = new THREE.MeshBasicMaterial({ color: bodyColor });
 
-//       // Create an animation mixer
-//       mixer = new THREE.AnimationMixer(frogModel);
+    // Back legs
+    const backLegGeometry = new THREE.BoxGeometry(0.15, 0.2, 0.3);
+    const backLeftLeg = new THREE.Mesh(backLegGeometry, legMaterial);
+    backLeftLeg.position.set(0.25, -0.15, 0.2);
+    this.legs.push(backLeftLeg);
 
-//       // Play the first animation
-//       const action = mixer.clipAction(fbx.animations[0]);
-//       action.play();
-//     } else {
-//       console.log('Model has no animations');
-//     }
+    const backRightLeg = new THREE.Mesh(backLegGeometry, legMaterial);
+    backRightLeg.position.set(-0.25, -0.15, 0.2);
+    this.legs.push(backRightLeg);
 
-//     // You can also inspect the skeleton
-//     fbx.traverse((child: THREE.Object3D) => {
-//       if ((child as THREE.Bone).isBone) {
-//         console.log('Found bone:', child.name);
-//       }
-//     });
+    // Front legs
+    const frontLegGeometry = new THREE.BoxGeometry(0.1, 0.15, 0.2);
+    const frontLeftLeg = new THREE.Mesh(frontLegGeometry, legMaterial);
+    frontLeftLeg.position.set(0.2, -0.15, -0.2);
+    this.legs.push(frontLeftLeg);
 
-//     scene.add(frogModel);
-//   },
-//   // Progress callback
-//   function (xhr: FBXLoaderProgressEvent) {
-//     console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
-//   },
-//   // Error callback
-//   function (error: FBXLoaderErrorEvent) {
-//     console.error('An error occurred loading the model:', error.message);
-//   }
-// );
+    const frontRightLeg = new THREE.Mesh(frontLegGeometry, legMaterial);
+    frontRightLeg.position.set(-0.2, -0.15, -0.2);
+    this.legs.push(frontRightLeg);
+
+    // Add all parts to group
+    this.add(this.body);
+    this.add(this.head);
+    this.add(leftEye);
+    this.add(rightEye);
+    this.legs.forEach((leg) => this.add(leg));
+
+    // Set initial position
+    this.position.y = this.state.initialY;
+    this.setInitialRotation();
+  }
+
+  startJump() {
+    if (!this.state.isJumping) {
+      this.state.isJumping = true;
+      this.state.jumpProgress = 0;
+      this.squash();
+    }
+  }
+
+  private squash() {
+    this.body.scale.y = 0.7;
+    this.body.scale.x = 1.2;
+    this.body.scale.z = 1.2;
+
+    this.legs.forEach((leg) => {
+      leg.position.y *= 0.7;
+      if (leg.position.x > 0) {
+        leg.position.x += 0.1;
+      } else {
+        leg.position.x -= 0.1;
+      }
+    });
+  }
+
+  private stretch() {
+    this.body.scale.y = 1.2;
+    this.body.scale.x = 0.8;
+    this.body.scale.z = 0.8;
+
+    this.legs.forEach((leg) => {
+      leg.position.y -= 0.1;
+      if (leg.position.x > 0) {
+        leg.position.x -= 0.05;
+      } else {
+        leg.position.x += 0.05;
+      }
+    });
+  }
+
+  private resetShape() {
+    this.body.scale.set(1, 1, 1);
+    this.legs.forEach((leg) => {
+      leg.position.y = -0.15;
+      if (leg.position.x > 0) {
+        leg.position.x = leg.position.z > 0 ? 0.25 : 0.2;
+      } else {
+        leg.position.x = leg.position.z > 0 ? -0.25 : -0.2;
+      }
+    });
+  }
+
+  update(deltaTime: number) {
+    if (this.state.isJumping) {
+      this.state.jumpProgress += (deltaTime * 1000) / this.state.jumpDuration;
+
+      if (this.state.jumpProgress >= 1) {
+        this.state.isJumping = false;
+        this.state.jumpProgress = 0;
+        this.position.y = this.state.initialY;
+        this.resetShape();
+      } else {
+        const jumpPhase = Math.sin(this.state.jumpProgress * Math.PI);
+        this.position.y =
+          this.state.initialY + jumpPhase * this.state.jumpHeight;
+
+        if (this.state.jumpProgress < 0.5) {
+          this.stretch();
+        } else {
+          this.squash();
+        }
+      }
+    }
+  }
+
+  isJumping(): boolean {
+    return this.state.isJumping;
+  }
+
+  // Rotate to face -Z (upward in the scene)
+  setInitialRotation() {
+    this.rotation.y = 0;
+  }
+}
+
+export function createFrog(): IFrog {
+  return new Frog();
+}

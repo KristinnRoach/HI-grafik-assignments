@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { scene } from '../main';
+import { scene } from '../scene';
 
 import { GridSystem } from '../utility/GridSystem';
 

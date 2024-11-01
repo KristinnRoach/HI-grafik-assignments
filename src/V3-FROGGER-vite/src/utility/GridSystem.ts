@@ -16,10 +16,11 @@ export class GridSystem {
 
   // Convert grid coordinates to world coordinates
   gridToWorld(gridX: number, gridZ: number): { x: number; z: number } {
-    // THREE.Vector3 {
-    // Convert from grid coordinates to world coordinates
+    // For a 15x15 grid:
+    // Grid (0,0) → World (-7.5, 7.5)  [bottom left]
+    // Grid (14,14) → World (7.5, -7.5) [top right]
     const worldX = (gridX - this.offset + 0.5) * this.cellSize;
-    const worldZ = (-gridZ + this.offset - 0.5) * this.cellSize;
+    const worldZ = (this.offset - gridZ - 0.5) * this.cellSize;
     return { x: worldX, z: worldZ }; // new THREE.Vector3(worldX, this.baseHeight, worldZ);
   }
 
@@ -27,7 +28,7 @@ export class GridSystem {
   worldToGrid(worldX: number, worldZ: number): { x: number; z: number } {
     // Convert from world coordinates to grid coordinates
     const gridX = Math.floor(worldX + this.offset);
-    const gridZ = Math.floor(-worldZ + this.offset);
+    const gridZ = Math.floor(this.offset - worldZ);
     return { x: gridX, z: gridZ };
   }
 
