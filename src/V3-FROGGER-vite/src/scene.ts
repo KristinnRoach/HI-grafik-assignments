@@ -13,6 +13,17 @@ export const scene = new THREE.Scene();
 export const world = new Cannon.World();
 export const gridSystem = new GridSystem(GRID_SIZE);
 
+// Lights
+const dirLigth = new THREE.DirectionalLight(0xffffff, 1);
+dirLigth.position.set(0, 10, 0);
+scene.add(dirLigth);
+
+const ambientLight = new THREE.AmbientLight(0x404040, 0.2);
+scene.add(ambientLight);
+
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x080820, 1.3);
+scene.add(hemiLight);
+
 // Initialize cameras
 export const wideCam = new THREE.PerspectiveCamera(
   75,
@@ -42,12 +53,12 @@ export function initializeScene() {
   // Set up grid system
   gridSystem.setBaseHeight(BASE_HEIGHT);
 
-  // Add helpers
-  const gridHelper = new THREE.GridHelper(GRID_SIZE, GRID_SIZE, 0xffff00);
-  scene.add(gridHelper);
+  // // Add helpers
+  // const gridHelper = new THREE.GridHelper(GRID_SIZE, GRID_SIZE, 0xffff00);
+  // scene.add(gridHelper);
 
-  const axesHelper = new THREE.AxesHelper(5);
-  scene.add(axesHelper);
+  // const axesHelper = new THREE.AxesHelper(5);
+  // scene.add(axesHelper);
 
   // Set up wide camera
   scene.add(wideCam);

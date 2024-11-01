@@ -11,7 +11,7 @@ let powerupScale = 0.1;
 function createPowerup(): THREE.Mesh {
   const powerup = new THREE.Mesh(
     new THREE.TorusGeometry(powerupRadius - 0.4, 0.4, 16, 50),
-    new THREE.MeshBasicMaterial({ color: 0xffff00 })
+    new THREE.MeshPhongMaterial({ color: 0xffff00 })
   );
   powerup.position.y = powerupRadius * powerupScale;
   scene.add(powerup);

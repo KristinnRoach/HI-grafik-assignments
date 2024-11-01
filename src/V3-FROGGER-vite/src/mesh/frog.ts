@@ -31,20 +31,21 @@ export class Frog extends THREE.Group implements IFrog {
     // Body
     this.body = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 0.3, 0.7),
-      new THREE.MeshBasicMaterial({ color: bodyColor })
+      // new THREE.MeshBasicMaterial({ color: bodyColor })
+      new THREE.MeshPhongMaterial({ color: bodyColor }) // prófa StandardMaterial
     );
 
     // Head
     this.head = new THREE.Mesh(
       new THREE.BoxGeometry(0.6, 0.25, 0.3),
-      new THREE.MeshBasicMaterial({ color: bodyColor })
+      new THREE.MeshPhongMaterial({ color: bodyColor })
     );
     this.head.position.z = -0.4;
     this.head.position.y = 0.05;
 
     // Eyes
     const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-    const eyeMaterial = new THREE.MeshBasicMaterial({ color: eyeColor });
+    const eyeMaterial = new THREE.MeshPhongMaterial({ color: eyeColor });
 
     const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
     leftEye.position.set(0.2, 0.15, -0.4);
@@ -56,7 +57,7 @@ export class Frog extends THREE.Group implements IFrog {
 
     // Legs
     this.legs = [];
-    const legMaterial = new THREE.MeshBasicMaterial({ color: bodyColor });
+    const legMaterial = new THREE.MeshPhongMaterial({ color: bodyColor });
 
     // Back legs
     const backLegGeometry = new THREE.BoxGeometry(0.15, 0.2, 0.3);
