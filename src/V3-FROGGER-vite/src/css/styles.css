@@ -1,0 +1,51 @@
+body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  margin: 0 auto;
+
+  /* display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh; */
+
+  height: 100vh;
+
+  background-color: black;
+}
+
+#score {
+  position: absolute;
+  top: 2vh;
+  left: 5vw;
+  color: whitesmoke;
+}
+
+#time {
+  position: absolute;
+  top: 2vh;
+  left: 50%;
+  transform: translateX(-50%);
+  color: whitesmoke;
+}
+
+#lives {
+  position: absolute;
+  top: 2vh;
+  right: 5vw;
+  color: whitesmoke;
+}
+
+#gameOver {
+  position: absolute;
+  top: 50vh;
+  left: 50vw;
+  transform: translate(-50%, -50%);
+  color: whitesmoke;
+  font-size: 3em;
+  display: none;
+}
