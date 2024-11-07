@@ -1,0 +1,81 @@
+V3-FROGGER-vite/
+├─] .DS_Store (ignored)
+├── .gitignore
+├─] node_modules/ (ignored)
+├── package-lock.json
+├── package.json
+├── public/
+│   ├── .DS_Store
+│   ├── audio/
+│   ├── low_poly_cars.glb
+│   ├── models/
+│   │   ├── .DS_Store
+│   │   ├── Astronaut_Frog.fbx
+│   │   └── cars/
+│   │       ├── .DS_Store
+│   │       ├── pickup_big.obj
+│   │       ├── pickup_big.ply
+│   │       └── toon1/
+│   │           ├── .DS_Store
+│   │           ├── low-poly-cars/
+│   │           │   ├── .DS_Store
+│   │           │   ├── source/
+│   │           │   │   ├── .DS_Store
+│   │           │   │   ├── Cars/
+│   │           │   │   │   ├── Cars.blend
+│   │           │   │   │   ├── Cars.c4d
+│   │           │   │   │   ├── Cars.fbx
+│   │           │   │   │   ├── Cars.glb
+│   │           │   │   │   ├── Cars.ma
+│   │           │   │   │   ├── Cars.max
+│   │           │   │   │   ├── Cars.mtl
+│   │           │   │   │   └── Cars.obj
+│   │           │   │   └── Cars.zip
+│   │           │   └── textures/
+│   │           │       └── colors.jpg
+│   │           ├── low_poly_cars.glb
+│   │           ├── low_poly_cars_gltf/
+│   │           │   ├── .DS_Store
+│   │           │   ├── scene.bin
+│   │           │   ├── scene.gltf
+│   │           │   └── textures/
+│   │           │       └── Material_baseColor.jpeg
+│   │           └── textures/
+│   │               └── colors.jpg
+│   └── tex/
+│       ├── .DS_Store
+│       └── snow1/
+│           ├── .DS_Store
+│           ├── snow_02_4k.blend
+│           ├── snow_02_diff_4k.jpg
+│           ├── snow_02_disp_4k.png
+│           ├── snow_02_nor_gl_4k.exr
+│           ├── snow_02_rough_4k.jpg
+│           └── snow_02_translucent_4k.png
+├── src/
+│   ├── OLD-main.txt
+│   ├── controls.ts
+│   ├── css/
+│   │   ├── style.css
+│   │   └── styles.css
+│   ├── gameState.ts
+│   ├── index.html
+│   ├── main.ts
+│   ├── mesh/
+│   │   ├── Astronaut_Frog.fbx
+│   │   ├── cars.ts
+│   │   ├── frog.ts
+│   │   ├── frog.txt
+│   │   ├── ground.ts
+│   │   ├── low_poly_cars.glb
+│   │   └── powerup.ts
+│   ├── scene.ts
+│   ├── types/
+│   │   └── cannon-es-debugger.d.ts
+│   ├── utility/
+│   │   ├── GridSystem.ts
+│   │   ├── loadModel.ts
+│   │   └── position.ts
+│   └── vite-env.d.ts
+├── tsconfig.json
+└── vite.config.js

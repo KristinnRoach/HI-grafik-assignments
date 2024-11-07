@@ -10,7 +10,8 @@ import {
 } from './scene';
 import { createFrog, IFrog } from './mesh/frog';
 import { createGround } from './mesh/ground';
-import { createPowerups } from './mesh/powerup';
+// import { createPowerups } from './mesh/powerup';
+import { loadCar } from './mesh/cars';
 import { MovementController } from './controls';
 import { gameState } from './gameState';
 
@@ -33,7 +34,14 @@ frogCam.position.z = 2.5;
 frogCam.lookAt(frogger.position);
 
 // Create powerups
-createPowerups();
+// createPowerups();
+
+// create cars
+// const pickup = createPickup();
+// scene.add(pickup);
+// pickup.position.set(0, 2, 0);
+const car = loadCar();
+console.log(car);
 
 // Set initial positions
 gridSystem.placeObject(frogger, 7, 0);

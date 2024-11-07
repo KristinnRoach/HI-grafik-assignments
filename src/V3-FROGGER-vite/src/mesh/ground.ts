@@ -1,10 +1,13 @@
 import * as THREE from 'three';
+import { gridSystem } from '../scene';
 
 export const GROUND_X = 15;
 export const GROUND_Y = 1;
 export const GROUND_Z = 15;
 
-export function createGround(): THREE.Mesh {
+const GRID_SIZE = gridSystem.getGridSize();
+
+export function createGround(): THREE.Group {
   const textureLoader = new THREE.TextureLoader();
 
   // Base path matching your Vite config
@@ -38,7 +41,8 @@ export function createGround(): THREE.Mesh {
     texture.repeat.set(1.5, 1.5);
   });
 
-  const ground = new THREE.Mesh(
+  const ground = new THREE.Group();
+  const groundMesh = new THREE.Mesh(
     new THREE.BoxGeometry(GROUND_X, GROUND_Y, GROUND_Z),
     new THREE.MeshStandardMaterial({
       // color: 0xcccccc, // Temporary color to see if mesh is visible
@@ -49,7 +53,22 @@ export function createGround(): THREE.Mesh {
     })
   );
 
+  // create street
+  const street = new THREE.Mesh(
+    new THREE.BoxGeometry(GROUND_X, 0.1, 2.5),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+    })
+  );
+  street.position.y = 0.5;
+
+  gridSystem.placeObject(street, Math.floor(GRID_SIZE / 2), 2);
+
   ground.receiveShadow = true;
+  street.receiveShadow = true;
+
+  ground.add(groundMesh);
+  ground.add(street);
   return ground;
 }
 

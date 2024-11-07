@@ -30,7 +30,7 @@ camCtrls.rotateSpeed = 30;
 
 const gltfLoader = new GLTFLoader();
 
-const astroGLB = await gltfLoader.loadAsync('./assets/Astronaut.glb');
+const astroGLB = await gltfLoader.loadAsync('../assets/spaceguy/Astronaut.glb');
 const astronaut = astroGLB.scene;
 astronaut.traverse((child) => {
   if (child.isMesh) {
