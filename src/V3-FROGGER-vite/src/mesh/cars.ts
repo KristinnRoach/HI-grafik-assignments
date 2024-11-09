@@ -1,7 +1,7 @@
 // cars.ts
 import { getRandomThreeColor } from '../utility/color-utils';
 import { THREE } from '../types/types';
-import type { LaneConfig, CollisionType, Object3D, Mesh } from '../types/types';
+import type { LaneConfig, Object3D, Mesh } from '../types/types';
 
 const LANES: LaneConfig[] = [
   { z: 4, direction: 'left', speed: 2.5 },

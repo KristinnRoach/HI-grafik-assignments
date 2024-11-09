@@ -1,6 +1,5 @@
 // frog.ts
 import { THREE } from '../types/types';
-import type { FrogType } from '../types/types';
 
 export class Frog extends THREE.Group {
   private readonly MOVE_UNIT = 1.0;

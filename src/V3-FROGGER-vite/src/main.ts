@@ -3,7 +3,7 @@ import './css/styles.css';
 import { THREE } from './types/types';
 import Stats from 'three/addons/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createGround, getRiverBoundingBox } from './mesh/ground';
+import { createGround } from './mesh/ground';
 import { createCars, updateCars } from './mesh/cars';
 import { createLogs, updateLogs } from './mesh/logs';
 import { createFrog, Frog } from './mesh/Frog';

@@ -1,15 +1,15 @@
 // types.ts
-import * as THREE from 'three';
+// import * as THREE from 'three';
 
-export type FrogType = THREE.Object3D & {
-  isJumping: () => boolean;
-  startJump: () => void;
-  setJumpTarget: (x: number, z: number) => void;
-  update: (deltaTime: number) => void;
-  handleCollision: (type: CollisionType) => void;
-  handleMovement(direction: 'up' | 'down' | 'left' | 'right'): boolean;
-  collisionType: CollisionType;
-};
+// export type FrogType = THREE.Object3D & {
+//   isJumping: () => boolean;
+//   startJump: () => void;
+//   setJumpTarget: (x: number, z: number) => void;
+//   update: (deltaTime: number) => void;
+//   handleCollision: (type: CollisionType) => void;
+//   handleMovement(direction: 'up' | 'down' | 'left' | 'right'): boolean;
+//   collisionType: CollisionType;
+// };
 
 export type LaneConfig = {
   z: number;

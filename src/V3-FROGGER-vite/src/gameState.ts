@@ -1,5 +1,5 @@
 // gameState.ts
-import { Mesh, Vector3 } from './types/types';
+import { Mesh } from './types/types';
 
 const INIT = {
   score: 0,
