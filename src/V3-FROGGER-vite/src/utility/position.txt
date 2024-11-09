@@ -1,0 +1,73 @@
+// src/utility/position.ts
+import * as THREE from 'three';
+
+// Define lanes (Z positions) on the grid
+export const GRID_LANES = {
+  START: 0,
+  ROAD_START: 1,
+  ROAD_LANES: [2, 3, 4], // Three lanes for cars
+  RIVER_START: 6,
+  RIVER_LANES: [7, 8, 9], // Three lanes for logs
+  FINISH: 14,
+} as const;
+
+// Type for grid positions
+export interface GridPosition {
+  x: number;
+  z: number;
+}
+
+// Direction type for moving objects
+export type Direction = 'left' | 'right';
+
+// Lane configuration type
+export interface LaneConfig {
+  z: number;
+  direction: Direction;
+  speed: number;
+}
+
+// Configuration for road lanes
+export const ROAD_LANES: LaneConfig[] = [
+  { z: GRID_LANES.ROAD_LANES[0], direction: 'left', speed: 2 },
+  { z: GRID_LANES.ROAD_LANES[1], direction: 'right', speed: 3 },
+  { z: GRID_LANES.ROAD_LANES[2], direction: 'left', speed: 4 },
+];
+
+// Configuration for river lanes
+export const RIVER_LANES: LaneConfig[] = [
+  { z: GRID_LANES.RIVER_LANES[0], direction: 'right', speed: 1 },
+  { z: GRID_LANES.RIVER_LANES[1], direction: 'left', speed: 2 },
+  { z: GRID_LANES.RIVER_LANES[2], direction: 'right', speed: 1.5 },
+];
+
+// Helper to get movement multiplier based on direction
+export function getDirectionMultiplier(direction: Direction): number {
+  return direction === 'left' ? -1 : 1;
+}
+
+export function setYPosBottom(object: THREE.Object3D, bottomY: number): void {
+  const bbox = new THREE.Box3().setFromObject(object);
+  const height = bbox.max.y - bbox.min.y;
+  object.position.y = bottomY + height / 2;
+}
+
+export function setYPosTop(object: THREE.Object3D, topY: number): void {
+  const bbox = new THREE.Box3().setFromObject(object);
+  const height = bbox.max.y - bbox.min.y;
+  object.position.y = topY - height / 2;
+}
+
+export function getBottomY(object: THREE.Object3D): number {
+  // Create a bounding box
+  const bbox = new THREE.Box3().setFromObject(object);
+  // Return the minimum y value (bottom of the object)
+  return bbox.min.y;
+}
+
+export function getTopY(object: THREE.Object3D): number {
+  // Create a bounding box
+  const bbox = new THREE.Box3().setFromObject(object);
+  // Return the maximum y value (top of the object)
+  return bbox.max.y;
+}

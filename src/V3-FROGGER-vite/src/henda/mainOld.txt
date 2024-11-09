@@ -1,0 +1,111 @@
+import './css/styles.css';
+import * as THREE from 'three';
+import Stats from 'three/addons/libs/stats.module.js';
+import { initializeScene } from './scene';
+import { createGround } from './mesh/ground';
+import { createCars, updateCars } from './mesh/cars';
+import { createFrog, IFrog } from './mesh/Frog';
+import { FrogController } from './FrogController';
+import { gameState } from './gameState';
+
+// Constants
+export let GRID_SIZE = 15;
+export const BASE_HEIGHT = 0.5;
+export const GRID_SYSTEM: GridSystem = new GridSystem(GRID_SIZE, BASE_HEIGHT);
+
+// Initialize scene and get references
+const { scene, wideCam, frogCam, controls, renderer, handleResize } =
+  initializeScene();
+
+// add stats
+const stats = new Stats();
+document.body.appendChild(stats.dom);
+
+let frogCtrl: FrogController;
+
+// Create game objects
+const ground = createGround();
+ground.position.set(0, -BASE_HEIGHT, 0);
+scene.add(ground);
+
+// Create frog and attach camera
+const frogger: IFrog = createFrog();
+frogger.add(frogCam);
+scene.add(frogger);
+
+// Set up frog camera
+frogCam.position.y = 0.5;
+frogCam.position.z = 2.5;
+frogCam.lookAt(frogger.position);
+
+const numCars = 3;
+const cars = createCars(numCars);
+cars.forEach((car) => scene.add(car));
+
+// Set initial GRID position
+GRID_SYSTEM.placeObject(frogger, Math.floor(GRID_SIZE / 2), 0);
+
+function initGame() {
+  // Clean up old controller if it exists
+  if (frogCtrl) {
+    frogCtrl.dispose();
+  }
+
+  // Initialize movement controller
+  frogCtrl = new FrogController(frogger, GRID_SYSTEM);
+}
+
+initGame();
+
+function resetGame() {
+  if (frogCtrl) {
+    frogCtrl.dispose();
+  }
+  // ... other reset logic ...
+}
+
+// Animation loop
+const clock = new THREE.Clock();
+let currentCam = wideCam;
+function animate() {
+  const deltaTime = clock.getDelta();
+
+  // Update controls based on current camera
+  if (gameState.getCurrentCam() === 'wide') {
+    controls.update();
+  }
+
+  // Update movement
+  frogCtrl.update(deltaTime);
+  updateCars(cars, deltaTime, GRID_SIZE);
+
+  checkCollisions();
+
+  // Render scene
+  renderer.render(scene, currentCam);
+  stats.update();
+}
+
+renderer.setAnimationLoop(animate); // same as requestAnimationFrame(animate);
+
+function cleanup() {
+  frogCtrl.dispose();
+}
+
+function checkCollisions() {
+  // cars.forEach((car) => {
+  //   const distance = frogger.position.distanceTo(car.position);
+  //   if (distance < 1) {
+  //     // Adjust collision distance as needed
+  //     console.log('Collision detected!');
+  //     // Handle frog death
+  //   }
+  // });
+}
+
+// UI button setup
+const switchCamBtn = document.querySelector('#switchCam');
+switchCamBtn?.addEventListener('click', () => {
+  const newCam = gameState.toggleCamera();
+  currentCam = newCam === 'wide' ? wideCam : frogCam;
+});

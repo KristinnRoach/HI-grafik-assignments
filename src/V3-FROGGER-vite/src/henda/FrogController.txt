@@ -1,0 +1,99 @@
+// FrogController.ts
+import { THREE } from './types/types';
+import type { FrogType } from './types/types';
+
+export class FrogController {
+  private readonly MOVE_UNIT = 1.0;
+  private readonly BOUNDARY = 7; // Half of our 15x15 area
+  private readonly handleKeyDownEvent = (event: KeyboardEvent) =>
+    this.handleKeyDown(event);
+
+  // Visual debug helpers
+  private debugMarker?: THREE.Mesh;
+
+  constructor(
+    private readonly frog: FrogType,
+    private readonly scene?: THREE.Scene,
+    private readonly debug = false
+  ) {
+    document.addEventListener('keydown', (event) => this.handleKeyDown(event));
+
+    if (debug && scene) {
+      this.setupDebugHelpers();
+    }
+  }
+
+  private handleKeyDown(event: KeyboardEvent) {
+    if (this.frog.isJumping()) return;
+
+    let newX = this.frog.position.x;
+    let newZ = this.frog.position.z;
+
+    switch (event.key) {
+      case 'ArrowUp':
+        event.preventDefault();
+        newZ -= this.MOVE_UNIT;
+        this.frog.rotation.y = 0;
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        newZ += this.MOVE_UNIT;
+        this.frog.rotation.y = Math.PI;
+        break;
+      case 'ArrowLeft':
+        event.preventDefault();
+        newX -= this.MOVE_UNIT;
+        this.frog.rotation.y = Math.PI / 2;
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        newX += this.MOVE_UNIT;
+        this.frog.rotation.y = -Math.PI / 2;
+        break;
+      default:
+        return;
+    }
+
+    // Check boundaries
+    if (this.isValidPosition(newX, newZ)) {
+      // Round positions to prevent floating point errors
+      newX = Math.round(newX * 100) / 100;
+      newZ = Math.round(newZ * 100) / 100;
+
+      this.frog.setJumpTarget(newX, newZ);
+      this.frog.startJump();
+
+      if (this.debug) {
+        this.updateDebugMarker(newX, newZ);
+      }
+    }
+  }
+
+  private isValidPosition(x: number, z: number): boolean {
+    return Math.abs(x) <= this.BOUNDARY && Math.abs(z) <= this.BOUNDARY;
+  }
+
+  private setupDebugHelpers() {
+    // Create a marker to show target position
+    const geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.01, 32);
+    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    this.debugMarker = new THREE.Mesh(geometry, material);
+    this.debugMarker.position.y = 0.01; // Slightly above ground
+    this.scene?.add(this.debugMarker);
+  }
+
+  private updateDebugMarker(x: number, z: number) {
+    if (this.debugMarker) {
+      this.debugMarker.position.x = x;
+      this.debugMarker.position.z = z;
+    }
+  }
+
+  update(deltaTime: number) {
+    this.frog.update(deltaTime);
+  }
+
+  dispose() {
+    document.removeEventListener('keydown', this.handleKeyDownEvent);
+  }
+}

@@ -1,17 +1,33 @@
 import * as THREE from 'three';
-import * as Cannon from 'cannon-es';
+
+export type GridSystemType = {
+  gridToWorld(gridX: number, gridZ: number): { x: number; z: number };
+  worldToGrid(worldX: number, worldZ: number): { x: number; z: number };
+  placeObject(object: THREE.Object3D, gridX: number, gridZ: number): void;
+  getObjectInitYPos(objheight: number): number;
+  getRandomGridPosition(): { x: number; z: number };
+  getRandomHeight(max: number, min: number): number;
+  isValidGridPosition(gridX: number, gridZ: number): boolean;
+  getGridSize(): number;
+  getCellCenter(gridX: number, gridZ: number): { x: number; z: number };
+  setBaseHeight(height: number): void;
+  getBaseHeight(): number;
+  getGridCenter(): { x: number; z: number };
+};
+
+/* Grid System used for the X / Z plane */
 
 export class GridSystem {
   private gridSize: number;
   private cellSize: number;
   private offset: number;
-  private baseHeight: number; // Y axis is not part of grid system
+  private baseHeight: number; // height of the ground
 
-  constructor(gridSize: number = 15) {
+  constructor(gridSize: number = 15, baseHeight: number = 0) {
     this.gridSize = gridSize;
     this.offset = gridSize / 2; // Offset to center the grid (since Three.js uses center origin)
     this.cellSize = 1; // Default grid-cell size is 1 unit
-    this.baseHeight = 0; // Default base height is 0
+    this.baseHeight = baseHeight; // Default base height is 0
   }
 
   // Convert grid coordinates to world coordinates
@@ -20,7 +36,7 @@ export class GridSystem {
     // Grid (0,0) → World (-7.5, 7.5)  [bottom left]
     // Grid (14,14) → World (7.5, -7.5) [top right]
     const worldX = (gridX - this.offset + 0.5) * this.cellSize;
-    const worldZ = (this.offset - gridZ - 0.5) * this.cellSize;
+    const worldZ = -(gridZ - this.offset + 0.5) * this.cellSize;
     return { x: worldX, z: worldZ }; // new THREE.Vector3(worldX, this.baseHeight, worldZ);
   }
 
@@ -28,13 +44,13 @@ export class GridSystem {
   worldToGrid(worldX: number, worldZ: number): { x: number; z: number } {
     // Convert from world coordinates to grid coordinates
     const gridX = Math.floor(worldX + this.offset);
-    const gridZ = Math.floor(this.offset - worldZ);
+    const gridZ = Math.floor(-worldZ + this.offset); // 0 is the start / bottom of the grid
     return { x: gridX, z: gridZ };
   }
 
   // Place an object at a specific grid position
   placeObject(
-    object: THREE.Object3D | Cannon.Body,
+    object: THREE.Object3D, // | Cannon.Body,
     gridX: number,
     gridZ: number
   ) {
@@ -44,8 +60,11 @@ export class GridSystem {
   }
 
   // The Y position for object on ground
-  getObjectInitYPos(objheight: number): number {
-    return this.baseHeight + objheight / 2;
+  getObjectInitYPos(
+    objheight: number,
+    baseHeight: number = this.baseHeight
+  ): number {
+    return baseHeight + objheight / 2;
   }
 
   // Get random grid position
@@ -91,37 +110,3 @@ export class GridSystem {
     return { x: this.offset, z: this.offset };
   }
 }
-
-// // Example usage:
-// function initializeGame() {
-//   const gridSystem = new GridSystem(15); // 15x15 grid
-
-//   // Modified createPowerup to use grid coordinates
-//   function createPowerup(gridX: number, gridZ: number): THREE.Mesh {
-//     const powerup = new THREE.Mesh(
-//       new THREE.TorusGeometry(1, 0.4, 16, 50),
-//       new THREE.MeshBasicMaterial({ color: 0xffff00 })
-//     );
-
-//     powerup.scale.setScalar(0.1);
-//     gridSystem.placeObject(powerup, gridX, gridZ, 0);
-
-//     return powerup;
-//   }
-
-//   // Modified createPowerups to use grid system
-//   function createPowerups(): THREE.Mesh[] {
-//     const powerups = [];
-//     for (let i = 0; i < 10; i++) {
-//       const randomPos = gridSystem.getRandomGridPosition();
-//       const powerup = createPowerup(randomPos.x, randomPos.z);
-//       powerup.name = 'powerup' + (i + 1);
-//       powerups.push(powerup);
-//     }
-//     return powerups;
-//   }
-
-//   // Example of placing the frog at a specific grid position
-//   const frogger = createFrog();
-//   gridSystem.placeObject(frogger, 7, 7, -0.25); // Place frog in middle-ish of grid
-// }

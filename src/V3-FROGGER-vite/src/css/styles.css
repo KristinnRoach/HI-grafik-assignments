@@ -18,14 +18,14 @@ body {
   background-color: black;
 }
 
-#score {
+#scoreUI {
   position: absolute;
   top: 2vh;
-  left: 5vw;
+  left: 15vw;
   color: whitesmoke;
 }
 
-#time {
+#timeUI {
   position: absolute;
   top: 2vh;
   left: 50%;
@@ -33,19 +33,9 @@ body {
   color: whitesmoke;
 }
 
-#lives {
+#livesUI {
   position: absolute;
   top: 2vh;
-  right: 5vw;
+  right: 15vw;
   color: whitesmoke;
-}
-
-#gameOver {
-  position: absolute;
-  top: 50vh;
-  left: 50vw;
-  transform: translate(-50%, -50%);
-  color: whitesmoke;
-  font-size: 3em;
-  display: none;
 }

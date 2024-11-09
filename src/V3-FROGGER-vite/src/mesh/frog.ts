@@ -1,179 +1,243 @@
-import * as THREE from 'three';
+// frog.ts
+import { THREE } from '../types/types';
+import type { FrogType } from '../types/types';
 
-// Make the interface exported so we can use it for type checking
-export interface IFrog extends THREE.Group {
-  update(deltaTime: number): void;
-  startJump(): void;
-  isJumping(): boolean;
-  setInitialRotation(): void;
-}
+export class Frog extends THREE.Group {
+  private readonly MOVE_UNIT = 1.0;
+  private readonly BOUNDARY = 7;
 
-export class Frog extends THREE.Group implements IFrog {
-  private state = {
-    isJumping: false,
-    jumpProgress: 0,
-    jumpHeight: 1,
-    initialY: 0.25,
-    jumpDuration: 500,
-  };
+  private readonly bodyColor = 0x2ecc71;
+  private readonly eyeColor = 0xf1c40f;
+  private readonly jumpHeight = 0.5;
+  private readonly jumpDuration = 200;
+  private readonly restingY = 0.25;
 
-  private body: THREE.Mesh;
-  private head: THREE.Mesh;
-  private legs: THREE.Mesh[];
+  private jumping = false;
+  private jumpProgress = 0;
+  private startPos = new THREE.Vector3();
+  private targetPos = new THREE.Vector3();
+  // private currentY = this.restingY;
+  // private readonly initialPosition = new THREE.Vector3(0, this.restingY, 7);
+  private readonly modelGroup: THREE.Group; // New group for the frog model
+
+  private readonly body: THREE.Mesh;
+  private readonly head: THREE.Mesh;
+  private readonly legs: THREE.Mesh[];
 
   constructor() {
     super();
 
-    // Colors
-    const bodyColor = 0x2ecc71;
-    const eyeColor = 0xf1c40f;
+    // Create a separate group for the frog model
+    this.modelGroup = new THREE.Group();
+    this.add(this.modelGroup);
 
-    // Body
+    // Create body parts with shared materials
+    const bodyMaterial = new THREE.MeshPhongMaterial({ color: this.bodyColor });
+    const eyeMaterial = new THREE.MeshPhongMaterial({ color: this.eyeColor });
+
+    // Main body
     this.body = new THREE.Mesh(
       new THREE.BoxGeometry(0.5, 0.3, 0.7),
-      // new THREE.MeshBasicMaterial({ color: bodyColor })
-      new THREE.MeshPhongMaterial({ color: bodyColor }) // prófa StandardMaterial
+      bodyMaterial
     );
+    this.modelGroup.add(this.body);
 
     // Head
     this.head = new THREE.Mesh(
       new THREE.BoxGeometry(0.6, 0.25, 0.3),
-      new THREE.MeshPhongMaterial({ color: bodyColor })
+      bodyMaterial
     );
-    this.head.position.z = -0.4;
-    this.head.position.y = 0.05;
+    this.head.position.set(0, 0.05, -0.4);
+    this.modelGroup.add(this.head);
 
     // Eyes
     const eyeGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-    const eyeMaterial = new THREE.MeshPhongMaterial({ color: eyeColor });
-
-    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    leftEye.position.set(0.2, 0.15, -0.4);
-    leftEye.scale.set(0.4, 0.4, 0.4);
-
-    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    rightEye.position.set(-0.2, 0.15, -0.4);
-    rightEye.scale.set(0.4, 0.4, 0.4);
+    const createEye = (x: number) => {
+      const eye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+      eye.position.set(x, 0.15, -0.4);
+      eye.scale.set(0.4, 0.4, 0.4);
+      return eye;
+    };
+    this.modelGroup.add(createEye(0.2), createEye(-0.2));
 
     // Legs
-    this.legs = [];
-    const legMaterial = new THREE.MeshPhongMaterial({ color: bodyColor });
+    this.legs = this.createLegs(bodyMaterial);
+    this.legs.forEach((leg) => this.modelGroup.add(leg));
 
-    // Back legs
-    const backLegGeometry = new THREE.BoxGeometry(0.15, 0.2, 0.3);
-    const backLeftLeg = new THREE.Mesh(backLegGeometry, legMaterial);
-    backLeftLeg.position.set(0.25, -0.15, 0.2);
-    this.legs.push(backLeftLeg);
+    // Initial position
+    this.position.set(0, this.restingY, 7); // Reset to starting position
+    this.rotation.y = 0; // Face forward (-Z)
 
-    const backRightLeg = new THREE.Mesh(backLegGeometry, legMaterial);
-    backRightLeg.position.set(-0.25, -0.15, 0.2);
-    this.legs.push(backRightLeg);
-
-    // Front legs
-    const frontLegGeometry = new THREE.BoxGeometry(0.1, 0.15, 0.2);
-    const frontLeftLeg = new THREE.Mesh(frontLegGeometry, legMaterial);
-    frontLeftLeg.position.set(0.2, -0.15, -0.2);
-    this.legs.push(frontLeftLeg);
-
-    const frontRightLeg = new THREE.Mesh(frontLegGeometry, legMaterial);
-    frontRightLeg.position.set(-0.2, -0.15, -0.2);
-    this.legs.push(frontRightLeg);
-
-    // Add all parts to group
-    this.add(this.body);
-    this.add(this.head);
-    this.add(leftEye);
-    this.add(rightEye);
-    this.legs.forEach((leg) => this.add(leg));
-
-    // Set initial position
-    this.position.y = this.state.initialY;
-    this.setInitialRotation();
+    // Enable shadow casting    // FIX SHADOWS NOT WORKING FOR FROG
+    this.castShadow = true;
+    this.receiveShadow = true;
   }
 
-  startJump() {
-    if (!this.state.isJumping) {
-      this.state.isJumping = true;
-      this.state.jumpProgress = 0;
+  // input handling logic
+  handleMovement(direction: 'up' | 'down' | 'left' | 'right'): boolean {
+    if (this.jumping) return false;
+
+    let newX = this.position.x;
+    let newZ = this.position.z;
+
+    switch (direction) {
+      case 'up':
+        newZ -= this.MOVE_UNIT;
+        this.rotation.y = 0;
+        break;
+      case 'down':
+        newZ += this.MOVE_UNIT;
+        this.rotation.y = Math.PI;
+        break;
+      case 'left':
+        newX -= this.MOVE_UNIT;
+        this.rotation.y = Math.PI / 2;
+        break;
+      case 'right':
+        newX += this.MOVE_UNIT;
+        this.rotation.y = -Math.PI / 2;
+        break;
+    }
+
+    if (this.isValidPosition(newX, newZ)) {
+      this.setJumpTarget(newX, newZ);
+      this.startJump();
+      return true;
+    }
+
+    return false;
+  }
+
+  private isValidPosition(x: number, z: number): boolean {
+    return Math.abs(x) <= this.BOUNDARY && Math.abs(z) <= this.BOUNDARY;
+  }
+
+  private createLegs(material: THREE.Material): THREE.Mesh[] {
+    const createLegPair = (
+      geometry: THREE.BoxGeometry,
+      x: number,
+      z: number
+    ): THREE.Mesh[] => {
+      return [-x, x].map((xPos) => {
+        const leg = new THREE.Mesh(geometry, material);
+        leg.position.set(xPos, -0.15, z);
+        return leg;
+      });
+    };
+
+    return [
+      // Back legs
+      ...createLegPair(new THREE.BoxGeometry(0.15, 0.2, 0.3), 0.25, 0.2),
+      // Front legs
+      ...createLegPair(new THREE.BoxGeometry(0.1, 0.15, 0.2), 0.2, -0.2),
+    ];
+  }
+
+  startJump(): void {
+    if (!this.jumping) {
+      this.jumping = true;
+      this.jumpProgress = 0;
+      this.startPos.copy(this.position);
       this.squash();
     }
   }
 
-  private squash() {
-    this.body.scale.y = 0.7;
-    this.body.scale.x = 1.2;
-    this.body.scale.z = 1.2;
-
-    this.legs.forEach((leg) => {
-      leg.position.y *= 0.7;
-      if (leg.position.x > 0) {
-        leg.position.x += 0.1;
-      } else {
-        leg.position.x -= 0.1;
-      }
-    });
-  }
-
-  private stretch() {
-    this.body.scale.y = 1.2;
-    this.body.scale.x = 0.8;
-    this.body.scale.z = 0.8;
-
-    this.legs.forEach((leg) => {
-      leg.position.y -= 0.1;
-      if (leg.position.x > 0) {
-        leg.position.x -= 0.05;
-      } else {
-        leg.position.x += 0.05;
-      }
-    });
-  }
-
-  private resetShape() {
-    this.body.scale.set(1, 1, 1);
-    this.legs.forEach((leg) => {
-      leg.position.y = -0.15;
-      if (leg.position.x > 0) {
-        leg.position.x = leg.position.z > 0 ? 0.25 : 0.2;
-      } else {
-        leg.position.x = leg.position.z > 0 ? -0.25 : -0.2;
-      }
-    });
-  }
-
-  update(deltaTime: number) {
-    if (this.state.isJumping) {
-      this.state.jumpProgress += (deltaTime * 1000) / this.state.jumpDuration;
-
-      if (this.state.jumpProgress >= 1) {
-        this.state.isJumping = false;
-        this.state.jumpProgress = 0;
-        this.position.y = this.state.initialY;
-        this.resetShape();
-      } else {
-        const jumpPhase = Math.sin(this.state.jumpProgress * Math.PI);
-        this.position.y =
-          this.state.initialY + jumpPhase * this.state.jumpHeight;
-
-        if (this.state.jumpProgress < 0.5) {
-          this.stretch();
-        } else {
-          this.squash();
-        }
-      }
-    }
+  setJumpTarget(x: number, z: number): void {
+    this.targetPos.set(x, this.restingY, z);
   }
 
   isJumping(): boolean {
-    return this.state.isJumping;
+    return this.jumping;
   }
 
-  // Rotate to face -Z (upward in the scene)
-  setInitialRotation() {
-    this.rotation.y = 0;
+  update(deltaTime: number): void {
+    if (!this.jumping) return;
+
+    this.jumpProgress += (deltaTime * 1000) / this.jumpDuration;
+
+    if (this.jumpProgress >= 1) {
+      this.completeJump();
+    } else {
+      this.updateJumpAnimation();
+    }
+  }
+
+  private completeJump(): void {
+    this.jumping = false;
+    this.position.copy(this.targetPos);
+    this.position.y = this.restingY;
+    this.resetShape();
+  }
+
+  private updateJumpAnimation(): void {
+    // Calculate target position
+    const targetPosition = new THREE.Vector3();
+    targetPosition.lerpVectors(
+      this.startPos,
+      this.targetPos,
+      this.jumpProgress
+    );
+
+    // Jump arc - only modify Y during jump
+    const jumpPhase = Math.sin(this.jumpProgress * Math.PI);
+    targetPosition.y = this.restingY + jumpPhase * this.jumpHeight;
+
+    // Update position in one operation
+    this.position.copy(targetPosition);
+
+    // Animation
+    if (this.jumpProgress < 0.5) {
+      this.stretch();
+    } else {
+      this.squash();
+    }
+  }
+
+  private squash(): void {
+    this.modelGroup.scale.set(1.2, 0.7, 1.2);
+  }
+
+  private stretch(): void {
+    this.modelGroup.scale.set(0.8, 1.2, 0.8);
+  }
+
+  private resetShape(): void {
+    this.modelGroup.scale.set(1, 1, 1);
+  }
+
+  resetFrog(): void {
+    this.position.set(0, this.restingY, 7); // Reset to starting position
+    this.rotation.y = 0; // Face forward
+    this.modelGroup.scale.set(1, 1, 1);
   }
 }
 
-export function createFrog(): IFrog {
+export function createFrog() {
   return new Frog();
 }
+
+// private squash(): void {
+//   this.body.scale.set(1.2, 0.7, 1.2);
+//   this.legs.forEach((leg) => {
+//     leg.position.y *= 0.45;
+//     leg.position.x *= 1.2;
+//   });
+// }
+
+// private stretch(): void {
+//   this.body.scale.set(0.8, 1.2, 0.8);
+//   this.legs.forEach((leg) => {
+//     leg.position.y *= 0.8;
+//     leg.position.x *= 0.8;
+//   });
+// }
+
+// private resetShape(): void {
+//   this.body.scale.set(1, 1, 1);
+//   this.legs.forEach((leg, i) => {
+//     const isBack = i < 2;
+//     const isLeft = i % 2 === 0;
+//     leg.position.y = -0.15;
+//     leg.position.x = isLeft ? (isBack ? 0.25 : 0.2) : isBack ? -0.25 : -0.2;
+//   });
+// }

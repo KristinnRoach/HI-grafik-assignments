@@ -1,0 +1,6 @@
+There is one file missing from your file structure, the game state. Let's start by cleaning up, simplifying and optimizing our core setup code which is in main.ts, scene.ts, gameState.ts and GridSystem.ts. We can refactor if there are significant benefits. Here are the current files:
+
+Yes. Also, i noticed there is one file missing from your file structure, the game state. 
+
+Let's start by cleaning up, simplifying and optimizing our core setup code which is in main.ts, scene.ts, and gameState.ts. We can refactor if there are significant benefits. Here are the current files: 
+
