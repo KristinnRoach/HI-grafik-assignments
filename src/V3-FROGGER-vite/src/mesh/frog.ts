@@ -65,10 +65,6 @@ export class Frog extends THREE.Group {
     // Initial position
     this.position.set(0, this.restingY, 7); // Reset to starting position
     this.rotation.y = 0; // Face forward (-Z)
-
-    // Enable shadow casting    // FIX SHADOWS NOT WORKING FOR FROG
-    this.castShadow = true;
-    this.receiveShadow = true;
   }
 
   // input handling logic
@@ -148,13 +144,30 @@ export class Frog extends THREE.Group {
     return this.jumping;
   }
 
+  isAnimatingLevelUp = false;
+  animateVictory(): void {
+    this.isAnimatingLevelUp = true;
+  }
+
   update(deltaTime: number): void {
     if (!this.jumping) return;
-
+    if (this.isAnimatingLevelUp) {
+      this.updateWinningAnimation(deltaTime);
+    }
     this.jumpProgress += (deltaTime * 1000) / this.jumpDuration;
-
     if (this.jumpProgress >= 1) {
       this.completeJump();
+    } else {
+      this.updateJumpAnimation();
+    }
+  }
+
+  updateWinningAnimation(deltaTime: number): void {
+    // slow mo jump back to starting position
+    this.jumpProgress += (deltaTime * 1000) / this.jumpDuration / 2;
+    if (this.jumpProgress >= 1) {
+      this.isAnimatingLevelUp = false;
+      this.resetFrog();
     } else {
       this.updateJumpAnimation();
     }
@@ -207,6 +220,15 @@ export class Frog extends THREE.Group {
     this.position.set(0, this.restingY, 7); // Reset to starting position
     this.rotation.y = 0; // Face forward
     this.modelGroup.scale.set(1, 1, 1);
+    this.jumping = false;
+
+    // reset materials
+    let materialIndex = 0;
+    this.modelGroup.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.material = this.body.material;
+      }
+    });
   }
 }
 

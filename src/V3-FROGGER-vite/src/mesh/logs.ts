@@ -63,7 +63,7 @@ export function updateLogs(logs: Object3D[], deltaTime: number) {
     log.position.x += deltaTime * speed;
 
     // Reset position when log goes off screen
-    const bound = 7.5; // Half width + half log length
+    const bound = 8; //
     if (lane.direction === 'left' && log.position.x < -bound) {
       log.position.x = bound;
     } else if (lane.direction === 'right' && log.position.x > bound) {

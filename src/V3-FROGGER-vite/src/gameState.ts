@@ -2,27 +2,27 @@
 import { Mesh } from './types/types';
 
 const INIT = {
-  score: 0,
-  time: 480,
+  level: 0,
+  // time: 480,
   lives: 3,
   currentCam: 'wide' as const,
 };
 
-let score_el: HTMLElement | null = null;
+let level_el: HTMLElement | null = null;
 let time_el: HTMLElement | null = null;
 let lives_el: HTMLElement | null = null;
 
 function initUI() {
-  score_el = document.querySelector('#scoreUI');
+  level_el = document.querySelector('#scoreUI');
   time_el = document.querySelector('#timeUI');
   lives_el = document.querySelector('#livesUI');
 
-  if (!score_el || !time_el || !lives_el) {
+  if (!level_el || !time_el || !lives_el) {
     throw new Error('UI elements not found');
   }
 
-  score_el.textContent = `Score: ${INIT.score}`;
-  time_el.textContent = `Time: ${INIT.time}`;
+  level_el.textContent = `Level: ${INIT.level}`;
+  time_el.textContent = ''; // `Time: ${INIT.time}`;
   lives_el.textContent = `Lives: ${INIT.lives}`;
 }
 
@@ -33,8 +33,8 @@ export class GameState {
 
   private _currentCam: 'wide' | 'frog' = INIT.currentCam;
   private _isGameOver = false;
-  private _score = INIT.score;
-  private _time = INIT.time;
+  private _level = INIT.level;
+  private _time = 0;
   private _lives = INIT.lives;
 
   private _isOnLog = false; // move to collision.ts
@@ -75,7 +75,7 @@ export class GameState {
   }
 
   get score(): number {
-    return this._score;
+    return this._level;
   }
 
   get time(): number {
@@ -95,28 +95,29 @@ export class GameState {
   }
 
   private updateUI() {
-    if (!score_el || !time_el || !lives_el) {
+    if (!level_el || !lives_el) {
+      // || !time_el
       console.error('UI elements not found');
       return;
     }
 
-    time_el.style.color = 'whitesmoke';
-    score_el.style.color = 'whitesmoke';
+    // time_el.style.color = 'whitesmoke';
+    level_el.style.color = 'whitesmoke';
     lives_el.style.color = 'whitesmoke';
 
-    score_el.textContent = `Score: ${this._score.toString()}`;
-    time_el.textContent = `Time: ${this._time.toString()}`;
+    level_el.textContent = `Score: ${this._level.toString()}`;
+    // time_el.textContent = `Time: ${this._time.toString()}`;
     lives_el.textContent = `Lives: ${this._lives.toString()}`;
   }
 
-  updateScore(delta: number) {
-    this._score += delta;
+  updateLevel(delta: number) {
+    this._level += delta;
     this.updateUI();
   }
 
   updateTime(delta: number) {
-    this._time += delta;
-    this.updateUI();
+    // this._time += delta;
+    // this.updateUI();
   }
 
   updateLives(delta: number) {
@@ -134,8 +135,8 @@ export class GameState {
   }
 
   reset() {
-    this._score = INIT.score;
-    this._time = INIT.time;
+    this._level = INIT.level;
+    // this._time = INIT.time;
     this._lives = INIT.lives;
     this._currentCam = INIT.currentCam;
     this._isGameOver = false;
@@ -147,27 +148,27 @@ export class GameState {
     this._currentCam = 'wide';
 
     // Update UI elements
-    time_el!.textContent = `Time's up!`;
+    time_el!.textContent = `Game Over`;
     time_el!.style.color = 'red';
 
-    score_el!.textContent = `Final Score: ${this._score}`;
-    score_el!.style.color = 'red';
+    level_el!.textContent = `Final Score: ${this._level}`;
+    level_el!.style.color = 'red';
 
     lives_el!.textContent = `He dead`;
     lives_el!.style.color = 'red';
 
     // Optional: Disable UI controls if they exist
-    const switchCamBtn = document.querySelector(
-      '#switchCam'
-    ) as HTMLButtonElement;
-    if (switchCamBtn) {
-      switchCamBtn.disabled = true;
-    }
+    // const switchCamBtn = document.querySelector(
+    //   '#switchCam'
+    // ) as HTMLButtonElement;
+    // if (switchCamBtn) {
+    //   switchCamBtn.disabled = true;
+    // }
 
     // Log final game state
     console.log('Game Over!', {
-      finalScore: this._score,
-      timeRemaining: this._time,
+      level: this._level,
+      // timeRemaining: this._time,
       totalLives: this._lives,
     });
 

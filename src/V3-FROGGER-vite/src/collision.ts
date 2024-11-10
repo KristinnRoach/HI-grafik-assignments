@@ -12,7 +12,6 @@ export class CollisionSystem {
   private isAnimatingDeath = false;
   private originalMaterials: THREE.Material[] = [];
   private gameState: GameState;
-  private currentLogVelocity = new THREE.Vector3(0, 0, 0);
 
   constructor(private frog: THREE.Object3D) {
     this.gameState = GameState.getInstance();
@@ -43,30 +42,45 @@ export class CollisionSystem {
     if (this.isAnimatingDeath) return false;
 
     this.frogBox.setFromObject(this.frog);
+    let isOnAnyLog = false;
 
     for (const obj of collidables) {
       this.tempBox.setFromObject(obj);
 
       if (this.frogBox.intersectsBox(this.tempBox)) {
-        console.log('Collision detected!');
         if (type === 'car') {
           this.handleCarCollision();
         } else if (type === 'log') {
           this.handleLogCollision(obj, deltaTime, frogger);
+          isOnAnyLog = true;
         }
         return true;
       }
     }
 
-    return false;
+    if (type === 'log' && !isOnAnyLog) {
+      this.gameState.updateCurrentLog(null);
+    }
+
+    // Return whether we found any collisions
+    return isOnAnyLog || type === 'car';
   }
 
-  checkRiver(deltaTime: number, frogger: THREE.Object3D) {
-    if (this.isAnimatingDeath) return false;
+  logRadius = 0.3; // move
+  frogHeight = 0.25; // move
 
-    this.frogBox.setFromObject(frogger);
-    if (this.frogBox.intersectsBox(this.riverBox)) {
-      this.animateDeathEffect(500);
+  private handleLogCollision(
+    log: THREE.Object3D,
+    deltaTime: number,
+    frogger: THREE.Object3D
+  ) {
+    const logY = log.position.y;
+    // Position frog on top of log
+    frogger.position.y = logY + this.logRadius + this.frogHeight;
+
+    //  update the current log reference if it's a new log
+    if (this.gameState.currentLog !== log) {
+      this.gameState.updateCurrentLog(log as THREE.Mesh);
     }
   }
 
@@ -74,28 +88,33 @@ export class CollisionSystem {
     console.log('Hit by car!');
     this.animateDeathEffect(500);
     this.gameState.updateLives(-1);
-    this.resetFrog();
   }
 
-  private handleLogCollision(
-    log: THREE.Object3D,
-    deltaTime: number,
-    frogger: THREE.Object3D
-  ) {
-    if (this.gameState.currentLog === log) return; // if still on the same log, or not on a log return
+  checkRiver(deltaTime: number, frogger: THREE.Object3D) {
+    if (this.isAnimatingDeath) return false;
 
-    // If switching logs, remove old movement
-    if (this.gameState.currentLog && this.gameState.currentLog !== log) {
-      frogger.position.sub(this.currentLogVelocity);
-      this.gameState.updateCurrentLog(log as THREE.Mesh);
+    this.frogBox.setFromObject(frogger);
+
+    // Check if frog is in river area
+    if (this.frogBox.intersectsBox(this.riverBox)) {
+      console.log('frogger intersects river box');
+      // If we're not on a log while in the river, we're drowning
+      if (!this.gameState.currentLog) {
+        console.log('River collision detected - Drowning!');
+        this.handleDrowning();
+        return true;
+      }
     }
-    // Apply new log's movement
-    this.currentLogVelocity = log.userData.velocity
-      .clone()
-      .multiplyScalar(deltaTime);
-    frogger.position.add(this.currentLogVelocity);
   }
 
+  private handleDrowning() {
+    if (!this.isAnimatingDeath) {
+      this.animateDeathEffect(500);
+      this.gameState.updateLives(-1);
+    }
+  }
+
+  // move frog animations to Frog class!
   private animateDeathEffect(duration: number) {
     if (this.isAnimatingDeath) return;
 
@@ -139,20 +158,3 @@ export class CollisionSystem {
     this.frog.scale.copy(orgScale || new THREE.Vector3(1, 1, 1));
   }
 }
-
-// const logMovement = new THREE.Vector3(0.1, 0, 0);
-// this.frogger.position.sub(this.currentLogVelocity);
-// this.currentLogVelocity.set(0, 0, 0);
-
-// if (this.gameState.currentLog) {
-//   if (this.currentLogVelocity.length() === 0) {
-//     this.currentLogVelocity = this.gameState.currentLog.userData.velocity
-//       .clone()
-//       .multiplyScalar(deltaTime);
-//   }
-//   this.frogger.position.add(this.currentLogVelocity);
-// } else if (this.currentLogVelocity.length() > 0) {
-//   // Only subtract and reset if we actually have a velocity to undo
-//   this.frogger.position.sub(this.currentLogVelocity);
-//   this.currentLogVelocity.set(0, 0, 0);
-// }

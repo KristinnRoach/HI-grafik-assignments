@@ -135,19 +135,18 @@ class Game {
   private setupScene() {
     // Lights
     const lights = [
-      new THREE.DirectionalLight(0xffffff, 1.3),
-      new THREE.AmbientLight(0x404040, 0.2),
-      new THREE.HemisphereLight(0xffffff, 0x080820, 0.3),
+      new THREE.DirectionalLight(0xffffff, 0.8),
+      new THREE.AmbientLight(0xffffff, 0.2),
+      // new THREE.HemisphereLight(0xffffff, 0x080820, 0.3),
     ];
-    lights[0].castShadow = true; // Enable shadow casting // MAKE THIS THE SUN ?
     // lights[2].castShadow = true;
-    lights[0].position.set(4, 5, 8);
+    lights[0].castShadow = true; // Enable shadow casting
+    lights[0].position.set(0, 3, 3);
 
     lights.forEach((light) => this.scene.add(light));
 
     // Ground
     const ground = createGround();
-    ground.position.y = -0.5;
     this.scene.add(ground);
 
     // Frog
@@ -159,7 +158,7 @@ class Game {
     this.cars.forEach((car) => this.scene.add(car));
 
     // Logs
-    this.logs = createLogs(3);
+    this.logs = createLogs(2);
     this.logs.forEach((log) => this.scene.add(log));
 
     // Debug helpers
@@ -188,36 +187,38 @@ class Game {
     const playBtn = document.querySelector('#play');
     const resetBtn = document.querySelector('#reset');
 
-    if (switchCamBtn && pauseBtn && playBtn && resetBtn) {
-      switchCamBtn.addEventListener('click', () => {
-        const newCam = this.gameState.toggleCamera();
-        this.currentCam = newCam === 'wide' ? this.wideCam : this.frogCam;
+    console.log(switchCamBtn, pauseBtn, playBtn, resetBtn);
 
-        // Manually update the OrbitControls to work with the new camera
-        if (newCam === 'wide') {
-          this.controls.object = this.wideCam;
-          this.controls.enabled = true;
-        } else {
-          this.controls.enabled = false; // Disable controls for frog cam
-        }
+    // if (switchCamBtn && pauseBtn && playBtn && resetBtn) {
+    switchCamBtn?.addEventListener('click', () => {
+      const newCam = this.gameState.toggleCamera();
+      this.currentCam = newCam === 'wide' ? this.wideCam : this.frogCam;
 
-        // Update camera projections
-        this.currentCam.updateProjectionMatrix();
-        console.log('Camera switched to:', newCam); // Debug log
-      });
+      // Manually update the OrbitControls to work with the new camera
+      if (newCam === 'wide') {
+        this.controls.object = this.wideCam;
+        this.controls.enabled = true;
+      } else {
+        this.controls.enabled = false; // Disable controls for frog cam
+      }
 
-      pauseBtn.addEventListener('click', () => {
-        this.renderer.setAnimationLoop(null);
-      });
+      // Update camera projections
+      this.currentCam.updateProjectionMatrix();
+      console.log('Camera switched to:', newCam); // Debug log
+    });
 
-      playBtn.addEventListener('click', () => {
-        this.renderer.setAnimationLoop(() => this.update());
-      });
+    // pauseBtn.addEventListener('click', () => {
+    //   this.renderer.setAnimationLoop(null);
+    // });
 
-      resetBtn.addEventListener('click', () => {
-        this.gameState.reset();
-      });
-    }
+    // playBtn.addEventListener('click', () => {
+    //   this.renderer.setAnimationLoop(() => this.update());
+    // });
+
+    // resetBtn.addEventListener('click', () => {
+    //   this.gameState.reset();
+    // });
+    // }
   }
 
   checkIsOnGroundXZ(obj: THREE.Object3D): boolean {
@@ -225,16 +226,44 @@ class Game {
       obj.position.x < 7.5 &&
       obj.position.x > -7.5 &&
       obj.position.z < 7.5 &&
-      obj.position.z > -7.5
+      obj.position.z > -9.5 // temp fix - test actual values
     );
+  }
+
+  private _isAnimatingVictory = false; // finish implementing
+  set isAnimatingVictory(value: boolean) {
+    this.isAnimatingVictory = value;
+  }
+
+  isFroggerOverRiver = false;
+  checkIsOverRiver(obj: THREE.Object3D): boolean {
+    return obj.position.z < -5;
   }
 
   private update() {
     const deltaTime = this.clock.getDelta();
 
-    if (!this.checkIsOnGroundXZ(this._frogger)) {
-      this.gameState.updateLives(-1);
-      this.gameState.updateCurrentLog(null);
+    // Check if frogger is over the river
+    if (!this.isFroggerOverRiver && !this._isAnimatingVictory) {
+      if (this.checkIsOverRiver(this._frogger)) {
+        this.gameState.updateLevel(1);
+        this.isFroggerOverRiver = true;
+        this._frogger.animateVictory();
+      }
+      setTimeout(() => {
+        // temp fix
+        this.isFroggerOverRiver = false;
+      }, 2000);
+    }
+
+    updateLogs(this.logs, deltaTime);
+
+    // If frog is on a log, move it with the log
+    if (this.gameState.currentLog) {
+      const logVelocity = this.gameState.currentLog.userData.velocity
+        .clone()
+        .multiplyScalar(deltaTime);
+      this._frogger.position.add(logVelocity);
     }
 
     const isOnLog = this.collisionSystem.check(
@@ -243,12 +272,7 @@ class Game {
       deltaTime,
       this._frogger
     );
-    const isCarCrash = this.collisionSystem.check(
-      this.cars,
-      'car',
-      deltaTime,
-      this._frogger
-    );
+
     if (!isOnLog) {
       const isDrowning = this.collisionSystem.checkRiver(
         deltaTime,
@@ -256,9 +280,26 @@ class Game {
       );
     }
 
+    const isCarCrash = this.collisionSystem.check(
+      this.cars,
+      'car',
+      deltaTime,
+      this._frogger
+    );
+
+    if (!isOnLog && this.gameState.currentLog) {
+      this.gameState.updateCurrentLog(null);
+    }
+
     this._frogger.update(deltaTime);
     updateCars(this.cars, deltaTime);
-    updateLogs(this.logs, deltaTime);
+
+    if (!this.checkIsOnGroundXZ(this._frogger)) {
+      console.log('Frogger fell off the map!');
+      this.gameState.updateLives(-1);
+      this.gameState.updateCurrentLog(null);
+      // this._frogger.resetFrog();
+    }
 
     this.controls.update();
 

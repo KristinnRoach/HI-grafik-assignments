@@ -59,7 +59,7 @@ export function updateCars(cars: Object3D[], deltaTime: number) {
     car.position.x += deltaTime * speed;
 
     // Reset position when car goes off screen
-    const bound = 7.5; // Half width + half car length
+    const bound = 8; //
     if (lane.direction === 'left' && car.position.x < -bound) {
       car.position.x = bound;
     } else if (lane.direction === 'right' && car.position.x > bound) {
