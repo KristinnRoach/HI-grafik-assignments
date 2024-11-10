@@ -1,5 +1,5 @@
 export default {
-  base: '/HI-grafik-assignments/src/v3-frogger-vite/', // Simpler path, lowercase needed
+  base: '/hi-grafik-assignments/src/v3-frogger-vite/', // Simpler path, lowercase needed
   root: 'src',
   publicDir: '../public',
   build: {
