@@ -15,9 +15,8 @@ export class Frog extends THREE.Group {
   private jumpProgress = 0;
   private startPos = new THREE.Vector3();
   private targetPos = new THREE.Vector3();
-  // private currentY = this.restingY;
-  // private readonly initialPosition = new THREE.Vector3(0, this.restingY, 7);
-  private readonly modelGroup: THREE.Group; // New group for the frog model
+
+  private readonly modelGroup: THREE.Group;
 
   private readonly body: THREE.Mesh;
   private readonly head: THREE.Mesh;
@@ -26,7 +25,7 @@ export class Frog extends THREE.Group {
   constructor() {
     super();
 
-    // Create a separate group for the frog model
+    // Group for all body parts
     this.modelGroup = new THREE.Group();
     this.add(this.modelGroup);
 
@@ -215,6 +214,8 @@ export function createFrog() {
   return new Frog();
 }
 
+/* old animation, ignore below */
+
 // private squash(): void {
 //   this.body.scale.set(1.2, 0.7, 1.2);
 //   this.legs.forEach((leg) => {
@@ -240,3 +241,5 @@ export function createFrog() {
 //     leg.position.x = isLeft ? (isBack ? 0.25 : 0.2) : isBack ? -0.25 : -0.2;
 //   });
 // }
+
+/* end of old animation */

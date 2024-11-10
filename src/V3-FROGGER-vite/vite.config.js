@@ -1,6 +1,6 @@
 export default {
   base: '/hi-grafik-assignments/src/v3-frogger-vite/', // Simpler path, lowercase needed
-  root: 'src',
+  root: '.',
   publicDir: '../public',
   build: {
     outDir: '../dist', // 'dist' to match the GitHub Actions script

@@ -8,9 +8,11 @@ export class CollisionSystem {
 
   private frogBox = new THREE.Box3();
   private tempBox = new THREE.Box3();
+  private riverBox = new THREE.Box3(); // getRiverBoundingBox();
   private isAnimatingDeath = false;
   private originalMaterials: THREE.Material[] = [];
   private gameState: GameState;
+  private currentLogVelocity = new THREE.Vector3(0, 0, 0);
 
   constructor(private frog: THREE.Object3D) {
     this.gameState = GameState.getInstance();
@@ -21,6 +23,8 @@ export class CollisionSystem {
         this.originalMaterials.push(child.material);
       }
     });
+
+    this.riverBox = getRiverBoundingBox();
   }
 
   static getInstance(frog: THREE.Object3D): CollisionSystem {
@@ -56,7 +60,6 @@ export class CollisionSystem {
 
     return false;
   }
-  riverBox = getRiverBoundingBox();
 
   checkRiver(deltaTime: number, frogger: THREE.Object3D) {
     if (this.isAnimatingDeath) return false;
@@ -73,14 +76,6 @@ export class CollisionSystem {
     this.gameState.updateLives(-1);
     this.resetFrog();
   }
-
-  // private handleWaterCollision() {
-  //   console.log('Fell in water!');
-  //   this.gameState.updateLives(-1);
-  //   this.resetFrog();
-  // }
-
-  currentLogVelocity = new THREE.Vector3(0, 0, 0);
 
   private handleLogCollision(
     log: THREE.Object3D,
@@ -100,23 +95,6 @@ export class CollisionSystem {
       .multiplyScalar(deltaTime);
     frogger.position.add(this.currentLogVelocity);
   }
-
-  // const logMovement = new THREE.Vector3(0.1, 0, 0);
-  // this.frogger.position.sub(this.currentLogVelocity);
-  // this.currentLogVelocity.set(0, 0, 0);
-
-  // if (this.gameState.currentLog) {
-  //   if (this.currentLogVelocity.length() === 0) {
-  //     this.currentLogVelocity = this.gameState.currentLog.userData.velocity
-  //       .clone()
-  //       .multiplyScalar(deltaTime);
-  //   }
-  //   this.frogger.position.add(this.currentLogVelocity);
-  // } else if (this.currentLogVelocity.length() > 0) {
-  //   // Only subtract and reset if we actually have a velocity to undo
-  //   this.frogger.position.sub(this.currentLogVelocity);
-  //   this.currentLogVelocity.set(0, 0, 0);
-  // }
 
   private animateDeathEffect(duration: number) {
     if (this.isAnimatingDeath) return;
@@ -162,23 +140,19 @@ export class CollisionSystem {
   }
 }
 
-// Usage example:
-/*
-const collisionSystem = new CollisionSystem(frog);
+// const logMovement = new THREE.Vector3(0.1, 0, 0);
+// this.frogger.position.sub(this.currentLogVelocity);
+// this.currentLogVelocity.set(0, 0, 0);
 
-// In game loop:
-collisionSystem.check(cars);
-*/
-
-// private handleCarCollision() {
-//   console.log('Hit by car!');
-//   this.gameState.updateLives(-1);
-//   this.resetFrog();
-// }
-
-// // well implement this later
-// private handleWaterCollision() {
-//   console.log('Fell in water!');
-//   this.gameState.updateLives(-1);
-//   this.resetFrog();
+// if (this.gameState.currentLog) {
+//   if (this.currentLogVelocity.length() === 0) {
+//     this.currentLogVelocity = this.gameState.currentLog.userData.velocity
+//       .clone()
+//       .multiplyScalar(deltaTime);
+//   }
+//   this.frogger.position.add(this.currentLogVelocity);
+// } else if (this.currentLogVelocity.length() > 0) {
+//   // Only subtract and reset if we actually have a velocity to undo
+//   this.frogger.position.sub(this.currentLogVelocity);
+//   this.currentLogVelocity.set(0, 0, 0);
 // }

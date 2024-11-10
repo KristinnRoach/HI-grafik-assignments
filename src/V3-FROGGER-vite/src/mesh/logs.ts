@@ -41,25 +41,6 @@ export function createLogs(logsPerLane: number) {
   return logs;
 }
 
-// function makeRidable(log: THREE.Mesh): IRidable {
-//   const onRide = (passenger: THREE.Object3D) => {
-//     passenger.position.add(log.userData.velocity);
-//   };
-//   const onCollision = (gameState: IGameState): CollisionType => {
-//     return {
-//       type: 'ride-on',
-//     };
-//   };
-
-//   let ridable = {
-//     obj: log,
-//     onCollision: onCollision,
-//     onRide: onRide,
-//   };
-
-//   return ridable;
-// }
-
 function createLogMesh(length: number): THREE.Mesh {
   const log = new THREE.Mesh(
     new THREE.CylinderGeometry(0.3, 0.3, length),

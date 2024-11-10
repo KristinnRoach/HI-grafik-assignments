@@ -52,9 +52,9 @@ class Game {
     this.renderer.setAnimationLoop(() => this.update());
   }
 
-  get frogger() {
-    return this._frogger;
-  }
+  // get frogger() {
+  //   return this._frogger;
+  // }
 
   private setupRenderer() {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -237,9 +237,24 @@ class Game {
       this.gameState.updateCurrentLog(null);
     }
 
-    this.collisionSystem.check(this.cars, 'car', deltaTime, this._frogger);
-    this.collisionSystem.check(this.logs, 'log', deltaTime, this._frogger);
-    this.collisionSystem.checkRiver(deltaTime, this._frogger);
+    const isOnLog = this.collisionSystem.check(
+      this.logs,
+      'log',
+      deltaTime,
+      this._frogger
+    );
+    const isCarCrash = this.collisionSystem.check(
+      this.cars,
+      'car',
+      deltaTime,
+      this._frogger
+    );
+    if (!isOnLog) {
+      const isDrowning = this.collisionSystem.checkRiver(
+        deltaTime,
+        this._frogger
+      );
+    }
 
     this._frogger.update(deltaTime);
     updateCars(this.cars, deltaTime);
@@ -254,5 +269,3 @@ class Game {
 
 // Start game
 new Game();
-
-//export const GAME = new Game(); // temp fix, change to singleton
