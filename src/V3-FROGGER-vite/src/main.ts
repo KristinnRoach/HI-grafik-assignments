@@ -163,12 +163,12 @@ class Game {
     this.logs.forEach((log) => this.scene.add(log));
 
     // Debug helpers
-    const gridHelper = new THREE.GridHelper(15, 15, 0xffff00);
-    gridHelper.position.y = 0.01;
-    this.scene.add(gridHelper);
+    // const gridHelper = new THREE.GridHelper(15, 15, 0xffff00);
+    // gridHelper.position.y = 0.01;
+    // this.scene.add(gridHelper);
 
-    const axesHelper = new THREE.AxesHelper(5);
-    this.scene.add(axesHelper);
+    // const axesHelper = new THREE.AxesHelper(5);
+    // this.scene.add(axesHelper);
   }
 
   private setupEventListeners() {
