@@ -157,6 +157,7 @@ export class Frog extends THREE.Group {
     this.jumpProgress += (deltaTime * 1000) / this.jumpDuration;
     if (this.jumpProgress >= 1) {
       this.completeJump();
+      this.isAnimatingLevelUp = false;
     } else {
       this.updateJumpAnimation();
     }

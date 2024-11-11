@@ -230,11 +230,6 @@ class Game {
     );
   }
 
-  private _isAnimatingVictory = false; // finish implementing
-  set isAnimatingVictory(value: boolean) {
-    this.isAnimatingVictory = value;
-  }
-
   isFroggerOverRiver = false;
   checkIsOverRiver(obj: THREE.Object3D): boolean {
     return obj.position.z < -5;
@@ -244,10 +239,10 @@ class Game {
     const deltaTime = this.clock.getDelta();
 
     // Check if frogger is over the river
-    if (!this.isFroggerOverRiver && !this._isAnimatingVictory) {
+    if (!this.isFroggerOverRiver) {
       if (this.checkIsOverRiver(this._frogger)) {
-        this.gameState.updateLevel(1);
         this.isFroggerOverRiver = true;
+        this.gameState.updateLevel(1);
         this._frogger.animateVictory();
       }
       setTimeout(() => {
