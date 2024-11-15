@@ -23,6 +23,7 @@ const controls = new OrbitControls(camera, canvas);
 
 // Skilgreina birtingaraðferð með afbjögun (antialias)
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 renderer.shadowMap.enabled = true; // kveikja á skuggakorti
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 // renderer.shadowMap.
@@ -58,14 +59,21 @@ scene.add(plane);
 
 // Skilgreina ljósgjafa og bæta honum í sviðsnetið
 const light = new THREE.PointLight(0xffffff, 1);
+light.position.set(-4, 1, -1);
 light.castShadow = true; // þessi ljósgjafi getur valdið skuggum
 
-light.position.set(-4, 1, -1);
+light.shadow.mapSize.width = 2048;
+light.shadow.mapSize.height = 2048;
+
 scene.add(light);
 
 const light_2 = new THREE.PointLight(0xffffff, 1);
-light_2.castShadow = true;
 light_2.position.set(4, 1, 1);
+light_2.castShadow = true;
+
+light_2.shadow.mapSize.width = 2048;
+light_2.shadow.mapSize.height = 2048;
+
 scene.add(light_2);
 
 // Hlutur sem sýnir staðsetningu ljósgjafa
@@ -124,19 +132,19 @@ folder.open();
 makeXYZGUI(gui, light.position, 'Light 1: position');
 makeXYZGUI(gui, light_2.position, 'Light 2: position');
 
-folder = gui.addFolder('Skuggakort 1');
-folder.add(light.shadow.mapSize, 'width', 128, 2048, 128).name('width');
-folder.add(light.shadow.mapSize, 'height', 128, 2048, 128).name('height');
+// folder = gui.addFolder('Skuggakort 1');
+// folder.add(light.shadow.mapSize, 'width', 128, 2048, 128).name('width');
+// folder.add(light.shadow.mapSize, 'height', 128, 2048, 128).name('height');
 
-folder = gui.addFolder('Skuggakort 2');
-folder.add(light_2.shadow.mapSize, 'width', 128, 2048, 128).name('width');
-folder.add(light_2.shadow.mapSize, 'height', 128, 2048, 128).name('height');
+// folder = gui.addFolder('Skuggakort 2');
+// folder.add(light_2.shadow.mapSize, 'width', 128, 2048, 128).name('width');
+// folder.add(light_2.shadow.mapSize, 'height', 128, 2048, 128).name('height');
 
 // Hreyfifall
 const animate = function () {
   requestAnimationFrame(animate);
 
-  let time = Date.now() * 0.0015;
+  let time = Date.now() * 0.0018;
 
   // Hreyfa tening og kúlu
   ball.position.y = Math.abs(Math.sin(time)) * 2;
