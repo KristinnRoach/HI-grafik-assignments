@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebGL Triangle Transparency</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+        background-color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="glCanvas" width="800" height="600"></canvas>
+
+    <script>
+      // Vertex shader program
+      const vsSource = `
+            attribute vec4 aVertexPosition;
+            attribute vec4 aVertexColor;
+            
+            varying lowp vec4 vColor;
+            
+            void main() {
+                gl_Position = aVertexPosition;
+                vColor = aVertexColor;
+            }
+        `;
+
+      // Fragment shader program
+      const fsSource = `
+            varying lowp vec4 vColor;
+            
+            void main() {
+                gl_FragColor = vColor;
+            }
+        `;
+
+      function initShaderProgram(gl, vsSource, fsSource) {
+        const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
+        const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+        const shaderProgram = gl.createProgram();
+        gl.attachShader(shaderProgram, vertexShader);
+        gl.attachShader(shaderProgram, fragmentShader);
+        gl.linkProgram(shaderProgram);
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LESS); // LESS is default
+
+        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+          alert(
+            'Unable to initialize the shader program: ' +
+              gl.getProgramInfoLog(shaderProgram)
+          );
+          return null;
+        }
+
+        return shaderProgram;
+      }
+
+      function loadShader(gl, type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          alert(
+            'An error occurred compiling the shaders: ' +
+              gl.getShaderInfoLog(shader)
+          );
+          gl.deleteShader(shader);
+          return null;
+        }
+
+        return shader;
+      }
+
+      function initBuffers(gl) {
+        // Triangle A - closest (purple, semi-transparent)
+        const triangleAVertices = [
+          -0.3, -0.3, -0.1, 0.0, 0.5, -0.1, 0.3, -0.3, -0.1,
+        ];
+        const triangleAColors = [
+          1.0,
+          0.0,
+          1.0,
+          0.25, // RGBA
+          1.0,
+          0.0,
+          1.0,
+          0.25,
+          1.0,
+          0.0,
+          1.0,
+          0.25,
+        ];
+
+        // Triangle B - middle (yellow, opaque)
+        const triangleBVertices = [
+          -0.1, -0.1, 0.0, 0.2, 0.7, 0.0, 0.5, -0.1, 0.0,
+        ];
+        const triangleBColors = [
+          1.0,
+          1.0,
+          0.0,
+          1.0, // RGBA
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+        ];
+
+        // Triangle C - farthest (cyan, semi-transparent)
+        const triangleCVertices = [0.1, 0.1, 0.1, 0.4, 0.9, 0.1, 0.7, 0.1, 0.1];
+
+        const triangleCColors = [
+          0.0,
+          1.0,
+          1.0,
+          0.75, // RGBA
+          0.0,
+          1.0,
+          1.0,
+          0.75,
+          0.0,
+          1.0,
+          1.0,
+          0.75,
+        ];
+
+        function createBuffer(vertices) {
+          const buffer = gl.createBuffer();
+          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(vertices),
+            gl.STATIC_DRAW
+          );
+          return buffer;
+        }
+
+        return {
+          A: {
+            position: createBuffer(triangleAVertices),
+            color: createBuffer(triangleAColors),
+          },
+          B: {
+            position: createBuffer(triangleBVertices),
+            color: createBuffer(triangleBColors),
+          },
+          C: {
+            position: createBuffer(triangleCVertices),
+            color: createBuffer(triangleCColors),
+          },
+        };
+      }
+
+      function drawTriangle(gl, programInfo, buffers, triangle) {
+        // Position attribute
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangle.position);
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexPosition,
+          3, // 3 components per vertex
+          gl.FLOAT,
+          false,
+          0,
+          0
+        );
+
+        // Color attribute
+        gl.bindBuffer(gl.ARRAY_BUFFER, triangle.color);
+        gl.vertexAttribPointer(
+          programInfo.attribLocations.vertexColor,
+          4, // 4 components per color (RGBA)
+          gl.FLOAT,
+          false,
+          0,
+          0
+        );
+
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      }
+
+      function main() {
+        const canvas = document.querySelector('#glCanvas');
+        const gl = canvas.getContext('webgl', {
+          alpha: true,
+          premultipliedAlpha: true,
+          depth: true,
+        }); // depth: true });
+
+        if (gl === null) {
+          alert(
+            'Unable to initialize WebGL. Your browser or machine may not support it.'
+          );
+          return;
+        }
+
+        const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
+        const programInfo = {
+          program: shaderProgram,
+          attribLocations: {
+            vertexPosition: gl.getAttribLocation(
+              shaderProgram,
+              'aVertexPosition'
+            ),
+            vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
+          },
+        };
+
+        const buffers = initBuffers(gl);
+
+        // Enable attributes
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition);
+        gl.enableVertexAttribArray(programInfo.attribLocations.vertexColor);
+
+        // Set clear color and clear the canvas
+        gl.clearColor(0.1, 0.5, 0.1, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // gl.depthMask(false);
+        // Enable blending
+        gl.enable(gl.BLEND);
+
+        // 1. Standard alpha blending - requires back-to-front drawing
+        // gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        // Result = Source * srcAlpha + Destination * (1 - srcAlpha)
+        // Most common, used for regular transparency
+
+        // 2. Additive blending - order independent
+        // gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        // Result = Source * srcAlpha + Destination
+        // Good for glowing effects, particles, fire
+
+        // 3. Multiplicative blending - order independent
+        // gl.blendFunc(gl.ZERO, gl.SRC_COLOR);
+        // Result = Source * Destination
+        // Used for shadows, darkening effects
+
+        // 4. Premultiplied alpha - better for back-to-front but more flexible
+        // gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        // Result = Source + Destination * (1 - srcAlpha)
+        // More predictable results with multiple transparent layers
+
+        // 5. Maximum - order independent
+        // gl.blendFunc(gl.ONE, gl.ONE);
+        // Result = Source + Destination
+
+        // Use shader program
+        gl.useProgram(programInfo.program);
+
+        // Draw triangles in correct order for transparency
+        // First opaque objects (B), then transparent ones back-to-front (C, A)
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        drawTriangle(gl, programInfo, buffers, buffers.C);
+
+        gl.blendFunc(gl.ONE, gl.ZERO);
+        drawTriangle(gl, programInfo, buffers, buffers.B);
+
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        drawTriangle(gl, programInfo, buffers, buffers.A);
+      }
+
+      window.onload = main;
+    </script>
+  </body>
+</html>
