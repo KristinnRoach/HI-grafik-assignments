@@ -132,14 +132,6 @@ folder.open();
 makeXYZGUI(gui, light.position, 'Light 1: position');
 makeXYZGUI(gui, light_2.position, 'Light 2: position');
 
-// folder = gui.addFolder('Skuggakort 1');
-// folder.add(light.shadow.mapSize, 'width', 128, 2048, 128).name('width');
-// folder.add(light.shadow.mapSize, 'height', 128, 2048, 128).name('height');
-
-// folder = gui.addFolder('Skuggakort 2');
-// folder.add(light_2.shadow.mapSize, 'width', 128, 2048, 128).name('width');
-// folder.add(light_2.shadow.mapSize, 'height', 128, 2048, 128).name('height');
-
 // Hreyfifall
 const animate = function () {
   requestAnimationFrame(animate);
