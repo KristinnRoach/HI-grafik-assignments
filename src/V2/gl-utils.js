@@ -5,7 +5,7 @@ import { initShaders } from '../lib/initShaders.js';
 
 export let gl, program;
 
-const bgColor = [0.0, 0.0, 0.0, 0.5];
+const bgColor = [0.0, 0.0, 0.0, 0.0];
 
 export const glPos = {
   aColor: null,

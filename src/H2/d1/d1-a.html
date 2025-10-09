@@ -4,19 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <title>h1-d1</title>
 
+    <title>h1-d1</title>
+    <link rel="stylesheet" href="../../shared.css" />
     <style>
       body {
         margin: 0 auto;
         display: flex;
         flex-direction: column;
         align-items: center;
+
+        height: 100vh;
+        max-height: 100vh;
       }
       canvas {
-        width: 90vh;
-        height: 90vh;
+        width: 80vh;
+        height: 80vh;
         margin: 0 auto;
+        background: transparent;
+        z-index: 1;
+        position: relative;
       }
     </style>
 
@@ -49,9 +56,13 @@
     <script type="text/javascript" src="../lib/initShaders.js"></script>
     <script type="text/javascript" src="../lib/MV.js"></script>
     <script type="module" src="./a.js"></script>
+
+    <script src="../../theme-toggle.js"></script>
   </head>
 
   <body>
+    <a href="../index.html" class="back-btn" aria-label="Back to H2">← Back</a>
+    <button id="theme-toggle"></button>
     <canvas id="gl-canvas" width="512" height="512">
       Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>

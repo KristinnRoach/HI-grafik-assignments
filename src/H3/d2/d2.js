@@ -12,7 +12,7 @@ let vPosition;
 window.onload = function init() {
   //  Configure WebGL
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(1.0, 1.0, 1.0, 1.0);
+  gl.clearColor(1.0, 1.0, 1.0, 0.0);
 
   //  Load shaders and initialize attribute buffers
   program = initShaders(gl, 'vertex-shader', 'fragment-shader');

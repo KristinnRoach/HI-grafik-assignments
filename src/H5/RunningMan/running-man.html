@@ -1,148 +1,105 @@
+<!DOCTYPE html>
 <html>
-  <script id="vertex-shader" type="x-shader/x-vertex">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Running Man</title>
 
-    attribute  vec4 vPosition;
-    attribute vec4 vColor;
+    <style>
+      body {
+        position: relative;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+        min-height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+      }
+      canvas {
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+        z-index: 1;
+        position: relative;
+      }
+      #instructions {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        flex-wrap: nowrap;
+        align-items: center;
+        font-size: 1rem;
+        color: var(--color-fg);
+        gap: 2rem;
+        height: 7vh;
 
-    varying vec4 fColor;
-    // varying vec3 N, L, E;
+        z-index: 9999;
+      }
+    </style>
 
-
-    uniform mat4 modelViewMatrix;
-    uniform mat4 projectionMatrix;
-    /*
-    uniform vec4 lightPosition;
-    uniform mat3 normalMatrix;
-    */
-
-    float random(vec2 st) {
-      return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
-    }
-
-    void main()
-    {
-        vec4 random = vec4(random(vPosition.xy), random(vPosition.yz), random(vPosition.zx), 1.0);
-        fColor = random;
-
-        // fColor = vColor;
-        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-    /*
-        // TEST NONPHOTOREAL LIGHT (cartoony)
-        vec3 pos = (modelViewMatrix * vPosition).xyz;
-
-        // check for directional light
-        if(lightPosition.w == 0.0) L = normalize(lightPosition.xyz);
-        else L = normalize( lightPosition.xyz - pos );
-
-        E =  -normalize(pos);
-        N = normalize( normalMatrix*vNormal.xyz);
-
-        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-    */
-    }
-  </script>
-
-  <script id="fragment-shader" type="x-shader/x-fragment">
-
-    precision mediump float;
-
-    varying vec4 fColor;
-
-    uniform float time;
-    /*
-    uniform vec4 ambientProduct;
-    uniform vec4 diffuseProduct;
-    uniform vec4 specularProduct;
-    uniform float shininess;
-    varying vec3 N, L, E;
-    */
-
-    void main()
-    {
-        gl_FragColor = fColor;
-    /*
-        // TEST NONPHOTOREAL LIGHT (cartoony)
-        vec3 H = normalize( L + E );
-
-        vec4 ambient = ambientProduct;
-        vec4 diffuse = max( dot(L, N), 0.0 )*diffuseProduct;
-        vec4 specular = specularProduct * pow( max(dot(N, H), 0.0), shininess );
-
-        if( dot(L, N) < 0.0 ) specular = vec4(0.0, 0.0, 0.0, 1.0);
-
-    //  Do nonphoto realistic shading:
-        if( max(dot(L, N), 0.0) > 0.6 )
-            gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
-        else
-            gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-
-        if( max(dot(E,N), 0.0) < 0.1 )
-            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-    */
-    }
-  </script>
-
-  <script type="text/javascript" src="../../lib/webgl-utils.js"></script>
-  <script type="module" src="../../lib/initShaders.js"></script>
-  <script type="module" src="../../lib/MV.js"></script>
-  <script type="module" src="running-man.js"></script>
-
-  <style>
-    body {
-      position: relative;
-
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: nowrap;
-      background-color: black;
-
-      min-height: 100vh;
-      max-height: 100vh;
-
-      overflow: hidden;
-    }
-    canvas {
-      width: 100vw;
-      margin: 0 auto;
-
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #instructions {
-      position: absolute;
-      bottom: 5px;
-      left: 0;
-      right: 0;
-      display: flex;
-      flex-direction: row;
-      justify-content: space-evenly;
-      flex-wrap: nowrap;
-      align-items: center;
-      font-size: 1rem;
-      color: rgb(255, 0, 0);
-      row-gap: 5px;
-      height: 7vh;
-    }
-
-    /* #instructions p {
-    } */
-  </style>
-
+    <link rel="stylesheet" href="../../shared.css" />
+  </head>
   <body>
-    <canvas id="gl-canvas" width="600" height="600"></canvas>
+    <a href="../index.html" class="back-btn" aria-label="Back to H5">← Back</a>
+    <button id="theme-toggle"></button>
+    <canvas id="gl-canvas" width="800" height="600">
+      Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
     <div id="instructions">
       <p>'s': slowmo</p>
       <p>'r': normal speed</p>
       <p>'p': pause/play ♪</p>
-
       <p>Speed: Left & Right</p>
       <p>Bounce: Up & Down</p>
     </div>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+
+      attribute  vec4 vPosition;
+      attribute vec4 vColor;
+
+      varying vec4 fColor;
+
+      uniform mat4 modelViewMatrix;
+      uniform mat4 projectionMatrix;
+
+      float random(vec2 st) {
+        return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+      }
+
+      void main()
+      {
+          vec4 random = vec4(random(vPosition.xy), random(vPosition.yz), random(vPosition.zx), 1.0);
+          fColor = random;
+          gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+
+      }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+
+      precision mediump float;
+
+      varying vec4 fColor;
+
+      uniform float time;
+
+      void main()
+      {
+          gl_FragColor = fColor;
+      }
+    </script>
+
+    <script src="../../theme-toggle.js"></script>
+    <script type="text/javascript" src="../../lib/webgl-utils.js"></script>
+    <script type="module" src="../../lib/initShaders.js"></script>
+    <script type="module" src="../../lib/MV.js"></script>
+    <script type="module" src="running-man.js"></script>
   </body>
 </html>

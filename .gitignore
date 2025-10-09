@@ -3,5 +3,10 @@ src/v3-frogger-vite/node_modules/*
 src/v3-frogger-vite/dist/
 src/v3-frogger-vite/dist/*
 
+test.frag
 
+.vscode/
 **/.DS_Store
+
+deploy-frogger.txt
+

@@ -11,22 +11,18 @@
     <style>
       body {
         margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: nowrap;
-        background-color: black;
-
         color: rgba(101, 255, 84, 0.603);
 
-        /* min-height: 100vh; */
+        min-height: 100vh;
         max-height: 100vh;
       }
-      canvas {
-        /* position: relative; */
 
-        width: 90vh; /* TODO: enable more width by compensating in js or glsl */
+      .canvas-container {
+        place-items: center;
+      }
+
+      canvas {
+        width: 90vh;
         height: 85vh;
         margin: 0 auto;
 
@@ -36,7 +32,6 @@
         align-items: center;
 
         z-index: -1;
-
       }
 
       #cells {
@@ -50,8 +45,6 @@
         font-size: 20px;
         /* font-family: Arial, sans-serif; */
         color: rgba(101, 255, 84, 0.603);
-
-        
       }
       #cell-count #max-cells {
         display: none;
@@ -81,7 +74,7 @@
         /* color: red; */
         color: white;
         text-shadow: 2px 2px 4px #000000;
-        pointer-events: none; 
+        pointer-events: none;
         display: none;
 
         mix-blend-mode: difference; /* hard-light;  */
@@ -99,11 +92,13 @@
 
       input,
       select {
-        background-color: black;
-        color: rgba(101, 255, 84, 0.603);
+        background-color: var(--color-surface-2);
+        color: rgba(0, 210, 0, 1);
         border: 1px solid rgba(101, 255, 84, 0.603);
         border-radius: 5px;
         padding: 5px;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
       }
 
       input[type='number'] {
@@ -112,7 +107,7 @@
 
       .controls {
         margin: 0 auto;
-        height: 15vh;
+        margin-top: 1rem;
         column-gap: 1rem;
         display: flex;
         flex-direction: row;
@@ -127,6 +122,8 @@
         margin-right: 10px;
       }
     </style>
+
+    <link rel="stylesheet" href="../shared.css" />
 
     <!-- prettier-ignore -->
     <script id="vertex-shader" type="x-shader/x-vertex">#version 300 es
@@ -213,6 +210,8 @@
 
         vec3 litColor = vColor.rgb * (ambient + diffuse); // + specular;
 
+        // fragColor = vec4(litColor, vColor.a);
+
         fragColor = vec4(litColor, vColor.a);
 
         // vec3 debugColor = 0.5 * normalize(vNormal) + 0.5;
@@ -224,14 +223,48 @@
   </head>
 
   <body>
-    <div id="canvas-container">
+    <button
+      id="theme-toggle"
+      style="
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        padding: 6px 12px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-fg);
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+      "
+    ></button>
+    <a
+      href="../../index.html"
+      class="back-btn"
+      aria-label="Back to main page"
+      style="
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        padding: 6px 12px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-fg);
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        text-decoration: none;
+      "
+      >← Back</a
+    >
 
+    <div id="canvas-container">
       <div id="cells">
         <div style="visibility: hidden" id="cell-count"></div>
-        <div  style="visibility: hidden" id="count-down"></div>
+        <div style="visibility: hidden" id="count-down"></div>
         <div style="visibility: hidden" id="max-cells"></div>
       </div>
-      
+
       <canvas id="gl-canvas" width="512" height="512">
         Oops ... your browser doesn't support the HTML5 canvas element
       </canvas>
@@ -243,9 +276,7 @@
           <p>Press r to restart</p>
         </div>
       </div>
-
-    <div id="canvas-container">
-
+    </div>
 
     <div class="controls">
       <div class="control-group">
@@ -263,9 +294,9 @@
       <div class="control-group">
         <label for="fps">Speed (FPS):</label>
         <input type="number" id="fps" min="1" max="60" step="1" />
-       
+
         <!-- <label for="cell-scale">Scale:</label>
-        <input type="number" id="cell-scale" min="0.0001" step="0.1" /> -->
+      <input type="number" id="cell-scale" min="0.0001" step="0.1" /> -->
       </div>
 
       <div class="control-group">
@@ -289,7 +320,7 @@
           <option value="sphere">Spheres</option>
         </select>
       </div>
-
     </div>
+    <script src="../theme-toggle.js"></script>
   </body>
 </html>

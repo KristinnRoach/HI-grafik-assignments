@@ -3,11 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>circlefan</title>
 
+    <title>circlefan</title>
+    <link rel="stylesheet" href="../../shared.css" />
     <style>
       body {
-        height: 100vh;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
@@ -17,8 +17,28 @@
         width: 90vh;
         height: 90vh;
         margin: 0 auto;
+        background: transparent;
+        z-index: 1;
+        position: relative;
       }
     </style>
+
+    <button
+      id="theme-toggle"
+      style="
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        padding: 6px 12px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-fg);
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+      "
+    ></button>
+    <script src="../../theme-toggle.js"></script>
   </head>
 
   <script id="vertex-shader" type="x-shader/x-vertex">
@@ -49,6 +69,7 @@
   <script type="text/javascript" src="circlefan.js"></script>
 
   <body>
+    <a href="../index.html" class="back-btn" aria-label="Back to H2">← Back</a>
     <canvas id="gl-canvas" width="512" height="512"
       >> Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>

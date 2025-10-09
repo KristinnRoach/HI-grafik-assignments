@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    <title>Sierpinski Carpet</title>
 
+    <title>Sierpinski Carpet</title>
+    <link rel="stylesheet" href="../../shared.css" />
     <style>
       body {
-        height: 100vh;
         margin: 0 auto;
         display: flex;
         flex-direction: column;
@@ -17,6 +17,9 @@
         width: 90vh;
         height: 90vh;
         margin: 0 auto;
+        background: transparent;
+        z-index: 1;
+        position: relative;
       }
     </style>
 
@@ -44,9 +47,13 @@
     <script type="text/javascript" src="../lib/initShaders.js"></script>
     <script type="text/javascript" src="../lib/MV.js"></script>
     <script type="text/javascript" src="./sierpinskiCarpet.js"></script>
+
+    <button id="theme-toggle"></button>
+    <script src="../../theme-toggle.js"></script>
   </head>
 
   <body>
+    <a href="../index.html" class="back-btn" aria-label="Back to H2">← Back</a>
     <canvas id="gl-canvas" width="512" height="512">
       Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>

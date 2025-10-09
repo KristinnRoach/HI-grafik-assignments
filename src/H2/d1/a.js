@@ -31,7 +31,7 @@ window.onload = function init() {
 
   // Configure WebGL
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(1.0, 1.0, 1.0, 1.0);
+  gl.clearColor(1.0, 1.0, 1.0, 0.0);
 
   var program = initShaders(gl, 'vertex-shader', 'fragment-shader');
   gl.useProgram(program);
@@ -39,20 +39,25 @@ window.onload = function init() {
   vPosition = gl.getAttribLocation(program, 'vPosition');
 
   // Add start, stop, reset buttons
+  var container = document.createElement('div');
+  container.id = 'button-container';
+  container.classList.add('button-container');
+  document.body.appendChild(container);
+
   var startButton = document.createElement('button');
   startButton.textContent = 'Start Animation';
   startButton.onclick = startAnimation;
-  document.body.appendChild(startButton);
+  container.appendChild(startButton);
 
   var stopButton = document.createElement('button');
   stopButton.textContent = 'Stop Animation';
   stopButton.onclick = stopAnimation;
-  document.body.appendChild(stopButton);
+  container.appendChild(stopButton);
 
   var resetButton = document.createElement('button');
   resetButton.textContent = 'Reset';
   resetButton.onclick = reset;
-  document.body.appendChild(resetButton);
+  container.appendChild(resetButton);
 };
 
 function startAnimation() {

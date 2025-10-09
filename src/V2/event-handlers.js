@@ -97,6 +97,7 @@ function handleKeyDown(event) {
       break;
     case ' ':
       game.isPaused = !game.isPaused;
+      event.preventDefault();
       break;
   }
 }

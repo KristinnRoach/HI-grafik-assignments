@@ -1,4 +1,5 @@
-<head>
+  <head>
+    <link rel="stylesheet" href="../../shared.css" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>car perspectives</title>
@@ -16,7 +17,7 @@
           align-items: center;
           justify-content: center;
           flex-wrap: nowrap;
-          background-color: #000;
+          /* background-color: #000; */
       
           height: 100vh;
           max-height: 100vh;
@@ -53,7 +54,9 @@
         }
         
       </style>
-</head>
+    <button id="theme-toggle"></button>
+    <script src="../../theme-toggle.js"></script>
+  </head>
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 
@@ -86,7 +89,8 @@ void main()
 <script type="module" src="carPerspective.js"></script>
 
 
-<body>
+  <body>
+    <a href="../index.html" class="back-btn" aria-label="Back to H5">← Back</a>
 <div id="instructions">
     <h4>Lyklar 1, 2, ..., 9 til að skipta um sjónarhorn.</h4>
     <p>Örvalyklar hækka og lækka staðsetningu áhorfanda</p>

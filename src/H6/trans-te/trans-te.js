@@ -61,7 +61,7 @@ window.onload = function init() {
   }
 
   gl.viewport(0, 0, canvas.width, canvas.height);
-  gl.clearColor(0.9, 1.0, 1.0, 1.0);
+  gl.clearColor(0.9, 1.0, 1.0, 0.0);
 
   gl.enable(gl.DEPTH_TEST);
   // gl.enable(gl.CULL_FACE);

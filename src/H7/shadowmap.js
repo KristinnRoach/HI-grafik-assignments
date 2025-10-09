@@ -7,7 +7,7 @@ const canvas = document.querySelector('#c');
 
 // Skilgreina sviðsnet
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('black');
+scene.background = new THREE.Color('darkgray');
 
 // Skilgreina myndavél og staðsetja hana
 const camera = new THREE.PerspectiveCamera(

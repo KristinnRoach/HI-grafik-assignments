@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <link rel="stylesheet" href="../../shared.css" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
@@ -63,9 +64,13 @@
 
     <script type="text/javascript" src="../../lib/webgl-utils.js"></script>
     <script type="module" src="./d2-exp.js"></script>
+
+    <button id="theme-toggle"></button>
+    <script src="../../theme-toggle.js"></script>
   </head>
 
   <body>
+    <a href="../index.html" class="back-btn" aria-label="Back to H3">← Back</a>
     <canvas id="gl-canvas" width="512" height="512">
       Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>
