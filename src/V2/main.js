@@ -5,9 +5,6 @@ import {
   flatten,
   mult,
   scalem,
-  transpose,
-  mat3,
-  inverse,
   vec3,
   vec4,
   normalize,
@@ -20,9 +17,10 @@ import {
   createBuffer,
   createInstancedBuffer,
   setupShaders,
+  createIndexBuffer,
+  getAllGlLocations,
   gl,
-  glPos,
-  program,
+  glLoc,
 } from './gl-utils.js';
 import { createGeometry } from './geometry.js';
 import { initGrid, updateGrid } from './game-logic.js';
@@ -32,6 +30,8 @@ import { game, setShape, updateCellCountDisplay } from './game-state.js';
 export let geometry;
 export let geometryBuffers;
 export let instanceBuffer;
+
+const LIGHT_DIRECTION = [0.4, 1.0, 0.6];
 
 export function setupGeometry() {
   try {
@@ -45,32 +45,29 @@ export function setupGeometry() {
     geometryBuffers = {
       vertices: createBuffer(
         new Float32Array(flatten(geometry.vertices)),
-        glPos.aPosition,
+        glLoc.aPosition,
         3
       ),
       colors: createBuffer(
         new Float32Array(flatten(geometry.colors)),
-        glPos.aColor,
+        glLoc.aColor,
         4
+      ),
+      uvs: createBuffer(
+        new Float32Array(flatten(geometry.uvs)),
+        glLoc.aTexCoord,
+        2
       ),
       normals: createBuffer(
         new Float32Array(flatten(geometry.normals)),
-        glPos.aNormal,
+        glLoc.aNormal,
         3
       ),
-      indices: gl.createBuffer(),
+      indices: createIndexBuffer(geometry.indices),
       numIndices: geometry.numIndices,
     };
 
     console.log('Geometry buffers created:', geometryBuffers);
-
-    if (!gl) {
-      console.error('WebGL context is not available');
-      return;
-    }
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, geometry.indices, gl.STATIC_DRAW);
 
     const initialInstanceData = new Float32Array(
       game.dimensions[0] * game.dimensions[1] * game.dimensions[2] * 3
@@ -78,7 +75,7 @@ export function setupGeometry() {
 
     instanceBuffer = createInstancedBuffer(
       initialInstanceData,
-      glPos.aOffset,
+      glLoc.aOffset,
       3
     );
 
@@ -95,19 +92,7 @@ export function init() {
   setupWebGL();
   setupShaders();
 
-  glPos.aColor = gl.getAttribLocation(program, 'aColor');
-  glPos.aPosition = gl.getAttribLocation(program, 'aPosition');
-
-  glPos.aOffset = gl.getAttribLocation(program, 'aOffset');
-
-  glPos.uProjection = gl.getUniformLocation(program, 'uProjection');
-  glPos.uLightDirection = gl.getUniformLocation(program, 'uLightDirection');
-
-  glPos.aNormal = gl.getAttribLocation(program, 'aNormal');
-  glPos.uNormalMatrix = gl.getUniformLocation(program, 'uNormalMatrix');
-
-  glPos.uViewMatrix = gl.getUniformLocation(program, 'uViewMatrix');
-  glPos.uCellScale = gl.getUniformLocation(program, 'uCellScale');
+  getAllGlLocations();
 
   setupGeometry(game.shape);
 
@@ -118,7 +103,7 @@ export function init() {
     cam.NEAR_PLANE,
     cam.FAR_PLANE
   );
-  gl.uniformMatrix4fv(glPos.uProjection, false, flatten(projectionMatrix));
+  gl.uniformMatrix4fv(glLoc.uProjection, false, flatten(projectionMatrix));
 
   setupEventListeners(gl.canvas);
   initGrid(game.pattern);
@@ -199,31 +184,13 @@ export function render() {
   );
 
   // Set cell scale uniform
-  gl.uniform1f(glPos.uCellScale, baseScale);
+  gl.uniform1f(glLoc.uCellScale, baseScale);
 
   // Set view matrix
-  gl.uniformMatrix4fv(glPos.uViewMatrix, false, flatten(viewMatrix));
+  gl.uniformMatrix4fv(glLoc.uViewMatrix, false, flatten(viewMatrix));
 
-  // Bind normal buffer
-  gl.bindBuffer(gl.ARRAY_BUFFER, geometryBuffers.normals);
-  gl.vertexAttribPointer(glPos.aNormal, 3, gl.FLOAT, false, 0, 0);
-
-  gl.enableVertexAttribArray(glPos.aNormal);
-
-  // Set light direction uniform
-  if (game.shape === 'sphere') {
-    // need to adjust normals or keep separate light direction for cubes n spheres
-    gl.uniform3fv(glPos.uLightDirection, flatten(normalize([5.0, -0.9, 1.0])));
-  } else {
-    gl.uniform3fv(
-      glPos.uLightDirection,
-      flatten(normalize([-0.01, -0.5, 0.05]))
-    );
-  }
-
-  // Set normal matrix
-  const normalMatrix = mat3(transpose(inverse(viewMatrix)));
-  gl.uniformMatrix3fv(glPos.uNormalMatrix, false, flatten(normalMatrix));
+  // World-space direction towards the light, same for every shape
+  gl.uniform3fv(glLoc.uLightDirection, flatten(normalize(LIGHT_DIRECTION)));
 
   // Bind index buffer
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);
