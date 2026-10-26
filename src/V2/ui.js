@@ -100,7 +100,6 @@ export function resetGameState() {
   game.cellScale = 0.5;
 
   const { fps, pattern, shape, birth, survival } = getHtmlValues();
-  // setFPS(fps);
   game.pattern = pattern;
   game.shape = shape;
   game.rules.birth = birth;
@@ -119,7 +118,7 @@ export function resetGameState() {
 export function restartGame() {
   document.getElementById('game-over').style.display = 'none';
 
-  game.isGameOver = false;
+  game.isOver = false;
   game.isPaused = false;
 
   initGrid(game.pattern);

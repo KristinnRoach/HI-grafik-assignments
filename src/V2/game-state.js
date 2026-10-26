@@ -98,44 +98,12 @@ export function gameOver(reason) {
   document.getElementById('game-over').style.display = 'block';
 }
 
-export function setStartPattern(pattern) {
-  game.pattern = pattern;
-}
-
-export function togglePause() {
-  game.isPaused = !game.isPaused;
-}
-
 export function toggleWrapping() {
   game.infiniteGrid = !game.infiniteGrid;
 }
 
-export function setGenInterval(interval) {
-  game.genInterval = interval;
-}
-
 export function setGridDimensions(dimensions) {
   game.dimensions = dimensions;
-}
-
-export function setRule(value, rule) {
-  switch (rule) {
-    case 'birth-1':
-      game.rules.birth[0] = value;
-      break;
-    case 'birth-2':
-      game.rules.birth[1] = value;
-      break;
-    case 'survival-1':
-      game.rules.survival[0] = value;
-      break;
-    case 'survival-2':
-      game.rules.survival[1] = value;
-      break;
-    case 'survival-3':
-      game.rules.survival[2] = value;
-      break;
-  }
 }
 
 export function setGridScale(scale) {
@@ -156,14 +124,4 @@ export function clearGrid() {
     );
 
   game.activeCells = 0;
-}
-
-export function randomizeGrid() {
-  game.currentGrid = game.currentGrid.map((x) =>
-    x.map((y) => y.map(() => (Math.random() < 0.5 ? 0 : 1)))
-  );
-
-  game.activeCells = game.currentGrid
-    .flat(3)
-    .filter((cell) => cell === 1).length;
 }

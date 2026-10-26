@@ -99,7 +99,6 @@ export function updateGrid() {
 
 function countNeighbors(x, y, z) {
   let count = 0;
-  let outOfBoundsSet = new Set();
 
   for (let dx = -1; dx <= 1; dx++) {
     for (let dy = -1; dy <= 1; dy++) {
@@ -145,10 +144,6 @@ function xyzOutOfBounds(x, y, z) {
 function isGridStabilized(grid1, grid2) {
   // TEMP make if same over x iterations
   return grid1 == grid2;
-}
-
-function outOfBounds(value, axis) {
-  return value < 0 || value >= game.dimensions[axis];
 }
 
 /* Initializer patterns */
@@ -296,16 +291,3 @@ function createEmptyGrid() {
         .map(() => Array(game.dimensions[2]).fill(0))
     );
 }
-
-// if (game.wrapping) {
-//   nx = (nx + game.dimensions[0]) % game.dimensions[0];
-//   ny = (ny + game.dimensions[1]) % game.dimensions[1];
-//   nz = (nz + game.dimensions[2]) % game.dimensions[2];
-// }
-
-// if (outOfBounds(nx, ny, nz)) {
-//   // if (boundariesKill) {
-//   //   count++;
-//   // }
-//   continue;
-// }
