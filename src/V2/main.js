@@ -33,15 +33,15 @@ export let instanceBuffer;
 
 // Tweakable at runtime by dev-tuning.js
 export const lighting = {
-  cellColor: [0.4, 0.9, 0.5], // sRGB
-  lightDirection: [0.4, 1.0, 0.6], // world space, towards the light
-  lightIntensity: 1.0,
+  cellColor: [0.3, 0.8, 0.4], // sRGB
+  lightDirection: [0.8, -0.5, 0.8], // world space, towards the light
+  lightIntensity: 1,
   skyColor: [0.5, 0.5, 0.5], // linear
-  groundColor: [0.3, 0.4, 0.2], // linear
-  diffuseWrap: 0.1,
+  groundColor: [0.3, 0.3, 0.2], // linear
+  diffuseWrap: 0.95,
   specularStrength: 0.25,
   occlusionStrength: 2,
-  occlusionDirect: 0.5, // how much occlusion also dims direct light
+  occlusionDirect: 0.15, // how much occlusion also dims direct light
 };
 
 // Fraction of the 26 surrounding cells that are alive, used as cheap ambient occlusion
