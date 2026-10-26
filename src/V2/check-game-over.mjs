@@ -33,4 +33,10 @@ assert.equal(game.activeCells, 27);
 assert.ok(poke(...ray)); // hits the front face, back layer survives
 assert.equal(game.activeCells, 9);
 assert.equal(poke([0, 100, 0], [1, 0, 0]), false); // misses the grid
+
+// A click in empty space stamps the selected pattern: a line through the grid
+game.currentGrid.forEach((p) => p.forEach((r) => r.fill(0)));
+game.pattern = 'line';
+assert.ok(poke(...ray));
+assert.equal(game.activeCells, 2 * game.seedRadius + 1); // clipped to seedRadius
 console.log('ok');

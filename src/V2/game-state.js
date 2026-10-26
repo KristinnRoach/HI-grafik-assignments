@@ -1,6 +1,6 @@
 // game-state.js
 
-export const GRID_DIMENSIONS = [16, 16, 16];
+export const GRID_DIMENSIONS = [18, 18, 18];
 const MAX_CELLS = GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1] * GRID_DIMENSIONS[2];
 const BEST_KEY = 'gol-best';
 
@@ -20,11 +20,12 @@ export const game = {
 
   // Game-over tuning
   maxPopulation: Math.round(MAX_CELLS / 5),
-  overpopGrace: 5, // generations allowed above maxPopulation before game over
-  stableWindow: 6, // a grid repeating any of the last N grids counts as stabilised
+  overpopGrace: 10, // generations allowed above maxPopulation before game over
+  stableWindow: 4, // a grid repeating any of the last N grids counts as stabilised
 
-  // Clicking empty space seeds a 3×3×3 block; clicking a live cell clears one
-  seedDensity: 0.5, // chance each cell in a seeded block comes alive
+  // Clicking empty space stamps the selected pattern; clicking a live cell clears a 3×3×3 block
+  seedDensity: 0.5, // chance each cell comes alive when clicking with the random pattern
+  seedRadius: 4, // clicked patterns are clipped to this many cells from the click on each axis
 
   // Per-run counters, reset by initGrid
   generation: 0, // also the score
