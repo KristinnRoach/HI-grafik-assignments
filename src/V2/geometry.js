@@ -11,7 +11,7 @@ export function createGeometry(shape = 'cube', options = {}) {
 }
 
 function createCubeGeometry(options = {}) {
-  const { size = 1, color = [0.34, 0.8, 0.1, 1.0] } = options;
+  const { size = 1 } = options;
   const halfSize = size / 2;
 
   const vertices = [
@@ -50,7 +50,6 @@ function createCubeGeometry(options = {}) {
 
   const vertexArray = [];
   const normalArray = [];
-  const colorArray = [];
   const indexArray = [];
   const uvArray = [];
 
@@ -59,7 +58,6 @@ function createCubeGeometry(options = {}) {
     [a, b, c, a, c, d].forEach((vertexIndex, i) => {
       vertexArray.push(...vertices[vertexIndex]);
       normalArray.push(...normals[faceIndex]);
-      colorArray.push(...color);
       uvArray.push(...triUvs[i]);
     });
   });
@@ -71,7 +69,6 @@ function createCubeGeometry(options = {}) {
   return {
     vertices: new Float32Array(vertexArray),
     normals: new Float32Array(normalArray),
-    colors: new Float32Array(colorArray),
     uvs: new Float32Array(uvArray),
     indices: new Uint16Array(indexArray),
     numIndices: indexArray.length,
@@ -83,12 +80,10 @@ function createSphereGeometry(options = {}) {
     radius = 1,
     latitudeBands = 30,
     longitudeBands = 30,
-    color = [0.34, 0.8, 0.1, 1.0],
   } = options;
 
   const vertexArray = [];
   const normalArray = [];
-  const colorArray = [];
   const indexArray = [];
   const uvArray = [];
 
@@ -108,7 +103,6 @@ function createSphereGeometry(options = {}) {
 
       vertexArray.push(radius * x, radius * y, radius * z);
       normalArray.push(x, y, z);
-      colorArray.push(...color);
       uvArray.push(1 - long / longitudeBands, 1 - lat / latitudeBands);
     }
   }
@@ -124,7 +118,6 @@ function createSphereGeometry(options = {}) {
   return {
     vertices: new Float32Array(vertexArray),
     normals: new Float32Array(normalArray),
-    colors: new Float32Array(colorArray),
     uvs: new Float32Array(uvArray),
     indices: new Uint16Array(indexArray),
     numIndices: indexArray.length,

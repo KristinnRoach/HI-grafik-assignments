@@ -31,14 +31,31 @@ export let geometry;
 export let geometryBuffers;
 export let instanceBuffer;
 
-const LIGHT_DIRECTION = [0.4, 1.0, 0.6];
-
-// Linear-space values, tweakable at runtime by dev-tuning.js
+// Tweakable at runtime by dev-tuning.js
 export const lighting = {
-  skyColor: [0.35, 0.45, 0.6],
-  groundColor: [0.12, 0.1, 0.08],
-  diffuseWrap: 0.3,
+  cellColor: [0.4, 0.9, 0.5], // sRGB
+  lightDirection: [0.4, 1.0, 0.6], // world space, towards the light
+  lightIntensity: 1.0,
+  skyColor: [0.5, 0.5, 0.5], // linear
+  groundColor: [0.3, 0.4, 0.2], // linear
+  diffuseWrap: 0.1,
+  specularStrength: 0.25,
+  occlusionStrength: 2,
+  occlusionDirect: 0.5, // how much occlusion also dims direct light
 };
+
+// Fraction of the 26 surrounding cells that are alive, used as cheap ambient occlusion
+function neighborFraction(grid, x, y, z) {
+  let count = 0;
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dz = -1; dz <= 1; dz++) {
+        count += grid[x + dx]?.[y + dy]?.[z + dz] ?? 0;
+      }
+    }
+  }
+  return (count - 1) / 26; // minus the cell itself
+}
 
 export function setupGeometry() {
   try {
@@ -48,10 +65,7 @@ export function setupGeometry() {
       }
     }
 
-    geometry = createGeometry(game.shape, {
-      size: 1,
-      color: [0.4, 0.9, 0.5, 0.9],
-    });
+    geometry = createGeometry(game.shape, { size: 1 });
 
     console.log('Geometry created:', geometry);
 
@@ -60,11 +74,6 @@ export function setupGeometry() {
         new Float32Array(flatten(geometry.vertices)),
         glLoc.aPosition,
         3
-      ),
-      colors: createBuffer(
-        new Float32Array(flatten(geometry.colors)),
-        glLoc.aColor,
-        4
       ),
       uvs: createBuffer(
         new Float32Array(flatten(geometry.uvs)),
@@ -98,7 +107,7 @@ export function init() {
 
   setupGeometry();
   // Filled every frame in render()
-  instanceBuffer = createInstancedBuffer(new Float32Array(), glLoc.aOffset, 3);
+  instanceBuffer = createInstancedBuffer(new Float32Array(), glLoc.aInstance, 4);
 
   const aspect = 1; // gl.canvas.width / gl.canvas.height;
   const projectionMatrix = perspective(
@@ -171,7 +180,8 @@ export function render() {
           instanceData.push(
             (x - gridCenter[0]) * baseScale,
             (y - gridCenter[1]) * baseScale,
-            (z - gridCenter[2]) * baseScale
+            (z - gridCenter[2]) * baseScale,
+            neighborFraction(game.currentGrid, x, y, z)
           );
           instanceCount++;
         }
@@ -193,11 +203,15 @@ export function render() {
   // Set view matrix
   gl.uniformMatrix4fv(glLoc.uViewMatrix, false, flatten(viewMatrix));
 
-  // World-space direction towards the light, same for every shape
-  gl.uniform3fv(glLoc.uLightDirection, flatten(normalize(LIGHT_DIRECTION)));
+  gl.uniform3fv(glLoc.uLightDirection, flatten(normalize([...lighting.lightDirection])));
+  gl.uniform3fv(glLoc.uCellColor, lighting.cellColor);
+  gl.uniform1f(glLoc.uLightIntensity, lighting.lightIntensity);
   gl.uniform3fv(glLoc.uSkyColor, lighting.skyColor);
   gl.uniform3fv(glLoc.uGroundColor, lighting.groundColor);
   gl.uniform1f(glLoc.uDiffuseWrap, lighting.diffuseWrap);
+  gl.uniform1f(glLoc.uSpecularStrength, lighting.specularStrength);
+  gl.uniform1f(glLoc.uOcclusionStrength, lighting.occlusionStrength);
+  gl.uniform1f(glLoc.uOcclusionDirect, lighting.occlusionDirect);
 
   // Bind index buffer
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);

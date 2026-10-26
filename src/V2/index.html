@@ -130,8 +130,7 @@
       precision mediump float;
       
       in vec4 aPosition;
-      in vec4 aColor;
-      in vec3 aOffset;
+      in vec4 aInstance; // xyz: cell offset, w: fraction of live neighbours
       in vec3 aNormal;
       in vec2 aTexCoord;
 
@@ -140,18 +139,18 @@
       uniform mat4 uProjection;
       uniform float uCellScale;
 
-      out vec4 vColor;
       out vec3 vNormal;
       out vec3 vLightDirection;
       out vec3 vViewPos;
       out vec3 vUp;
       out vec2 vTexCoord;
+      out float vNeighbors;
 
       // All lighting is done in view space, where the camera sits at the origin
       void
       main()
       {
-        vec4 viewPos = uViewMatrix * vec4(aPosition.xyz * uCellScale + aOffset, 1.0);
+        vec4 viewPos = uViewMatrix * vec4(aPosition.xyz * uCellScale + aInstance.xyz, 1.0);
         gl_Position = uProjection * viewPos;
 
         // Uniform scale + rigid view matrix, so no inverse-transpose needed
@@ -161,8 +160,8 @@
         vViewPos = viewPos.xyz;
         vUp = viewRot * vec3(0.0, 1.0, 0.0);
 
-        vColor = aColor;
         vTexCoord = aTexCoord;
+        vNeighbors = aInstance.w;
       }
     </script>
 
@@ -170,19 +169,22 @@
     <script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
       precision mediump float;
 
-      in vec4 vColor;
       in vec3 vNormal;
       in vec3 vLightDirection;
       in vec3 vViewPos;
       in vec3 vUp;
       in vec2 vTexCoord;
+      in float vNeighbors;
 
       uniform vec3 uSkyColor;
       uniform vec3 uGroundColor;
       uniform float uDiffuseWrap;
+      uniform float uOcclusionStrength;
+      uniform float uOcclusionDirect;
+      uniform vec3 uCellColor;
+      uniform float uLightIntensity;
+      uniform float uSpecularStrength;
 
-      const vec3 lightColor = vec3(1.0, 0.95, 0.85);
-      const float specularStrength = 0.25;
       const float shininess = 48.0;
       const float gamma = 2.2;
 
@@ -197,7 +199,8 @@
         vec3 halfDir = normalize(lightDir + viewDir);
 
         // Base color is authored in sRGB
-        vec3 albedo = pow(vColor.rgb, vec3(gamma));
+        vec3 albedo = pow(uCellColor, vec3(gamma));
+        vec3 lightColor = vec3(1.0, 0.95, 0.85) * uLightIntensity;
 
         // Up-facing surfaces get sky light, down-facing get ground bounce
         float skyFactor = dot(normal, normalize(vUp)) * 0.5 + 0.5;
@@ -209,10 +212,15 @@
           ? pow(max(dot(normal, halfDir), 0.0), shininess)
           : 0.0;
 
-        vec3 lit = albedo * (ambient + diffuse * lightColor)
-          + specularStrength * specular * lightColor;
+        // Crowded cells get less light: ambient fully, direct light by uOcclusionDirect
+        float occlusion = clamp(1.0 - uOcclusionStrength * vNeighbors, 0.05, 1.0);
+        ambient *= occlusion;
+        diffuse *= mix(1.0, occlusion, uOcclusionDirect);
 
-        fragColor = vec4(pow(lit, vec3(1.0 / gamma)), vColor.a);
+        vec3 lit = albedo * (ambient + diffuse * lightColor)
+          + uSpecularStrength * specular * lightColor;
+
+        fragColor = vec4(pow(lit, vec3(1.0 / gamma)), 1.0);
       }
     </script>
 

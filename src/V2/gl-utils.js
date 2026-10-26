@@ -8,9 +8,8 @@ export let gl, program;
 const bgColor = [0.0, 0.0, 0.0, 0.0];
 
 export const glLoc = {
-  aColor: null,
   aPosition: null,
-  aOffset: null,
+  aInstance: null,
   aNormal: null,
   aTexCoord: null,
   uProjection: null,
@@ -20,6 +19,11 @@ export const glLoc = {
   uSkyColor: null,
   uGroundColor: null,
   uDiffuseWrap: null,
+  uOcclusionStrength: null,
+  uCellColor: null,
+  uLightIntensity: null,
+  uSpecularStrength: null,
+  uOcclusionDirect: null,
 };
 
 export function getAllGlLocations() {
