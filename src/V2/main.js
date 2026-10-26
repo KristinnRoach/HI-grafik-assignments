@@ -35,6 +35,12 @@ const LIGHT_DIRECTION = [0.4, 1.0, 0.6];
 
 export function setupGeometry() {
   try {
+    if (geometryBuffers) {
+      for (const buffer of Object.values(geometryBuffers)) {
+        if (buffer instanceof WebGLBuffer) gl.deleteBuffer(buffer);
+      }
+    }
+
     geometry = createGeometry(game.shape, {
       size: 1,
       color: [0.4, 0.9, 0.5, 0.9],
@@ -69,17 +75,6 @@ export function setupGeometry() {
 
     console.log('Geometry buffers created:', geometryBuffers);
 
-    const initialInstanceData = new Float32Array(
-      game.dimensions[0] * game.dimensions[1] * game.dimensions[2] * 3
-    );
-
-    instanceBuffer = createInstancedBuffer(
-      initialInstanceData,
-      glLoc.aOffset,
-      3
-    );
-
-    console.log('Instance buffer created:', instanceBuffer);
     console.log('Shape set to: ', game.shape);
   } catch (error) {
     console.error('Error in setShape:', error);
@@ -94,7 +89,9 @@ export function init() {
 
   getAllGlLocations();
 
-  setupGeometry(game.shape);
+  setupGeometry();
+  // Filled every frame in render()
+  instanceBuffer = createInstancedBuffer(new Float32Array(), glLoc.aOffset, 3);
 
   const aspect = 1; // gl.canvas.width / gl.canvas.height;
   const projectionMatrix = perspective(
@@ -285,9 +282,6 @@ document
   });
 
 document.getElementById('shapeSelect').addEventListener('change', function (e) {
-  if (e.target.value === 'Cubes') {
-    setShape('cube');
-  } else if (e.target.value === 'Spheres') {
-    setShape('sphere');
-  }
+  setShape(e.target.value);
+  setupGeometry();
 });

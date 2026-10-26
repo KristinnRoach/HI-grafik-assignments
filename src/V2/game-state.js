@@ -2,7 +2,6 @@
 
 import { initGrid, updateGrid } from './game-logic.js';
 import {
-  gameLoop,
   setupGeometry,
   getHtmlValues,
   setHtmlValues,
@@ -144,8 +143,6 @@ export function restartGame() {
 
   initGrid(game.pattern);
   updateCellCountDisplay();
-
-  gameLoop();
 }
 
 export function setStartPattern(pattern) {
