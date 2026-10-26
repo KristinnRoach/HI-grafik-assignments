@@ -1,7 +1,7 @@
 // dev-tuning.js
 // Dev-only panel for tuning lighting in the browser. Remove the script tag in index.html before deploy.
 
-import { lighting } from './main.js';
+import { lighting } from './renderer.js';
 
 const panel = document.createElement('div');
 panel.style.cssText =

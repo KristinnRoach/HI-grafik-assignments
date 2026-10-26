@@ -44,7 +44,6 @@ export function setShape(shape) {
     console.error(`Invalid shape: ${shape}. Must be 'cube' or 'sphere'.`);
     return;
   }
-  console.log(`Setting shape for next game to: ${shape}`);
   game.shape = shape;
 }
 
@@ -76,7 +75,6 @@ export function countDown() {
       gameOver('OVERPOPULATED');
       return;
     }
-    console.log(countdownValue);
     countdownElement.innerText = countdownValue;
   }, 1000);
 }
@@ -84,7 +82,6 @@ export function countDown() {
 export function abortCountDown() {
   if (!timer) return;
 
-  console.log('aborting count down');
   clearInterval(timer);
   timer = null;
   document.getElementById('count-down').style.display = 'none';
@@ -97,7 +94,6 @@ function interpolate(start, end, factor) {
 export function gameOver(reason) {
   game.isOver = true;
 
-  console.log('game over', reason);
   document.getElementById('game-over-reason').textContent = reason;
   document.getElementById('game-over').style.display = 'block';
 }
