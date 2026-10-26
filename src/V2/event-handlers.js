@@ -1,13 +1,16 @@
 // event-handlers.js
 import * as camera from './camera.js';
-import { game, restartGame, resetGameState } from './game-state.js';
+import { game } from './game-state.js';
 
 export let isDragging = false;
 export let lastMouseX, lastMouseY;
 
 // TODO: Double click to reset camera position
 
-export function setupEventListeners(canvas) {
+let restart;
+
+export function setupEventListeners(canvas, onRestart) {
+  restart = onRestart;
   canvas.addEventListener('mousedown', handleMouseDown);
   canvas.addEventListener('mouseup', handleMouseUp);
   canvas.addEventListener('mousemove', handleMouseMove);
@@ -92,8 +95,7 @@ function handleKeyDown(event) {
       camera.move('down', KEY_STEP);
       break;
     case 'r':
-      resetGameState();
-      restartGame();
+      restart();
       break;
     case ' ':
       game.isPaused = !game.isPaused;

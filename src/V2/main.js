@@ -118,7 +118,10 @@ export function init() {
   );
   gl.uniformMatrix4fv(glLoc.uProjection, false, flatten(projectionMatrix));
 
-  setupEventListeners(gl.canvas);
+  setupEventListeners(gl.canvas, () => {
+    resetGameState();
+    restartGame();
+  });
   initGrid(game.pattern);
   // cam.updatePosition(); // init camera
 
@@ -309,3 +312,38 @@ document.getElementById('shapeSelect').addEventListener('change', function (e) {
   setShape(e.target.value);
   setupGeometry();
 });
+
+export function resetGameState() {
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('count-down').style.display = 'none';
+
+  game.isPaused = true;
+  game.isOver = true;
+  game.cellScale = 0.5;
+
+  const { fps, pattern, shape, birth, survival } = getHtmlValues();
+  // setFPS(fps);
+  game.pattern = pattern;
+  game.shape = shape;
+  game.rules.birth = birth;
+  game.rules.survival = survival;
+
+  game.nextGrid = [];
+  game.currentGrid = [];
+  game.activeCells = 0;
+  setHtmlValues();
+
+  setupGeometry();
+
+  game.isOver = false;
+}
+
+export function restartGame() {
+  document.getElementById('game-over').style.display = 'none';
+
+  game.isGameOver = false;
+  game.isPaused = false;
+
+  initGrid(game.pattern);
+  updateCellCountDisplay();
+}

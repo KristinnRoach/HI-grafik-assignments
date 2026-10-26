@@ -1,13 +1,5 @@
 // game-state.js
 
-import { initGrid, updateGrid } from './game-logic.js';
-import {
-  setupGeometry,
-  getHtmlValues,
-  setHtmlValues,
-  setFPS,
-} from './main.js';
-
 export const GRID_DIMENSIONS = [33, 33, 33];
 export const INIT_COUNT_DOWN = 5;
 
@@ -108,41 +100,6 @@ export function gameOver(reason) {
   console.log('game over', reason);
   document.getElementById('game-over-reason').textContent = reason;
   document.getElementById('game-over').style.display = 'block';
-}
-
-export function resetGameState() {
-  document.getElementById('game-over').style.display = 'none';
-  document.getElementById('count-down').style.display = 'none';
-
-  game.isPaused = true;
-  game.isOver = true;
-  game.cellScale = 0.5;
-
-  const { fps, pattern, shape, birth, survival } = getHtmlValues();
-  // setFPS(fps);
-  game.pattern = pattern;
-  game.shape = shape;
-  game.rules.birth = birth;
-  game.rules.survival = survival;
-
-  game.nextGrid = [];
-  game.currentGrid = [];
-  game.activeCells = 0;
-  setHtmlValues();
-
-  setupGeometry();
-
-  game.isOver = false;
-}
-
-export function restartGame() {
-  document.getElementById('game-over').style.display = 'none';
-
-  game.isGameOver = false;
-  game.isPaused = false;
-
-  initGrid(game.pattern);
-  updateCellCountDisplay();
 }
 
 export function setStartPattern(pattern) {
