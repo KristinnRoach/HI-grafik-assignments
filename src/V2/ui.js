@@ -40,37 +40,18 @@ export function getHtmlValues() {
 }
 
 export function setupControls() {
-  document.getElementById('birth-1').addEventListener('input', function (e) {
-    if (isNaN(e.target.value)) {
-      game.rules.birth[0] = -1;
-    } else if (parseInt(e.target.value) >= 0) {
-      game.rules.birth[0] = parseInt(e.target.value);
-    } else {
-      game.rules.birth = game.rules.birth.slice(1);
+  // Rebuild the whole rule list from its boxes on any edit, so empty boxes
+  // drop out without shifting the others (NaN >= 0 is false).
+  for (const rule of ['birth', 'survival']) {
+    const inputs = document.querySelectorAll(`[id^="${rule}-"]`);
+    for (const input of inputs) {
+      input.addEventListener('input', function () {
+        game.rules[rule] = [...inputs]
+          .map((el) => parseInt(el.value))
+          .filter((n) => n >= 0);
+      });
     }
-  });
-
-  document.getElementById('birth-2').addEventListener('input', function (e) {
-    if (isNaN(e.target.value)) {
-      game.rules.birth[0] = -1;
-    } else if (parseInt(e.target.value) >= 0) {
-      game.rules.birth[1] = parseInt(e.target.value);
-    } else {
-      game.rules.birth = game.rules.birth.slice(0, 1);
-    }
-  });
-
-  document.getElementById('survival-1').addEventListener('input', function (e) {
-    game.rules.survival[0] = parseInt(e.target.value);
-  });
-
-  document.getElementById('survival-2').addEventListener('input', function (e) {
-    game.rules.survival[1] = parseInt(e.target.value);
-  });
-
-  document.getElementById('survival-3').addEventListener('input', function (e) {
-    game.rules.survival[2] = parseInt(e.target.value);
-  });
+  }
 
   document.getElementById('fps').addEventListener('input', function (e) {
     const newFPS = parseInt(e.target.value);
