@@ -31,7 +31,7 @@ Then open http://localhost:8123/src/V2/index.html. Controls: `space` pauses and 
 | `game-state.js` | `game` state object (incl. per-shape `cellScaleCube`/`cellScaleSphere`), countdown and game-over UI |
 | `event-handlers.js` | Keyboard and mouse input |
 | `camera.js` | Orbit camera |
-| `dev-tuning.js` | **Dev only.** Effect toggles and sliders for `lighting` |
+| `dev-tuning.js` | Collapsible "tune" panel (top right): effect toggles, colour pickers and sliders for `lighting`, grouped |
 
 ## Rendering
 
@@ -45,9 +45,9 @@ Then open http://localhost:8123/src/V2/index.html. Controls: `space` pauses and 
 ## Lighting tuning
 
 - All look parameters are in `lighting` in `renderer.js`. The shader reads them as uniforms every frame.
-- `dev-tuning.js` adds a slider panel. Its readout is in JS object syntax, so you can paste it straight over `lighting` to save new defaults.
+- `dev-tuning.js` adds a collapsed panel; the "Export lighting" group's readout is in JS object syntax, so you can paste it straight over `lighting` to save new defaults.
 - The current defaults put the light slightly below the cells (`lightDirection.y = -0.5`) and use strong wrap (`diffuseWrap = 0.95`). That was chosen during tuning, not a bug.
-- **Before deploy:** delete the `dev-tuning.js` script tag in `index.html` and the file itself.
+- The panel ships for now (collapsed by default). Drop its script tag in `index.html` to remove it.
 
 ## Game over
 

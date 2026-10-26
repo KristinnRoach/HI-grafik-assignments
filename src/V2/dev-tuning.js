@@ -1,57 +1,115 @@
 // dev-tuning.js
-// Dev-only panel for tuning lighting in the browser. Remove the script tag in index.html before deploy.
+// Collapsible panel for tuning the look in the browser. Native <details>, so it starts collapsed with no toggle code.
 
 import { lighting, effects } from './renderer.js';
 import { game } from './game-state.js';
 
-const panel = document.createElement('div');
-panel.style.cssText =
-  'position:fixed;top:60px;right:16px;padding:10px;display:grid;gap:4px 6px;' +
-  'grid-template-columns:auto auto;align-items:center;font:12px monospace;' +
-  'background:rgba(0,0,0,0.75);color:#9f9;border:1px solid #4a4;border-radius:6px;z-index:10;' +
-  'max-height:calc(100vh - 80px);overflow-y:auto;';
+const style = document.createElement('style');
+style.textContent = `
+  #dev-panel { position: fixed; top: 60px; right: 16px; z-index: 10; font: 12px monospace; color: #9f9; }
+  #dev-panel > summary { list-style: none; cursor: pointer; text-align: right; opacity: 0.4; }
+  #dev-panel > summary:hover, #dev-panel[open] > summary { opacity: 1; }
+  #dev-panel .body { margin-top: 4px; padding: 8px 10px; min-width: fit-content; width: 300px; max-height: calc(100vh - 100px); overflow-y: auto;
+    background: rgba(0, 0, 0, 0.75); border: 1px solid #4a4; border-radius: 6px; }
+  #dev-panel details details { margin: 2px 0; }
+  #dev-panel details details > summary { cursor: pointer; padding: 2px 0; }
+  #dev-panel .grid { display: grid; grid-template-columns: 1fr auto; gap: 4px 6px; align-items: center; padding: 4px 0 6px 12px; }
+  #dev-panel input { box-shadow: none; padding: 0; }
+  #dev-panel input[type=range] { width: 110px; }
+  #dev-panel pre { grid-column: 1 / 3; margin: 0; user-select: all; white-space: pre-wrap; }
+`;
+document.head.appendChild(style);
+
+const panel = document.createElement('details');
+panel.id = 'dev-panel';
+panel.innerHTML = '<summary title="Tune the look">⚙ tune</summary><div class="body"></div>';
 document.body.appendChild(panel);
+const body = panel.querySelector('.body');
 
-const readout = document.createElement('pre');
-readout.style.cssText = 'grid-column:1/3;margin:4px 0 0;user-select:all;';
+function addGroup(title) {
+  const group = document.createElement('details');
+  group.innerHTML = `<summary>${title}</summary><div class="grid"></div>`;
+  body.append(group);
+  return group.querySelector('.grid');
+}
 
-function addSlider(label, min, max, get, set) {
+function addRow(parent, label, input, onInput) {
   const name = document.createElement('label');
-  const input = document.createElement('input');
-  Object.assign(input, { type: 'range', min, max, step: 0.01, value: get() });
+  name.textContent = label;
   input.addEventListener('input', () => {
-    set(parseFloat(input.value));
+    onInput();
     updateReadout();
   });
-  name.textContent = label;
-  panel.append(name, input);
+  parent.append(name, input);
 }
 
-function addToggle(key) {
-  const name = document.createElement('label');
+function addSlider(parent, label, min, max, get, set) {
   const input = document.createElement('input');
-  Object.assign(input, { type: 'checkbox', checked: effects[key] });
-  input.addEventListener('change', () => (effects[key] = input.checked));
-  name.textContent = key;
-  panel.append(name, input);
+  Object.assign(input, { type: 'range', min, max, step: 0.01, value: get() });
+  addRow(parent, label, input, () => set(parseFloat(input.value)));
 }
 
-function addValue(key, min, max) {
-  addSlider(key, min, max, () => lighting[key], (v) => (lighting[key] = v));
+function addValue(parent, key, min, max) {
+  addSlider(parent, key, min, max, () => lighting[key], (v) => (lighting[key] = v));
 }
 
-// One slider per component, so values map 1:1 to the code
-function addVec3(key, min, max) {
+// One slider per component, for vectors that aren't colours
+function addVec3(parent, key, min, max) {
   ['x', 'y', 'z'].forEach((c, i) =>
-    addSlider(
-      `${key}.${c}`,
-      min,
-      max,
-      () => lighting[key][i],
-      (v) => (lighting[key][i] = v)
-    )
+    addSlider(parent, `${key}.${c}`, min, max, () => lighting[key][i], (v) => (lighting[key][i] = v))
   );
 }
+
+// ponytail: hex maps straight to 0..1 with no gamma step, so values stay 1:1 with the code,
+// but swatches for the linear colours (sky/ground) look darker than they render
+function addColor(parent, key) {
+  const toHex = (v) => '#' + v.map((n) => Math.round(n * 255).toString(16).padStart(2, '0')).join('');
+  const input = document.createElement('input');
+  Object.assign(input, { type: 'color', value: toHex(lighting[key]) });
+  addRow(parent, key, input, () => {
+    lighting[key] = [1, 3, 5].map((i) => parseInt(input.value.slice(i, i + 2), 16) / 255);
+  });
+}
+
+function addToggle(parent, key) {
+  const input = document.createElement('input');
+  Object.assign(input, { type: 'checkbox', checked: effects[key] });
+  addRow(parent, key, input, () => (effects[key] = input.checked));
+}
+
+const fx = addGroup('Effects');
+['tween', 'densityColor', 'fog', 'jitter'].forEach((key) => addToggle(fx, key));
+
+const color = addGroup('Color');
+addColor(color, 'cellColor');
+addColor(color, 'hotColor');
+addValue(color, 'densityMax', 0.06, 1);
+addValue(color, 'brightnessJitter', 0, 1);
+addValue(color, 'colorJitter', 0, 1);
+
+const light = addGroup('Light');
+addVec3(light, 'lightDirection', -1, 1);
+addValue(light, 'lightIntensity', 0, 3);
+addColor(light, 'skyColor');
+addColor(light, 'groundColor');
+addValue(light, 'diffuseWrap', 0, 1);
+addValue(light, 'specularStrength', 0, 1);
+
+const depth = addGroup('Occlusion & fog');
+addValue(depth, 'occlusionStrength', 0, 8);
+addValue(depth, 'occlusionDirect', 0, 1);
+addValue(depth, 'fogNear', 0, 100);
+addValue(depth, 'fogFar', 0, 150);
+
+const size = addGroup('Cell size');
+addSlider(size, 'cellScaleCube', 0.1, 1, () => game.cellScaleCube, (v) => (game.cellScaleCube = v));
+addSlider(size, 'cellScaleSphere', 0.1, 1, () => game.cellScaleSphere, (v) => (game.cellScaleSphere = v));
+addValue(size, 'sizeJitterCube', 0, 1);
+addValue(size, 'sizeJitterSphere', 0, 1);
+
+// Paste over `lighting` in renderer.js to save new defaults
+const readout = document.createElement('pre');
+addGroup('Export lighting').append(readout);
 
 function updateReadout() {
   readout.textContent = Object.entries(lighting)
@@ -62,29 +120,4 @@ function updateReadout() {
     )
     .join('\n');
 }
-
-addToggle('tween');
-addToggle('densityColor');
-addToggle('fog');
-addToggle('jitter');
-addVec3('cellColor', 0, 1);
-addVec3('hotColor', 0, 1);
-addValue('densityMax', 0.06, 1);
-addVec3('lightDirection', -1, 1);
-addValue('lightIntensity', 0, 3);
-addVec3('skyColor', 0, 1);
-addVec3('groundColor', 0, 1);
-addValue('diffuseWrap', 0, 1);
-addValue('specularStrength', 0, 1);
-addValue('occlusionStrength', 0, 8);
-addValue('occlusionDirect', 0, 1);
-addValue('fogNear', 0, 100);
-addValue('fogFar', 0, 150);
-addValue('sizeJitterCube', 0, 1);
-addValue('sizeJitterSphere', 0, 1);
-addValue('brightnessJitter', 0, 1);
-addValue('colorJitter', 0, 1);
-addSlider('cellScaleCube', 0.1, 1, () => game.cellScaleCube, (v) => (game.cellScaleCube = v));
-addSlider('cellScaleSphere', 0.1, 1, () => game.cellScaleSphere, (v) => (game.cellScaleSphere = v));
-panel.append(readout);
 updateReadout();

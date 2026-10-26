@@ -43,10 +43,21 @@
         color: rgba(101, 255, 84, 0.603);
       }
       
+      #how-to-play {
+        position: absolute;
+        top: calc(3% + 30px);
+        left: 50%;
+        transform: translateX(-50%);
+        margin: 0;
+        font-size: 14px;
+        white-space: nowrap;
+        opacity: 0.8;
+      }
+
       #count-down {
         display: none;
         position: absolute;
-        top: 8%;
+        top: calc(3% + 56px);
         left: 50%;
         transform: translateX(-50%);
         font-size: 20px;
@@ -338,6 +349,10 @@
         <div id="cell-count"></div>
         <div id="best"></div>
       </div>
+      <p id="how-to-play">
+        Keep the population under 100%: change the Birth and Survival rules to
+        steer it.
+      </p>
       <div id="count-down"></div>
 
       <canvas id="gl-canvas" width="512" height="512">
