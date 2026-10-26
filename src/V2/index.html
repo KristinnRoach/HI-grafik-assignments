@@ -140,6 +140,9 @@
       uniform mat4 uProjection;
       uniform float uCellScale;
       uniform float uTween; // 0..1 progress between generations
+      uniform float uSizeJitter; // max relative size offset per cell, 0 = off
+      uniform float uBrightnessJitter; // max relative brightness offset per cell, 0 = off
+      uniform float uColorJitter; // max relative per-channel offset per cell, 0 = off
 
       out vec3 vNormal;
       out vec3 vLightDirection;
@@ -147,6 +150,13 @@
       out vec3 vUp;
       out vec2 vTexCoord;
       out float vNeighbors;
+      out vec3 vTint; // per-cell brightness and color multiplier
+
+      // Stable 0..1 pseudo-random value per cell, keyed on its position
+      float hash(highp vec3 p)
+      {
+        return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+      }
 
       // All lighting is done in view space, where the camera sits at the origin
       void
@@ -155,6 +165,14 @@
         // Born cells grow in, dying cells shrink out
         float t = smoothstep(0.0, 1.0, uTween);
         float growth = aState > 0.5 ? t : aState < -0.5 ? 1.0 - t : 1.0;
+        growth *= 1.0 + uSizeJitter * (hash(aInstance.xyz) * 2.0 - 1.0);
+        float brightness = 1.0 + uBrightnessJitter * (hash(aInstance.xyz + 17.0) * 2.0 - 1.0);
+        vec3 channels = vec3(
+          hash(aInstance.xyz + 31.0),
+          hash(aInstance.xyz + 47.0),
+          hash(aInstance.xyz + 59.0)
+        );
+        vTint = brightness * (1.0 + uColorJitter * (channels * 2.0 - 1.0));
         vec4 viewPos = uViewMatrix * vec4(aPosition.xyz * uCellScale * growth + aInstance.xyz, 1.0);
         gl_Position = uProjection * viewPos;
 
@@ -180,6 +198,7 @@
       in vec3 vUp;
       in vec2 vTexCoord;
       in float vNeighbors;
+      in vec3 vTint;
 
       uniform vec3 uSkyColor;
       uniform vec3 uGroundColor;
@@ -212,7 +231,7 @@
         // Base color is authored in sRGB
         // Crowded cells shift toward the hot color
         float heat = uDensity * smoothstep(0.05, uDensityMax, vNeighbors);
-        vec3 albedo = pow(mix(uCellColor, uHotColor, heat), vec3(gamma));
+        vec3 albedo = pow(mix(uCellColor, uHotColor, heat), vec3(gamma)) * vTint;
         vec3 lightColor = vec3(1.0, 0.95, 0.85) * uLightIntensity;
 
         // Up-facing surfaces get sky light, down-facing get ground bounce

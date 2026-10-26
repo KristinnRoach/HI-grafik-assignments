@@ -1,6 +1,6 @@
 // game-state.js
 
-export const GRID_DIMENSIONS = [33, 33, 33];
+export const GRID_DIMENSIONS = [16, 16, 16];
 export const INIT_COUNT_DOWN = 5;
 
 export const game = {
@@ -26,11 +26,13 @@ export const game = {
 
   isCountDown: false,
 
-  fps: 6, // speed
+  fps: 1, // speed
   generation: 0,   // possibly useful
   lastUpdateTime: 0,
 
-  cellScale: 0.9, // cell size relative to grid spacing, 1 = touching
+  // Cell size relative to grid spacing per shape, 1 = touching
+  cellScaleCube: 0.9,
+  cellScaleSphere: 0.9,
   pattern: 'random', // or random, glider, spaceship, etc.
   shape: 'cube', // cube or sphere
 
@@ -107,10 +109,6 @@ export function setGridDimensions(dimensions) {
 
 export function setGridScale(scale) {
   game.gridScale = scale;
-}
-
-export function setCellScale(scale) {
-  game.cellScale = scale;
 }
 
 export function clearGrid() {

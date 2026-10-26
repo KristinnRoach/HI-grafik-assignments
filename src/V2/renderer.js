@@ -26,13 +26,14 @@ export const effects = {
   tween: true, // render every frame, grow/shrink cells between generations
   densityColor: true,
   fog: true,
+  jitter: true, // per-cell random size, brightness and color
 };
 
 // Tweakable at runtime by dev-tuning.js
 export const lighting = {
   cellColor: [0.3, 0.8, 0.4], // sRGB
-  hotColor: [0.2, 0.5, 0.3], // sRGB, crowded cells
-  densityMax: 0.5, // neighbour fraction that reads fully hot
+  hotColor: [0.2, 0.4, 0.3], // sRGB, crowded cells
+  densityMax: 0.7, // neighbour fraction that reads fully hot
   
   lightDirection: [0.8, -0.5, 0.8], // world space, towards the light
   lightIntensity: 1,
@@ -44,7 +45,12 @@ export const lighting = {
   occlusionStrength: 2,
   occlusionDirect: 0.15, // how much occlusion also dims direct light
   fogNear: 25, // view-space depth where fog starts
-  fogFar: 68, // fully faded
+  fogFar: 72, // fully faded
+  // Max relative size offset per cell, per shape (spheres tolerate more than cubes)
+  sizeJitterCube: 0,
+  sizeJitterSphere: 0.2,
+  brightnessJitter: 0.2, // max relative brightness offset per cell
+  colorJitter: 0.2, // max relative per-channel offset per cell
 };
 
 // Fraction of the 26 surrounding cells that are alive, used as cheap ambient occlusion
@@ -167,7 +173,8 @@ export function render(tween = 1) {
   gl.uniform1f(glLoc.uTween, Math.min(tween, 1));
 
   // Cell size relative to grid spacing (1 = neighbours touch)
-  gl.uniform1f(glLoc.uCellScale, baseScale * game.cellScale);
+  const cellScale = game.shape === 'sphere' ? game.cellScaleSphere : game.cellScaleCube;
+  gl.uniform1f(glLoc.uCellScale, baseScale * cellScale);
 
   // Set view matrix
   gl.uniformMatrix4fv(glLoc.uViewMatrix, false, flatten(viewMatrix));
@@ -187,6 +194,11 @@ export function render(tween = 1) {
   gl.uniform1f(glLoc.uFog, effects.fog ? 1 : 0);
   gl.uniform1f(glLoc.uFogNear, lighting.fogNear);
   gl.uniform1f(glLoc.uFogFar, lighting.fogFar);
+  const sizeJitter =
+    game.shape === 'sphere' ? lighting.sizeJitterSphere : lighting.sizeJitterCube;
+  gl.uniform1f(glLoc.uSizeJitter, effects.jitter ? sizeJitter : 0);
+  gl.uniform1f(glLoc.uBrightnessJitter, effects.jitter ? lighting.brightnessJitter : 0);
+  gl.uniform1f(glLoc.uColorJitter, effects.jitter ? lighting.colorJitter : 0);
 
   // Bind index buffer
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);
