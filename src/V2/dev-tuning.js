@@ -1,7 +1,7 @@
 // dev-tuning.js
 // Dev-only panel for tuning lighting in the browser. Remove the script tag in index.html before deploy.
 
-import { lighting } from './renderer.js';
+import { lighting, effects } from './renderer.js';
 import { game } from './game-state.js';
 
 const panel = document.createElement('div');
@@ -24,6 +24,15 @@ function addSlider(label, min, max, get, set) {
     updateReadout();
   });
   name.textContent = label;
+  panel.append(name, input);
+}
+
+function addToggle(key) {
+  const name = document.createElement('label');
+  const input = document.createElement('input');
+  Object.assign(input, { type: 'checkbox', checked: effects[key] });
+  input.addEventListener('change', () => (effects[key] = input.checked));
+  name.textContent = key;
   panel.append(name, input);
 }
 
@@ -54,7 +63,12 @@ function updateReadout() {
     .join('\n');
 }
 
+addToggle('tween');
+addToggle('densityColor');
+addToggle('fog');
 addVec3('cellColor', 0, 1);
+addVec3('hotColor', 0, 1);
+addValue('densityMax', 0.06, 1);
 addVec3('lightDirection', -1, 1);
 addValue('lightIntensity', 0, 3);
 addVec3('skyColor', 0, 1);
@@ -63,6 +77,8 @@ addValue('diffuseWrap', 0, 1);
 addValue('specularStrength', 0, 1);
 addValue('occlusionStrength', 0, 8);
 addValue('occlusionDirect', 0, 1);
+addValue('fogNear', 0, 100);
+addValue('fogFar', 0, 150);
 addSlider('cellScale', 0.1, 1, () => game.cellScale, (v) => (game.cellScale = v));
 panel.append(readout);
 updateReadout();

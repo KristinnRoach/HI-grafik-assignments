@@ -26,9 +26,8 @@ export const game = {
 
   isCountDown: false,
 
-  fps: 12, // speed
-  // possibly useful
-  generation: 0,
+  fps: 6, // speed
+  generation: 0,   // possibly useful
   lastUpdateTime: 0,
 
   cellScale: 0.9, // cell size relative to grid spacing, 1 = touching

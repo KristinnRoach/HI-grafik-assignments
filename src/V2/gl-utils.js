@@ -12,6 +12,7 @@ export const glLoc = {
   aInstance: null,
   aNormal: null,
   aTexCoord: null,
+  aState: null,
   uProjection: null,
   uLightDirection: null,
   uViewMatrix: null,
@@ -24,6 +25,13 @@ export const glLoc = {
   uLightIntensity: null,
   uSpecularStrength: null,
   uOcclusionDirect: null,
+  uTween: null,
+  uHotColor: null,
+  uDensity: null,
+  uDensityMax: null,
+  uFog: null,
+  uFogNear: null,
+  uFogFar: null,
 };
 
 export function getAllGlLocations() {
