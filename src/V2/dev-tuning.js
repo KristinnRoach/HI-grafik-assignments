@@ -2,6 +2,7 @@
 // Dev-only panel for tuning lighting in the browser. Remove the script tag in index.html before deploy.
 
 import { lighting } from './renderer.js';
+import { game } from './game-state.js';
 
 const panel = document.createElement('div');
 panel.style.cssText =
@@ -62,5 +63,6 @@ addValue('diffuseWrap', 0, 1);
 addValue('specularStrength', 0, 1);
 addValue('occlusionStrength', 0, 8);
 addValue('occlusionDirect', 0, 1);
+addSlider('cellScale', 0.1, 1, () => game.cellScale, (v) => (game.cellScale = v));
 panel.append(readout);
 updateReadout();

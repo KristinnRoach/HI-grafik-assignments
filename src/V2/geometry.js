@@ -77,7 +77,7 @@ function createCubeGeometry(options = {}) {
 
 function createSphereGeometry(options = {}) {
   const {
-    radius = 1,
+    radius = (options.size ?? 1) / 2, // same diameter as the cube's edge
     latitudeBands = 30,
     longitudeBands = 30,
   } = options;

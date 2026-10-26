@@ -31,7 +31,7 @@ export const game = {
   generation: 0,
   lastUpdateTime: 0,
 
-  cellScale: 0.5,
+  cellScale: 0.9, // cell size relative to grid spacing, 1 = touching
   pattern: 'random', // or random, glider, spaceship, etc.
   shape: 'cube', // cube or sphere
 

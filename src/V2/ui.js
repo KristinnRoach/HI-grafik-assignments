@@ -97,7 +97,6 @@ export function resetGameState() {
 
   game.isPaused = true;
   game.isOver = true;
-  game.cellScale = 0.5;
 
   const { fps, pattern, shape, birth, survival } = getHtmlValues();
   game.pattern = pattern;

@@ -140,8 +140,8 @@ export function render() {
     gl.DYNAMIC_DRAW
   );
 
-  // Set cell scale uniform
-  gl.uniform1f(glLoc.uCellScale, baseScale);
+  // Cell size relative to grid spacing (1 = neighbours touch)
+  gl.uniform1f(glLoc.uCellScale, baseScale * game.cellScale);
 
   // Set view matrix
   gl.uniformMatrix4fv(glLoc.uViewMatrix, false, flatten(viewMatrix));
