@@ -1,7 +1,7 @@
 // dev-tuning.js
 // Collapsible panel for tuning the look in the browser. Native <details>, so it starts collapsed with no toggle code.
 
-import { lighting, effects } from './renderer.js';
+import { lighting, effects, textureStyles, textureStyle, setTexture } from './renderer.js';
 import { game } from './game-state.js';
 
 const style = document.createElement('style');
@@ -78,7 +78,16 @@ function addToggle(parent, key) {
 }
 
 const fx = addGroup('Effects');
-['tween', 'densityColor', 'fog', 'jitter'].forEach((key) => addToggle(fx, key));
+['tween', 'densityColor', 'fog', 'jitter', 'texture'].forEach((key) => addToggle(fx, key));
+addValue(fx, 'textureStrengthCube', 0, 1);
+addValue(fx, 'textureStrengthSphere', 0, 1);
+for (const shape of ['cube', 'sphere']) {
+  const select = document.createElement('select');
+  select.innerHTML = Object.keys(textureStyles).map((k) => `<option>${k}</option>`).join('');
+  select.value = textureStyle[shape];
+  const label = `textureStyle${shape[0].toUpperCase()}${shape.slice(1)}`;
+  addRow(fx, label, select, () => setTexture(shape, select.value));
+}
 
 const color = addGroup('Color');
 addColor(color, 'cellColor');

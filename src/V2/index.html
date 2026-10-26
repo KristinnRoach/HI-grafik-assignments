@@ -258,6 +258,8 @@
       uniform float uFog; // 0 or 1, toggles depth fog
       uniform float uFogNear;
       uniform float uFogFar;
+      uniform sampler2D uTexture; // texture test, grayscale sRGB
+      uniform float uTextureStrength; // 0 = off
 
       const float shininess = 48.0;
       const float gamma = 2.2;
@@ -276,6 +278,8 @@
         // Crowded cells shift toward the hot color
         float heat = uDensity * smoothstep(0.05, uDensityMax, vNeighbors);
         vec3 albedo = pow(mix(uCellColor, uHotColor, heat), vec3(gamma)) * vTint;
+        vec3 texel = pow(texture(uTexture, vTexCoord).rgb, vec3(gamma));
+        albedo *= mix(vec3(1.0), texel, uTextureStrength);
         vec3 lightColor = vec3(1.0, 0.95, 0.85) * uLightIntensity;
 
         // Up-facing surfaces get sky light, down-facing get ground bounce
