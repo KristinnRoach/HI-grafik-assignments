@@ -33,6 +33,13 @@ export let instanceBuffer;
 
 const LIGHT_DIRECTION = [0.4, 1.0, 0.6];
 
+// Linear-space values, tweakable at runtime by dev-tuning.js
+export const lighting = {
+  skyColor: [0.35, 0.45, 0.6],
+  groundColor: [0.12, 0.1, 0.08],
+  diffuseWrap: 0.3,
+};
+
 export function setupGeometry() {
   try {
     if (geometryBuffers) {
@@ -188,6 +195,9 @@ export function render() {
 
   // World-space direction towards the light, same for every shape
   gl.uniform3fv(glLoc.uLightDirection, flatten(normalize(LIGHT_DIRECTION)));
+  gl.uniform3fv(glLoc.uSkyColor, lighting.skyColor);
+  gl.uniform3fv(glLoc.uGroundColor, lighting.groundColor);
+  gl.uniform1f(glLoc.uDiffuseWrap, lighting.diffuseWrap);
 
   // Bind index buffer
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);

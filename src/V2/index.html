@@ -144,6 +144,7 @@
       out vec3 vNormal;
       out vec3 vLightDirection;
       out vec3 vViewPos;
+      out vec3 vUp;
       out vec2 vTexCoord;
 
       // All lighting is done in view space, where the camera sits at the origin
@@ -158,6 +159,7 @@
         vNormal = viewRot * aNormal;
         vLightDirection = viewRot * uLightDirection;
         vViewPos = viewPos.xyz;
+        vUp = viewRot * vec3(0.0, 1.0, 0.0);
 
         vColor = aColor;
         vTexCoord = aTexCoord;
@@ -172,16 +174,21 @@
       in vec3 vNormal;
       in vec3 vLightDirection;
       in vec3 vViewPos;
+      in vec3 vUp;
       in vec2 vTexCoord;
 
-      const vec3 lightColor = vec3(1.0, 0.97, 0.9);
-      const float ambientStrength = 0.18;
-      const float specularStrength = 0.35;
+      uniform vec3 uSkyColor;
+      uniform vec3 uGroundColor;
+      uniform float uDiffuseWrap;
+
+      const vec3 lightColor = vec3(1.0, 0.95, 0.85);
+      const float specularStrength = 0.25;
       const float shininess = 48.0;
+      const float gamma = 2.2;
 
       out vec4 fragColor;
 
-      // Blinn-Phong
+      // Blinn-Phong with hemisphere ambient, lit in linear space
       void main()
       {
         vec3 normal = normalize(vNormal);
@@ -189,19 +196,29 @@
         vec3 viewDir = normalize(-vViewPos);
         vec3 halfDir = normalize(lightDir + viewDir);
 
-        float diffuse = max(dot(normal, lightDir), 0.0);
-        float specular = diffuse > 0.0
+        // Base color is authored in sRGB
+        vec3 albedo = pow(vColor.rgb, vec3(gamma));
+
+        // Up-facing surfaces get sky light, down-facing get ground bounce
+        float skyFactor = dot(normal, normalize(vUp)) * 0.5 + 0.5;
+        vec3 ambient = mix(uGroundColor, uSkyColor, skyFactor);
+
+        // Wrapped diffuse softens the terminator
+        float diffuse = max((dot(normal, lightDir) + uDiffuseWrap) / (1.0 + uDiffuseWrap), 0.0);
+        float specular = dot(normal, lightDir) > 0.0
           ? pow(max(dot(normal, halfDir), 0.0), shininess)
           : 0.0;
 
-        vec3 lit = vColor.rgb * (ambientStrength + diffuse) * lightColor
+        vec3 lit = albedo * (ambient + diffuse * lightColor)
           + specularStrength * specular * lightColor;
 
-        fragColor = vec4(lit, vColor.a);
+        fragColor = vec4(pow(lit, vec3(1.0 / gamma)), vColor.a);
       }
     </script>
 
     <script type="module" src="./main.js"></script>
+    <!-- Dev-only lighting tuning panel, remove before deploy -->
+    <script type="module" src="./dev-tuning.js"></script>
   </head>
 
   <body>

@@ -17,6 +17,9 @@ export const glLoc = {
   uLightDirection: null,
   uViewMatrix: null,
   uCellScale: null,
+  uSkyColor: null,
+  uGroundColor: null,
+  uDiffuseWrap: null,
 };
 
 export function getAllGlLocations() {
