@@ -15,7 +15,7 @@ Serve the repo root over HTTP, since ES modules don't load from `file://`:
 python3 -m http.server 8123
 ```
 
-Then open http://localhost:8123/src/V2/index.html. Controls: `space` pauses and `r` restarts. To move the camera, drag the mouse, use the wheel to zoom, or press WASD; double-click resets it. The left/right arrow keys cycle focus through the input fields.
+Then open http://localhost:8123/src/V2/index.html. Controls: `space` pauses and `r` restarts. To move the camera, drag the mouse, use the wheel to zoom, or press WASD; double-click resets it. Hidden extra: a click (without dragging) on a live cell clears a 3×3×3 block around it; a click on empty space seeds one near the grid centre (`seedDensity` in `game`). The left/right arrow keys cycle focus through the input fields.
 
 ## Files
 
@@ -63,6 +63,6 @@ Then open http://localhost:8123/src/V2/index.html. Controls: `space` pauses and 
 ## Next steps
 
 1. **Gameplay loop:** game over when the colony dies out, overpopulates past recovery, or stabilises. Score = generations survived, best score kept in `localStorage`.
-2. **Player intervention:** click to seed or kill cells, limited by an energy budget that refills slowly.
+2. **Player intervention:** click to seed/clear exists as a hidden extra (no cost, not in the hint). An energy budget was tried and removed: it added little. Revisit if clicking becomes a core mechanic.
 3. **Look:** tint cells by age, maybe a small procedural texture using the existing UVs. Don't use the big GOL-wip PNGs.
 4. **Cleanup for deploy:** remove the dev panel and stray `console.log`s, and check the page under a subpath (GitHub Pages).

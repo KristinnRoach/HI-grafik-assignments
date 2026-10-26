@@ -1,6 +1,6 @@
 // game-logic.js
 
-import { game } from './game-state.js';
+import { game, cellSpacing } from './game-state.js';
 
 export function initGrid(pattern = 'random') {
   switch (pattern) {
@@ -106,6 +106,48 @@ export function endReason() {
   if (game.overLimitFor >= game.overpopGrace) return 'OVERPOPULATED';
   if (game.isRepeating) return 'STABILISED';
   return null;
+}
+
+// Clear a 3×3×3 block around the first live cell a world-space ray hits,
+// or seed one in empty space if it hits none. Returns false if nothing happened.
+export function poke(origin, dir) {
+  if (game.isOver) return false;
+  const hit = pickCell(origin, dir);
+  if (!hit) return false;
+
+  const { cell, kill } = hit;
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dz = -1; dz <= 1; dz++) {
+        const [x, y, z] = [cell[0] + dx, cell[1] + dy, cell[2] + dz];
+        if (xyzOutOfBounds(x, y, z)) continue;
+        if (kill) game.currentGrid[x][y][z] = 0;
+        else if (Math.random() < game.seedDensity) game.currentGrid[x][y][z] = 1;
+      }
+    }
+  }
+  game.activeCells = game.currentGrid.flat(2).reduce((a, b) => a + b, 0);
+  return true;
+}
+
+// First live cell along the ray (kill), else the in-grid cell nearest the grid centre, else null.
+// ponytail: fixed-step march (~800 samples per click), swap for a 3D DDA if it ever matters
+function pickCell(origin, dir) {
+  const spacing = cellSpacing();
+  const center = game.dimensions.map((d) => (d - 1) / 2);
+  const start = origin.map((v, i) => v / spacing + center[i]); // world -> grid units
+
+  let nearest = null;
+  let nearestDist = Infinity;
+  for (let t = 0; t < 200; t += 0.25) {
+    const [x, y, z] = start.map((v, i) => Math.round(v + dir[i] * t));
+    if (xyzOutOfBounds(x, y, z)) continue;
+    if (game.currentGrid[x][y][z]) return { cell: [x, y, z], kill: true };
+
+    const dist = Math.hypot(x - center[0], y - center[1], z - center[2]);
+    if (dist < nearestDist) [nearest, nearestDist] = [[x, y, z], dist];
+  }
+  return nearest && { cell: nearest, kill: false };
 }
 
 function countNeighbors(x, y, z) {

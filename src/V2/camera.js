@@ -1,6 +1,6 @@
 // camera.js
 
-import { lookAt } from '../lib/MV.js';
+import { lookAt, add, subtract, scale, cross, normalize } from '../lib/MV.js';
 
 export const NEAR_PLANE = 0.5;
 export const FAR_PLANE = 700.0;
@@ -75,4 +75,17 @@ export function reset() {
   upVector = INIT_CAM.upVector;
 
   updatePosition();
+}
+
+// World-space ray from the camera through a screen point, ndc in -1..1.
+// Assumes the square projection set up in renderer.js (aspect 1).
+export function screenRay(ndcX, ndcY) {
+  const forward = normalize(subtract(target, position));
+  const right = normalize(cross(forward, upVector));
+  const up = cross(right, forward);
+  const t = Math.tan((FIELD_OF_VIEW * Math.PI) / 360);
+  const dir = normalize(
+    add(forward, add(scale(ndcX * t, right), scale(ndcY * t, up)))
+  );
+  return { origin: [...position], dir: [...dir] };
 }

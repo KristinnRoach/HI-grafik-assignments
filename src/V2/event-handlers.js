@@ -1,9 +1,11 @@
 // event-handlers.js
 import * as camera from './camera.js';
-import { game } from './game-state.js';
+import { game, updateHud } from './game-state.js';
+import { poke } from './game-logic.js';
 
 export let isDragging = false;
 export let lastMouseX, lastMouseY;
+let downX, downY;
 
 // TODO: Double click to reset camera position
 
@@ -21,16 +23,26 @@ export function setupEventListeners(canvas, onRestart) {
 
 function handleMouseDown(event) {
   isDragging = true;
-  lastMouseX = event.offsetX;
-  lastMouseY = event.offsetY;
+  lastMouseX = downX = event.offsetX;
+  lastMouseY = downY = event.offsetY;
 }
 
 function handleDoubleClick(event) {
   camera.reset();
 }
 
-function handleMouseUp() {
+function handleMouseUp(event) {
   isDragging = false;
+  // Barely moved: a click, not an orbit drag
+  if (Math.hypot(event.offsetX - downX, event.offsetY - downY) < 4) pokeAt(event);
+}
+
+function pokeAt(event) {
+  const canvas = event.target;
+  const ndcX = (event.offsetX / canvas.clientWidth) * 2 - 1;
+  const ndcY = 1 - (event.offsetY / canvas.clientHeight) * 2;
+  const { origin, dir } = camera.screenRay(ndcX, ndcY);
+  if (poke(origin, dir)) updateHud();
 }
 
 function handleMouseMove(event) {

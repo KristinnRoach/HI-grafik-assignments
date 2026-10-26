@@ -15,7 +15,7 @@ import {
   glLoc,
 } from './gl-utils.js';
 import { createGeometry } from './geometry.js';
-import { game } from './game-state.js';
+import { game, cellSpacing } from './game-state.js';
 
 let geometryBuffers;
 let instanceBuffer;
@@ -138,7 +138,7 @@ export function render(tween = 1) {
   const prevGrid = effects.tween ? game.nextGrid : grid;
 
   const gridCenter = game.dimensions.map((d) => (d - 1) / 2);
-  const baseScale = 20 / Math.max(...game.dimensions);
+  const baseScale = cellSpacing();
 
   if (grid?.length) {
     for (let x = 0; x < game.dimensions[0]; x++) {

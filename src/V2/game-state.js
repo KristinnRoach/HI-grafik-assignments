@@ -23,6 +23,9 @@ export const game = {
   overpopGrace: 5, // generations allowed above maxPopulation before game over
   stableWindow: 6, // a grid repeating any of the last N grids counts as stabilised
 
+  // Clicking empty space seeds a 3×3×3 block; clicking a live cell clears one
+  seedDensity: 0.5, // chance each cell in a seeded block comes alive
+
   // Per-run counters, reset by initGrid
   generation: 0, // also the score
   overLimitFor: 0, // consecutive generations above maxPopulation
@@ -53,6 +56,11 @@ export function setShape(shape) {
     return;
   }
   game.shape = shape;
+}
+
+// World-space distance between neighbouring cells; the grid always spans 20 units
+export function cellSpacing() {
+  return 20 / Math.max(...game.dimensions);
 }
 
 export function updateHud() {
