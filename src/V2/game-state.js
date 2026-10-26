@@ -1,7 +1,8 @@
 // game-state.js
 
 export const GRID_DIMENSIONS = [16, 16, 16];
-export const INIT_COUNT_DOWN = 5;
+const MAX_CELLS = GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1] * GRID_DIMENSIONS[2];
+const BEST_KEY = 'gol-best';
 
 export const game = {
   currentGrid: [],
@@ -11,23 +12,29 @@ export const game = {
   outOfBoundsCells: 0,
 
   dimensions: GRID_DIMENSIONS,
-  maxCells: GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1] * GRID_DIMENSIONS[2],
 
   rules: {
     birth: [5, 7],
     survival: [2, 4, 7],
   },
 
+  // Game-over tuning
+  maxPopulation: Math.round(MAX_CELLS / 5),
+  overpopGrace: 5, // generations allowed above maxPopulation before game over
+  stableWindow: 6, // a grid repeating any of the last N grids counts as stabilised
+
+  // Per-run counters, reset by initGrid
+  generation: 0, // also the score
+  overLimitFor: 0, // consecutive generations above maxPopulation
+  recentStates: [], // keys of the last stableWindow grids
+  isRepeating: false,
+
+  best: loadBest(),
+
   boundariesKill: false,
   infiniteGrid: false,
-  stabilized: false,
-  overpopulated: false,
-  underpopulated: false,
 
-  isCountDown: false,
-
-  fps: 1, // speed
-  generation: 0,   // possibly useful
+  fps: 2, // speed
   lastUpdateTime: 0,
 
   // Cell size relative to grid spacing per shape, 1 = touching
@@ -48,55 +55,55 @@ export function setShape(shape) {
   game.shape = shape;
 }
 
-export function updateCellCountDisplay() {
-  const cellCountElement = document.getElementById('cell-count');
-  cellCountElement.textContent = `Count: ${game.activeCells}`;
-}
+export function updateHud() {
+  document.getElementById('generation').textContent = `Gen: ${game.generation}`;
+  document.getElementById('best').textContent = `Best: ${game.best}`;
+  const population = document.getElementById('cell-count');
+  population.textContent = `Population: ${Math.round(
+    (game.activeCells / game.maxPopulation) * 100
+  )}%`;
+  population.classList.toggle(
+    'over-limit',
+    game.activeCells > game.maxPopulation
+  );
 
-let timer;
-let countdownValue;
-
-export function countDown() {
-  if (timer) return; // Prevent multiple timers
-
-  game.isCountDown = true;
-
-  const countdownElement = document.getElementById('count-down');
-  countdownElement.style.display = 'block';
-
-  countdownValue = INIT_COUNT_DOWN;
-  countdownElement.innerText = countdownValue;
-
-  timer = setInterval(() => {
-    countdownValue--;
-
-    if (countdownValue <= 0) {
-      clearInterval(timer);
-      timer = null;
-      gameOver('OVERPOPULATED');
-      return;
-    }
-    countdownElement.innerText = countdownValue;
-  }, 1000);
-}
-
-export function abortCountDown() {
-  if (!timer) return;
-
-  clearInterval(timer);
-  timer = null;
-  document.getElementById('count-down').style.display = 'none';
-}
-
-function interpolate(start, end, factor) {
-  return start + (end - start) * factor;
+  const warning = document.getElementById('count-down');
+  const warn = game.overLimitFor > 0 && !game.isOver;
+  warning.style.display = warn ? 'block' : 'none';
+  warning.textContent = `Overpopulated! Change the rules to thin it out: ${
+    game.overpopGrace - game.overLimitFor
+  }`;
 }
 
 export function gameOver(reason) {
   game.isOver = true;
 
+  if (game.generation > game.best) {
+    game.best = game.generation;
+    saveBest();
+  }
+
   document.getElementById('game-over-reason').textContent = reason;
+  document.getElementById(
+    'game-over-score'
+  ).textContent = `Survived ${game.generation} generations`;
   document.getElementById('game-over').style.display = 'block';
+  updateHud();
+}
+
+// localStorage can throw (private mode, blocked storage); the score just won't persist
+function loadBest() {
+  try {
+    return Number(localStorage.getItem(BEST_KEY)) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveBest() {
+  try {
+    localStorage.setItem(BEST_KEY, game.best);
+  } catch {}
 }
 
 export function toggleWrapping() {

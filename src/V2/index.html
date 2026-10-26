@@ -43,13 +43,31 @@
         color: rgba(101, 255, 84, 0.603);
       }
       
-      #cell-count #max-cells {
-        display: none;
-        z-index: -1;
-      }
-
       #count-down {
         display: none;
+        position: absolute;
+        top: 8%;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 20px;
+        color: rgb(255, 90, 60);
+      }
+
+      .over-limit {
+        color: rgb(255, 90, 60);
+        animation: blink 0.8s steps(2, jump-none) infinite;
+      }
+
+      @keyframes blink {
+        to {
+          opacity: 0.75;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .over-limit {
+          animation: none;
+        }
       }
 
       #game-over {
@@ -68,23 +86,40 @@
         /* font-family: Arial, sans-serif; */
         font-size: 48px;
         font-weight: bold;
-        /* color: red; */
-        color: white;
         text-shadow: 2px 2px 4px #000000;
         pointer-events: none;
         display: none;
+        color:rgb(225, 30, 30);
 
-        mix-blend-mode: difference; /* hard-light;  */
+        background: rgba(0, 0, 0, 0.7);
+        padding: 1rem 2rem;
+        border-radius: 12px;
       }
 
-      #game-over-reason {
-        font-size: 24px;
-        /* color:rgb(225, 0, 0); */
+      #game-over h2,
+      #game-over h3,
+      #game-over p {
+        margin: 0.2em 0;
+        line-height: 1.4;
       }
+
+      #game-over > :first-child { margin-top: 1rem; }
+      #game-over > :last-child { margin-bottom: 1rem; }
 
       #game-over p {
         font-size: 24px;
-        /* color: rgb(255, 255, 255); */
+        font-weight: thin; 
+        color:rgb(230, 230, 230);
+      }
+
+      #game-over-reason {
+        font-size: 32px;
+        font-weight: bold; 
+      }
+
+      #game-over-score {
+        font-weight: thin;
+        color:rgb(230, 230, 230);
       }
 
       input,
@@ -299,10 +334,11 @@
 
     <div id="canvas-container">
       <div id="cells">
-        <div style="visibility: hidden" id="cell-count"></div>
-        <div style="visibility: hidden" id="count-down"></div>
-        <div style="visibility: hidden" id="max-cells"></div>
+        <div id="generation"></div>
+        <div id="cell-count"></div>
+        <div id="best"></div>
       </div>
+      <div id="count-down"></div>
 
       <canvas id="gl-canvas" width="512" height="512">
         Oops ... your browser doesn't support the HTML5 canvas element
@@ -312,6 +348,7 @@
         <div id="game-over">
           <h2>GAME OVER</h2>
           <h3 id="game-over-reason"></h3>
+          <p id="game-over-score"></p>
           <p>Press r to restart</p>
         </div>
       </div>

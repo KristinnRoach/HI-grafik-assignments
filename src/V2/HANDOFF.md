@@ -49,9 +49,14 @@ Then open http://localhost:8123/src/V2/index.html. Controls: `space` pauses and 
 - The current defaults put the light slightly below the cells (`lightDirection.y = -0.5`) and use strong wrap (`diffuseWrap = 0.95`). That was chosen during tuning, not a bug.
 - **Before deploy:** delete the `dev-tuning.js` script tag in `index.html` and the file itself.
 
+## Game over
+
+- `endReason()` in `game-logic.js` is the one place that decides when a run ends: died out, more than `overpopGrace` generations above `maxPopulation`, or the grid repeating one of the last `stableWindow` grids. Tunables live in `game` (`game-state.js`).
+- Score = `game.generation`; best is kept in `localStorage` (`gol-best`).
+- `node src/V2/check-game-over.mjs` runs every pattern headlessly and asserts each end condition.
+
 ## Known issues
 
-- Most game-over logic (overpopulation/stabilised) is commented out. See `for later.txt` and the comments in `game-logic.js` / `game-state.js`.
 - UVs are uploaded but nothing samples a texture yet.
 - The JS loops over every cell every frame. Fine at 33³; at much larger grids (GOL-wip tried 75³) it will stutter.
 

@@ -1,8 +1,8 @@
 // main.js
 
-import { initGrid, updateGrid } from './game-logic.js';
+import { initGrid, updateGrid, endReason } from './game-logic.js';
 import { setupEventListeners } from './event-handlers.js';
-import { game, updateCellCountDisplay } from './game-state.js';
+import { game, updateHud, gameOver } from './game-state.js';
 import { initRenderer, render, effects } from './renderer.js';
 import {
   setHtmlValues,
@@ -37,9 +37,12 @@ function gameLoop(timestamp) {
   // Simulation steps at game.fps
   if (elapsed >= msPerFrame) {
     lastTimestamp = timestamp - (elapsed % msPerFrame);
-    updateCellCountDisplay();
-
-    if (running) updateGrid();
+    if (running) {
+      updateGrid();
+      const reason = endReason();
+      if (reason) gameOver(reason);
+    }
+    updateHud();
     if (!effects.tween) render();
   }
 

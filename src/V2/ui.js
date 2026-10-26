@@ -1,15 +1,11 @@
 // ui.js
 // HTML controls: syncing values to/from the DOM, input listeners, reset/restart.
 
-import { game, setShape, updateCellCountDisplay } from './game-state.js';
+import { game, setShape, updateHud } from './game-state.js';
 import { initGrid } from './game-logic.js';
 import { setupGeometry } from './renderer.js';
 
 export function setHtmlValues() {
-  document.getElementById('max-cells').textContent = `Max: ${Math.round(
-    (game.maxCells / 5 / 10) * 10
-  )}`;
-  // document.getElementById('count-down').textContent = `${game.countDown}`;
   // document.getElementById('grid-scale').value = game.gridScale;
   // document.getElementById('cell-scale').value = game.cellScale;
   document.getElementById('fps').value = game.fps;
@@ -102,5 +98,5 @@ export function restartGame() {
   game.isPaused = false;
 
   initGrid(game.pattern);
-  updateCellCountDisplay();
+  updateHud();
 }

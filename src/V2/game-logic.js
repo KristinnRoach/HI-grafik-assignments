@@ -1,6 +1,6 @@
 // game-logic.js
 
-import { countDown, abortCountDown, game, gameOver } from './game-state.js';
+import { game } from './game-state.js';
 
 export function initGrid(pattern = 'random') {
   switch (pattern) {
@@ -43,6 +43,11 @@ export function initGrid(pattern = 'random') {
   game.activeCells = game.currentGrid
     .flat(3)
     .filter((cell) => cell === 1).length;
+
+  game.generation = 0;
+  game.overLimitFor = 0;
+  game.recentStates = [];
+  game.isRepeating = false;
 }
 
 export function updateGrid() {
@@ -83,19 +88,25 @@ export function updateGrid() {
   game.activeCells = newCellCount;
 
   [game.currentGrid, game.nextGrid] = [game.nextGrid, game.currentGrid];
+
+  game.generation++;
+  game.overLimitFor =
+    game.activeCells > game.maxPopulation ? game.overLimitFor + 1 : 0;
+
+  // ponytail: whole grid as a string key, fine at 16³; switch to a numeric hash for big grids
+  const key = game.currentGrid.flat(2).join('');
+  game.isRepeating = game.recentStates.includes(key);
+  game.recentStates = [...game.recentStates, key].slice(-game.stableWindow);
 }
 
-// if (newCellCount > 4492) {
-//   game.isPaused = true;
-// }
-
-// if (newCellCount >= game.maxCells / 5 && !game.isPaused) {
-//   countDown();
-// }
-
-// if (game.isCountDown && newCellCount < game.maxCells / 5) {
-//   abortCountDown();
-// }
+// Why the run should end, or null to keep going. Checked after every generation.
+// Add new end conditions here.
+export function endReason() {
+  if (game.activeCells === 0) return 'DIED OUT';
+  if (game.overLimitFor >= game.overpopGrace) return 'OVERPOPULATED';
+  if (game.isRepeating) return 'STABILISED';
+  return null;
+}
 
 function countNeighbors(x, y, z) {
   let count = 0;
@@ -139,11 +150,6 @@ function xyzOutOfBounds(x, y, z) {
     z < 0 ||
     z >= game.dimensions[2]
   );
-}
-
-function isGridStabilized(grid1, grid2) {
-  // TEMP make if same over x iterations
-  return grid1 == grid2;
 }
 
 /* Initializer patterns */
