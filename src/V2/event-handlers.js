@@ -1,6 +1,6 @@
 // event-handlers.js
 import * as camera from './camera.js';
-import { game, updateHud } from './game-state.js';
+import { updateHud, togglePause } from './game-state.js';
 import { poke } from './game-logic.js';
 
 export let isDragging = false;
@@ -121,8 +121,7 @@ function handleKeyDown(event) {
       restart();
       break;
     case ' ':
-      game.isPaused = !game.isPaused;
-      updateHud();
+      togglePause();
       event.preventDefault();
       break;
   }

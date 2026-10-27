@@ -2,7 +2,7 @@
 
 import { initGrid, updateGrid, endReason } from './game-logic.js';
 import { setupEventListeners } from './event-handlers.js';
-import { game, updateHud, gameOver } from './game-state.js';
+import { game, updateHud, gameOver, togglePause } from './game-state.js';
 import { initRenderer, render, effects } from './renderer.js';
 import {
   applyPattern,
@@ -30,8 +30,7 @@ function init() {
   });
   document.getElementById('play-pause').addEventListener('click', (e) => {
     e.currentTarget.blur();
-    game.isPaused = !game.isPaused;
-    updateHud();
+    togglePause();
   });
 
   initGrid(game.pattern);
