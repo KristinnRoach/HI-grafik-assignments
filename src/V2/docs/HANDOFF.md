@@ -10,7 +10,20 @@ Serve the repo root over HTTP, since ES modules don't load from `file://`:
 python3 -m http.server 8123
 ```
 
-Then open http://localhost:8123/src/V2/index.html. Controls: the page starts paused; `space` plays/pauses, and `r` (or the Restart button, for touch) restarts. Restarting or changing the pattern keeps the play/pause state. To move the camera, drag the mouse, use the wheel to zoom, or press WASD; double-click resets it. Hidden extra: a click (without dragging) on a live cell clears a 3×3×3 block around it; a click on empty space stamps the selected pattern near the grid centre (the random pattern stamps a 3×3×3 block at `seedDensity`), clipped to `seedRadius` cells from the click. Patterns are offset lists in `patterns` (`game-logic.js`), shared by `initGrid` and clicks. Each pattern also has default `rules`, loaded into the Birth/Survival boxes when the pattern is picked. How they were found, with alternative candidates, is in `docs/rule-search.md`. The left/right arrow keys cycle focus through the input fields.
+Then open http://localhost:8123/src/V2/index.html.
+
+## Controls
+
+- Starts paused. `space` / Play plays and pauses, `r` / Restart restarts. Restart and pattern changes keep the play/pause state.
+- Camera auto-orbits (`orbit` in `camera.js`). Drag to orbit (with momentum), wheel or pinch to zoom, WASD to nudge, `c` resets. A press only becomes a drag past `TAP_SLOP`, so taps don't stop the orbit.
+- Click/tap without dragging: on a live cell clears a 3×3×3 block, on empty space stamps the selected pattern, clipped to `seedRadius` cells from the click. The Manual pattern starts empty for seeding by hand.
+- Left/right arrows cycle focus through the controls; up/down steps a focused select. On touch, dragging a number box up/down steps it.
+- Patterns are offset lists in `patterns` (`game-logic.js`), shared by `initGrid` and clicks, each with default `rules` loaded into the Birth/Survival boxes when picked. How the rules were found: `docs/rule-search.md`.
+
+## UX hints
+
+- `#how-to-play` is always visible: the goal plus the main keys (touch gets its own text in `ui.js`). Keep it short; don't add every shortcut there (`c` is deliberately left out).
+- `#hint` shows one contextual line at a time: the first entry in `hints` (`game-state.js`) whose `when` holds. It shares its slot with the overpopulation countdown. Add new interaction help here rather than new UI; `.controls` is already crowded.
 
 ## Files
 
@@ -24,8 +37,8 @@ Then open http://localhost:8123/src/V2/index.html. Controls: the page starts pau
 | `geometry.js` | Cube and sphere meshes (positions, normals, UVs, indices) |
 | `game-logic.js` | `patterns` table (offsets + default rules), update rule, `endReason()`, click picking (`poke`) |
 | `game-state.js` | `game` state object (incl. per-shape `cellScaleCube`/`cellScaleSphere`), countdown and game-over UI |
-| `event-handlers.js` | Keyboard and mouse input |
-| `camera.js` | Orbit camera |
+| `event-handlers.js` | Keyboard and pointer input (mouse, pen, touch, pinch) |
+| `camera.js` | Orbit camera, auto-orbit and drag momentum |
 | `dev-tuning.js` | Collapsible "tune" panel (top right): effect toggles, colour pickers and sliders for `lighting`, grouped (incl. separate cube and sphere surface groups) |
 
 ## Rendering
@@ -57,5 +70,5 @@ Then open http://localhost:8123/src/V2/index.html. Controls: the page starts pau
 
 ## Next steps
 
-1. **Player intervention:** click to seed/clear exists as a hidden extra (no cost, not in the hint). An energy budget was tried and removed: it added little. Revisit if clicking becomes a core mechanic.
+1. **Player intervention:** click to seed/clear has no cost. An energy budget was tried and removed: it added little. Revisit if clicking becomes a core mechanic.
 2. **Look:** tint cells by age.
