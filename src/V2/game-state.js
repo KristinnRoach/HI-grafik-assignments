@@ -34,6 +34,7 @@ export const game = {
   seedDensity: 0.5, // chance each cell comes alive when clicking with the random pattern
   seedRadius: 4, // clicked patterns are clipped to this many cells from the click on each axis
   initDensity: 0.08, // chance each cell starts alive with the random pattern
+  cellHover: true, // highlight the 3×3×3 block a click would clear
 
   // Per-run counters, reset by initGrid
   generation: 0, // also the score

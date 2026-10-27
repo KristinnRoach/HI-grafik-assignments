@@ -105,7 +105,7 @@ export function poke(origin, dir) {
 
 // First live cell along the ray (kill), else the in-grid cell nearest the grid centre, else null.
 // ponytail: fixed-step march (~800 samples per click), swap for a 3D DDA if it ever matters
-function pickCell(origin, dir) {
+export function pickCell(origin, dir) {
   const spacing = cellSpacing();
   const center = game.dimensions.map((d) => (d - 1) / 2);
   const start = origin.map((v, i) => v / spacing + center[i]); // world -> grid units

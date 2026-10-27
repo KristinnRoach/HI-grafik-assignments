@@ -15,6 +15,8 @@ import {
   glLoc,
 } from './gl-utils.js';
 import { createGeometry } from './geometry.js';
+import { pickCell } from './game-logic.js';
+import { hoverNdc, isDragging } from './event-handlers.js';
 import { game, cellSpacing } from './game-state.js';
 
 let geometryBuffers;
@@ -64,6 +66,7 @@ export const lighting = {
   cellDensity: 6, // Voronoi cells per unit, sphere diameter is 1; finer turns to aliased grain at play distance
   rimStrengthSphere: 0.5,
   bumpStrengthSphere: 0.05,
+  hoverBrightness: 2, // tint multiplier on the block a click would clear
 };
 
 // Fraction of the 26 surrounding cells that are alive, used as cheap ambient occlusion
@@ -221,6 +224,15 @@ export function render(tween = 1) {
   gl.uniform1f(glLoc.uCellDensity, lighting.cellDensity);
   gl.uniform1f(glLoc.uRimStrength, surfaceOn ? lighting[`rimStrength${shapeKey}`] : 0);
   gl.uniform1f(glLoc.uBumpStrength, surfaceOn ? lighting[`bumpStrength${shapeKey}`] : 0);
+
+  // Picked again every frame, since the orbit moves cells under a still cursor
+  // ponytail: only kill-hits highlight; previewing a spawn would need ghost instances
+  const ray = game.cellHover && hoverNdc && !isDragging && !game.isOver && cam.screenRay(...hoverNdc);
+  const hit = ray && pickCell(ray.origin, ray.dir);
+  const hover = hit?.kill ? hit.cell.map((v, i) => (v - gridCenter[i]) * baseScale) : [1e9, 1e9, 1e9];
+  gl.uniform3fv(glLoc.uHover, hover);
+  gl.uniform1f(glLoc.uHoverRadius, baseScale * 1.5); // the ±1 neighbours, not ±2
+  gl.uniform1f(glLoc.uHoverBrightness, lighting.hoverBrightness);
 
   // Bind index buffer
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);

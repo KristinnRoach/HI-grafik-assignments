@@ -4,6 +4,7 @@ import { updateHud, togglePause } from './game-state.js';
 import { poke } from './game-logic.js';
 
 export let isDragging = false;
+export let hoverNdc = null; // mouse position in NDC over the canvas, null when it's off it or not a mouse
 const pointers = new Map(); // active pointer id -> { x, y }, so two fingers can pinch
 let downX, downY;
 let multiTouch = false; // gesture had a second finger at some point, so it's never a tap
@@ -25,6 +26,7 @@ export function setupEventListeners(canvas, onRestart) {
   canvas.addEventListener('pointermove', handlePointerMove);
   // Fires after pointerup and on pointercancel, so all cleanup lives here
   canvas.addEventListener('lostpointercapture', handlePointerEnd);
+  canvas.addEventListener('pointerleave', () => (hoverNdc = null));
   canvas.addEventListener('wheel', handleWheel);
   window.addEventListener('keydown', handleKeyDown);
 }
@@ -62,15 +64,19 @@ function handlePointerEnd(event) {
   if (pointers.size === 2) pinchDist = pinchDistance();
 }
 
-function pokeAt(event) {
+const toNdc = (event) => {
   const canvas = event.target;
-  const ndcX = (event.offsetX / canvas.clientWidth) * 2 - 1;
-  const ndcY = 1 - (event.offsetY / canvas.clientHeight) * 2;
-  const { origin, dir } = camera.screenRay(ndcX, ndcY);
+  return [(event.offsetX / canvas.clientWidth) * 2 - 1, 1 - (event.offsetY / canvas.clientHeight) * 2];
+};
+
+function pokeAt(event) {
+  const { origin, dir } = camera.screenRay(...toNdc(event));
   if (poke(origin, dir)) updateHud();
 }
 
 function handlePointerMove(event) {
+  // Touch has no hover, and a touch pointermove is always part of a drag
+  if (event.pointerType === 'mouse') hoverNdc = toNdc(event);
   const last = pointers.get(event.pointerId);
   if (!last) return;
   const x = event.offsetX;

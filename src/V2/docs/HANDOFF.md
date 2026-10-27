@@ -17,6 +17,7 @@ Then open http://localhost:8123/src/V2/index.html.
 - Starts paused. `space` / Play plays and pauses, `r` / Restart restarts. Restart and pattern changes keep the play/pause state.
 - Camera auto-orbits (`orbit` in `camera.js`). Drag to orbit (with momentum), wheel or pinch to zoom, WASD to nudge, `c` resets. A press only becomes a drag past `TAP_SLOP`, so taps don't stop the orbit.
 - Click/tap without dragging: on a live cell clears a 3×3×3 block, on empty space stamps the selected pattern, clipped to `seedRadius` cells from the click. The Manual pattern starts empty for seeding by hand.
+- Mouse hover over a live cell brightens the 3×3×3 block a click would clear (`game.cellHover`, `lighting.hoverBrightness`, re-picked every frame in `render()`).
 - Left/right arrows cycle focus through the controls; up/down steps a focused select. On touch, dragging a number box up/down steps it.
 - Patterns are offset lists in `patterns` (`game-logic.js`), shared by `initGrid` and clicks, each with default `rules` loaded into the Birth/Survival boxes when picked. How the rules were found: `docs/rule-search.md`.
 

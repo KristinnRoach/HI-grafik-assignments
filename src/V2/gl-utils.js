@@ -41,6 +41,9 @@ export const glLoc = {
   uCellDensity: null,
   uRimStrength: null,
   uBumpStrength: null,
+  uHover: null,
+  uHoverRadius: null,
+  uHoverBrightness: null,
 };
 
 export function getAllGlLocations() {

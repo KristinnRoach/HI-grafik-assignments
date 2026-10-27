@@ -134,6 +134,10 @@ addSlider(orbitGroup, 'orbitSpeed', 0, 1, () => orbit.speed, (v) => (orbit.speed
 addSlider(orbitGroup, 'orbitMaxSpin', 0.2, 20, () => orbit.maxSpin, (v) => (orbit.maxSpin = v));
 addSlider(orbitGroup, 'orbitSettle', 0.1, 5, () => orbit.settle, (v) => (orbit.settle = v));
 
+const inputGroup = addGroup('Input');
+addCheckbox(inputGroup, 'cellHover', () => game.cellHover, (v) => (game.cellHover = v));
+addValue(inputGroup, 'hoverBrightness', 1, 3);
+
 // Paste over `lighting` in renderer.js to save new defaults
 const readout = document.createElement('pre');
 addGroup('Export lighting').append(readout);
