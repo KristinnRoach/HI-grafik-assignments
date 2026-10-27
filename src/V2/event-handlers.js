@@ -1,6 +1,6 @@
 // event-handlers.js
 import * as camera from './camera.js';
-import { game, updateHud } from './game-state.js';
+import { updateHud, togglePause } from './game-state.js';
 import { poke } from './game-logic.js';
 
 export let isDragging = false;
@@ -63,8 +63,8 @@ function handleWheel(event) {
 }
 
 function handleArrowKeys(event) {
-  // Get all input elements
-  const inputs = document.querySelectorAll('input');
+  // Get all focusable controls, in document order
+  const inputs = document.querySelectorAll('.controls :is(input, select, button)');
 
   // Find the index of the currently focused element
   const currentIndex = Array.from(inputs).indexOf(document.activeElement);
@@ -92,6 +92,17 @@ function handleKeyDown(event) {
     return;
   }
 
+  // Up/down on a focused select: step to the next option (wrapping) and apply it
+  const select = document.activeElement;
+  if (select instanceof HTMLSelectElement && select.id === 'shapeSelect' && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+    event.preventDefault();
+    const step = event.key === 'ArrowDown' ? 1 : -1;
+    const count = select.options.length;
+    select.selectedIndex = (select.selectedIndex + step + count) % count;
+    select.dispatchEvent(new Event('change'));
+    return;
+  }
+
   const KEY_STEP = 0.1;
   switch (event.key.toLowerCase()) {
     case 'a':
@@ -110,8 +121,7 @@ function handleKeyDown(event) {
       restart();
       break;
     case ' ':
-      game.isPaused = !game.isPaused;
-      updateHud();
+      togglePause();
       event.preventDefault();
       break;
   }

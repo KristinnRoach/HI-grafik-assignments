@@ -83,6 +83,13 @@ export function poke(origin, dir) {
   const hit = pickCell(origin, dir);
   if (!hit) return false;
 
+  // Paused: previous grid = current one, so the renderer only tweens the clicked cells.
+  // ponytail: running clicks ride the step's tween; per-cell start times would need a shader attribute
+  if (game.isPaused) {
+    game.nextGrid = structuredClone(game.currentGrid);
+    game.tweenStart = performance.now();
+  }
+
   if (hit.kill) {
     stamp(cube(1), hit.cell, 0);
   } else {
@@ -169,6 +176,12 @@ export const patterns = {
     rules: { birth: [5, 7], survival: [2, 4, 6] },
     offsets: () => cube(span()).filter(() => Math.random() < 0.5),
     clickOffsets: () => cube(1).filter(() => Math.random() < game.seedDensity),
+  },
+  // Starts empty, the player seeds it by clicking
+  manual: {
+    rules: { birth: [5, 7], survival: [2, 4, 6] },
+    offsets: () => [],
+    clickOffsets: () => patterns.random.clickOffsets(),
   },
   cross: {
     rules: { birth: [4, 8], survival: [7, 8, 9] },

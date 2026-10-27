@@ -13,6 +13,7 @@ const STORAGE_KEYS = {
 export const game = {
   currentGrid: [],
   nextGrid: [],
+  tweenStart: 0, // when the current grow/shrink animation began (a step or a click)
 
   activeCells: 0,
   outOfBoundsCells: 0,
@@ -70,6 +71,22 @@ export function cellSpacing() {
   return 20 / Math.max(...game.dimensions);
 }
 
+// Contextual hints for #hint: the first whose `when` holds is shown
+const hints = [
+  {
+    text: 'Click to seed cells and press Space (or click Play)',
+    when: () =>
+      game.pattern === 'manual' && game.generation === 0 && game.isPaused,
+  },
+];
+
+// An empty grid would die on the first step, so Play waits for cells
+export function togglePause() {
+  if (game.isPaused && game.activeCells === 0) return;
+  game.isPaused = !game.isPaused;
+  updateHud();
+}
+
 export function updateHud() {
   document.getElementById('generation').textContent = `Gen: ${game.generation}`;
   document.getElementById('best').textContent = `Best: ${game.best}`;
@@ -91,6 +108,11 @@ export function updateHud() {
   warning.textContent = `Overpopulated! Change the rules to thin it out: ${
     game.overpopGrace - game.overLimitFor
   }`;
+
+  const hint = hints.find((h) => h.when());
+  const hintEl = document.getElementById('hint');
+  hintEl.hidden = !hint;
+  hintEl.textContent = hint?.text ?? '';
 }
 
 export function gameOver(reason) {
