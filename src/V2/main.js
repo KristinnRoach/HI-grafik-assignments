@@ -5,6 +5,7 @@ import { setupEventListeners } from './event-handlers.js';
 import { game, updateHud, gameOver } from './game-state.js';
 import { initRenderer, render, effects } from './renderer.js';
 import {
+  applyPattern,
   setHtmlValues,
   setupControls,
   resetGameState,
@@ -12,6 +13,7 @@ import {
 } from './ui.js';
 
 function init() {
+  applyPattern(game.pattern); // the saved pattern needs its rules before they fill the boxes
   setHtmlValues();
   setupControls();
 

@@ -2,7 +2,13 @@
 
 export const GRID_DIMENSIONS = [18, 18, 18];
 const MAX_CELLS = GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1] * GRID_DIMENSIONS[2];
-const BEST_KEY = 'gol-best';
+// localStorage keys for values that survive a reload
+const STORAGE_KEYS = {
+  best: 'gol-best',
+  fps: 'gol-fps',
+  shape: 'gol-shape',
+  pattern: 'gol-pattern',
+};
 
 export const game = {
   currentGrid: [],
@@ -33,19 +39,19 @@ export const game = {
   recentStates: [], // keys of the last stableWindow grids
   isRepeating: false,
 
-  best: loadBest(),
+  best: Number(load('best')) || 0,
 
   boundariesKill: false,
   infiniteGrid: false,
 
-  fps: 2, // speed
+  fps: Number(load('fps')) || 2, // speed
   lastUpdateTime: 0,
 
   // Cell size relative to grid spacing per shape, 1 = touching
   cellScaleCube: 0.9,
   cellScaleSphere: 0.9,
-  pattern: 'random', // or random, glider, spaceship, etc.
-  shape: 'cube', // cube or sphere
+  pattern: load('pattern') || 'random', // validated against patterns by applyPattern in ui.js
+  shape: load('shape') === 'sphere' ? 'sphere' : 'cube',
 
   isOver: false,
   isPaused: true, // starts paused, space or the Play button begins the run
@@ -92,7 +98,7 @@ export function gameOver(reason) {
 
   if (game.generation > game.best) {
     game.best = game.generation;
-    saveBest();
+    save('best');
   }
 
   document.getElementById('game-over-reason').textContent = reason;
@@ -103,18 +109,18 @@ export function gameOver(reason) {
   updateHud();
 }
 
-// localStorage can throw (private mode, blocked storage); the score just won't persist
-function loadBest() {
+// localStorage can throw (private mode, blocked storage); values just won't persist
+function load(name) {
   try {
-    return Number(localStorage.getItem(BEST_KEY)) || 0;
+    return localStorage.getItem(STORAGE_KEYS[name]);
   } catch {
-    return 0;
+    return null;
   }
 }
 
-function saveBest() {
+export function save(name) {
   try {
-    localStorage.setItem(BEST_KEY, game.best);
+    localStorage.setItem(STORAGE_KEYS[name], game[name]);
   } catch {}
 }
 

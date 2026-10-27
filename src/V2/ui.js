@@ -1,7 +1,7 @@
 // ui.js
 // HTML controls: syncing values to/from the DOM, input listeners, reset/restart.
 
-import { game, setShape, updateHud } from './game-state.js';
+import { game, setShape, updateHud, save } from './game-state.js';
 import { initGrid, patterns } from './game-logic.js';
 import { setupGeometry } from './renderer.js';
 
@@ -53,6 +53,7 @@ export function setupControls() {
     const newFPS = parseInt(e.target.value);
     if (!isNaN(newFPS) && newFPS > 0) {
       game.fps = newFPS;
+      save('fps');
     }
   });
 
@@ -60,9 +61,8 @@ export function setupControls() {
     .getElementById('patternSelect')
     .addEventListener('change', function (e) {
       // Load the pattern's default rules into the boxes, which resetGameState reads back
-      const { rules } = patterns[e.target.value] ?? patterns.random;
-      game.pattern = e.target.value;
-      game.rules = { birth: [...rules.birth], survival: [...rules.survival] };
+      applyPattern(e.target.value);
+      save('pattern');
       setHtmlValues();
       resetGameState();
       restartGame();
@@ -70,8 +70,16 @@ export function setupControls() {
 
   document.getElementById('shapeSelect').addEventListener('change', function (e) {
     setShape(e.target.value);
+    save('shape');
     setupGeometry();
   });
+}
+
+// Sets the pattern and its default rules; unknown names (e.g. a stale saved value) fall back to random
+export function applyPattern(name) {
+  game.pattern = patterns[name] ? name : 'random';
+  const { rules } = patterns[game.pattern];
+  game.rules = { birth: [...rules.birth], survival: [...rules.survival] };
 }
 
 export function resetGameState() {

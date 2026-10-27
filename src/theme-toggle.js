@@ -15,8 +15,16 @@ function setButtonLabel(btn, theme) {
   if (!btn) return;
   btn.textContent = theme === 'dark' ? 'Light' : 'Dark';
 }
+// localStorage can throw (private mode, blocked storage); the theme just won't persist
+function loadTheme() {
+  try {
+    return localStorage.getItem(storageKey);
+  } catch {
+    return null;
+  }
+}
 function initTheme() {
-  const saved = localStorage.getItem(storageKey);
+  const saved = loadTheme();
   const theme = saved || (systemPrefersDark() ? 'dark' : 'light');
   applyTheme(theme);
   return theme;
@@ -24,7 +32,9 @@ function initTheme() {
 function toggleTheme() {
   const next = currentTheme() === 'dark' ? 'light' : 'dark';
   applyTheme(next);
-  localStorage.setItem(storageKey, next);
+  try {
+    localStorage.setItem(storageKey, next);
+  } catch {}
   setButtonLabel(document.getElementById('theme-toggle'), next);
 }
 (function () {
