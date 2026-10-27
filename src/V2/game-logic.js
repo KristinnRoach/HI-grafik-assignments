@@ -162,19 +162,32 @@ function xyzOutOfBounds(x, y, z) {
 
 /* Patterns: cell offsets around an anchor, stamped for the starting grid and on click */
 
+// rules load when the pattern is picked (headless search: lowest-density rules that last 25+ gens)
 // anchor defaults to the grid centre; clickOffsets, if set, replaces offsets on click
 export const patterns = {
   random: {
+    rules: { birth: [5, 7], survival: [2, 4, 6] },
     offsets: () => cube(span()).filter(() => Math.random() < 0.5),
     clickOffsets: () => cube(1).filter(() => Math.random() < game.seedDensity),
   },
   cross: {
+    rules: { birth: [4, 8], survival: [7, 8, 9] },
     offsets: () => cube(span()).filter(([x, y, z]) => x === 0 || y === 0 || z === 0),
   },
-  line: { offsets: () => steps(1).map((z) => [0, 0, z]) },
-  'dotted-line': { offsets: () => steps(2).map((z) => [0, 0, z]) },
-  block: { offsets: () => cube(1) },
+  line: {
+    rules: { birth: [1, 7], survival: [0, 1, 8] },
+    offsets: () => steps(1).map((z) => [0, 0, z]),
+  },
+  'dotted-line': {
+    rules: { birth: [1, 5], survival: [0, 1, 2] },
+    offsets: () => steps(2).map((z) => [0, 0, z]),
+  },
+  block: {
+    rules: { birth: [5, 6], survival: [2, 6, 7] },
+    offsets: () => cube(1),
+  },
   glider: {
+    rules: { birth: [4, 8], survival: [1, 6, 8] },
     anchor: quarter,
     offsets: () =>
       twoPlanes([
@@ -184,6 +197,7 @@ export const patterns = {
       ]),
   },
   spaceship: {
+    rules: { birth: [5, 6], survival: [1, 3, 8] },
     anchor: quarter,
     offsets: () =>
       twoPlanes([
@@ -194,6 +208,7 @@ export const patterns = {
       ]),
   },
   pulsar: {
+    rules: { birth: [4, 8], survival: [2, 6, 8] },
     offsets: () => {
       const arms = [-6, -1, 1, 6];
       return arms.flatMap((a) =>

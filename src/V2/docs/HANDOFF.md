@@ -1,11 +1,6 @@
 # V2 Game of Life: handoff
 
-The goal is to turn this 2024 course assignment (3D Game of Life, WebGL2) into a portfolio piece. The plan is quick wins: make it look better, then add game mechanics.
-
-## State
-
-- Branch `gol-portfolio`, cut from `main`. All work so far is committed.
-- `GOL-wip` is an older experiment branch. **Don't merge it.** It predates the shared styling on main, its texture code is half-wired, and it adds about 17 MB of PNGs. The useful parts (UVs, GL helpers) are already ported here.
+The goal is to turn this 2024 course assignment (3D Game of Life, WebGL2) into a portfolio piece.
 
 ## Run
 
@@ -15,7 +10,7 @@ Serve the repo root over HTTP, since ES modules don't load from `file://`:
 python3 -m http.server 8123
 ```
 
-Then open http://localhost:8123/src/V2/index.html. Controls: the page starts paused; `space` plays/pauses, and `r` (or the Restart button, for touch) restarts. Restarting or changing the pattern keeps the play/pause state. To move the camera, drag the mouse, use the wheel to zoom, or press WASD; double-click resets it. Hidden extra: a click (without dragging) on a live cell clears a 3×3×3 block around it; a click on empty space stamps the selected pattern near the grid centre (the random pattern stamps a 3×3×3 block at `seedDensity`), clipped to `seedRadius` cells from the click. Patterns are offset lists in `patterns` (`game-logic.js`), shared by `initGrid` and clicks. The left/right arrow keys cycle focus through the input fields.
+Then open http://localhost:8123/src/V2/index.html. Controls: the page starts paused; `space` plays/pauses, and `r` (or the Restart button, for touch) restarts. Restarting or changing the pattern keeps the play/pause state. To move the camera, drag the mouse, use the wheel to zoom, or press WASD; double-click resets it. Hidden extra: a click (without dragging) on a live cell clears a 3×3×3 block around it; a click on empty space stamps the selected pattern near the grid centre (the random pattern stamps a 3×3×3 block at `seedDensity`), clipped to `seedRadius` cells from the click. Patterns are offset lists in `patterns` (`game-logic.js`), shared by `initGrid` and clicks. Each pattern also has default `rules`, loaded into the Birth/Survival boxes when the pattern is picked. How they were found, with alternative candidates, is in `docs/rule-search.md`. The left/right arrow keys cycle focus through the input fields.
 
 ## Files
 
@@ -27,7 +22,7 @@ Then open http://localhost:8123/src/V2/index.html. Controls: the page starts pau
 | `ui.js` | HTML controls, reset/restart |
 | `gl-utils.js` | WebGL setup, buffer helpers; `glLoc` lists every attribute/uniform and `getAllGlLocations()` fills it |
 | `geometry.js` | Cube and sphere meshes (positions, normals, UVs, indices) |
-| `game-logic.js` | `patterns` table, update rule, `endReason()`, click picking (`poke`) |
+| `game-logic.js` | `patterns` table (offsets + default rules), update rule, `endReason()`, click picking (`poke`) |
 | `game-state.js` | `game` state object (incl. per-shape `cellScaleCube`/`cellScaleSphere`), countdown and game-over UI |
 | `event-handlers.js` | Keyboard and mouse input |
 | `camera.js` | Orbit camera |
@@ -41,7 +36,6 @@ Then open http://localhost:8123/src/V2/index.html. Controls: the page starts pau
 - Lighting is calculated relative to the camera: Blinn-Phong with a sky/ground two-colour ambient, softened diffuse, and gamma correction (`cellColor` is sRGB; sky and ground colours are linear).
 - Ambient occlusion uses the neighbour fraction. Crowded cells get less ambient light, and less direct light scaled by `occlusionDirect`.
 - Back-face culling is on. Both meshes are wound counter-clockwise from outside. If you change the geometry, re-check the winding.
-- Specular is effectively invisible on cubes (flat faces); it shows on spheres.
 
 ## Lighting tuning
 
@@ -52,17 +46,16 @@ Then open http://localhost:8123/src/V2/index.html. Controls: the page starts pau
 
 ## Game over
 
-- `endReason()` in `game-logic.js` is the one place that decides when a run ends: died out, more than `overpopGrace` generations above `maxPopulation`, or the grid repeating one of the last `stableWindow` grids. Tunables live in `game` (`game-state.js`).
+- `endReason()` in `game-logic.js` is the one place that decides when a run ends: died out, `overpopGrace` consecutive generations above `maxPopulation`, or the grid repeating one of the last `stableWindow` grids. Tunables live in `game` (`game-state.js`).
 - Score = `game.generation`; best is kept in `localStorage` (`gol-best`).
-- `node src/V2/check-game-over.mjs` runs every pattern headlessly and asserts each end condition.
+- `node src/V2/check-game-over.mjs` runs every pattern headlessly (with `game.rules`, not each pattern's own rules) and asserts the end conditions and click behaviour.
 
 ## Known issues
 
-- The JS loops over every cell every frame. Fine at 33³; at much larger grids (GOL-wip tried 75³) it will stutter.
+- The JS loops over every cell every frame.
+- The overpopulation check only counts consecutive generations, so a population that swings above and below the limit never ends the run (see `rule-search.md`).
 
 ## Next steps
 
-1. **Gameplay loop:** game over when the colony dies out, overpopulates past recovery, or stabilises. Score = generations survived, best score kept in `localStorage`.
-2. **Player intervention:** click to seed/clear exists as a hidden extra (no cost, not in the hint). An energy budget was tried and removed: it added little. Revisit if clicking becomes a core mechanic.
-3. **Look:** tint cells by age, maybe a small procedural texture using the existing UVs. Don't use the big GOL-wip PNGs.
-4. **Cleanup for deploy:** remove the dev panel and stray `console.log`s, and check the page under a subpath (GitHub Pages).
+1. **Player intervention:** click to seed/clear exists as a hidden extra (no cost, not in the hint). An energy budget was tried and removed: it added little. Revisit if clicking becomes a core mechanic.
+2. **Look:** tint cells by age.

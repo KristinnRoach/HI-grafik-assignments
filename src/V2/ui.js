@@ -2,7 +2,7 @@
 // HTML controls: syncing values to/from the DOM, input listeners, reset/restart.
 
 import { game, setShape, updateHud } from './game-state.js';
-import { initGrid } from './game-logic.js';
+import { initGrid, patterns } from './game-logic.js';
 import { setupGeometry } from './renderer.js';
 
 export function setHtmlValues() {
@@ -58,8 +58,13 @@ export function setupControls() {
 
   document
     .getElementById('patternSelect')
-    .addEventListener('change', function () {
-      resetGameState(); // reads the new pattern from the select
+    .addEventListener('change', function (e) {
+      // Load the pattern's default rules into the boxes, which resetGameState reads back
+      const { rules } = patterns[e.target.value] ?? patterns.random;
+      game.pattern = e.target.value;
+      game.rules = { birth: [...rules.birth], survival: [...rules.survival] };
+      setHtmlValues();
+      resetGameState();
       restartGame();
     });
 

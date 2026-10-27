@@ -14,8 +14,8 @@ export const game = {
   dimensions: GRID_DIMENSIONS,
 
   rules: {
-    birth: [5, 7],
-    survival: [2, 4, 7],
+    birth: [5, 7], // random pattern's defaults, see patterns in game-logic.js
+    survival: [2, 4, 6],
   },
 
   // Game-over tuning
