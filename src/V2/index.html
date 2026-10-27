@@ -185,6 +185,17 @@
       .controls input[type='number'] {
         touch-action: none;
       }
+      /* No accidental text selection or iOS long-press callout while scrubbing */
+      .controls {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      /* Desktop Safari can block typing in inputs under user-select: none; touch selection is stopped in ui.js */
+      .controls input {
+        -webkit-user-select: text;
+        user-select: text;
+      }
       .control-group {
         margin: 5px 0;
         white-space: nowrap;

@@ -68,6 +68,7 @@ Then open http://localhost:8123/src/V2/index.html.
 
 - The JS loops over every cell every frame.
 - The overpopulation check only counts consecutive generations, so a population that swings above and below the limit never ends the run (see `rule-search.md`).
+- Temp fix for iOS: number inputs cancel `touchstart` (`addTouchScrub` in `ui.js`) so a stray tap doesn't focus them, open the keyboard or zoom, and `.controls` has `user-select: none`. Touch users can only scrub, not type. Revisit if touch support gets proper attention.
 
 ## Next steps
 

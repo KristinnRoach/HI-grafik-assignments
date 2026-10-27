@@ -85,12 +85,14 @@ export function setupControls() {
   }
 }
 
-// Touch: drag a number box up/down to step its value. A plain tap still focuses it and opens the
-// keyboard natively, since a drag doesn't count as a tap.
+// Touch: drag a number box up/down to step its value. Taps never focus it (no keyboard, no iOS
+// focus-zoom); touch users only scrub.
 // ponytail: untested on devices; tune SCRUB_PX on a phone
 const SCRUB_PX = 20; // finger travel per step
 function addTouchScrub(input) {
   let startY, startValue;
+  // Cancelling touchstart stops iOS from synthesizing the click that focuses the input; pointer events still fire
+  input.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
   input.addEventListener('pointerdown', (e) => {
     if (e.pointerType !== 'touch') return;
     input.setPointerCapture(e.pointerId);
