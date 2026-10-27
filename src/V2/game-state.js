@@ -33,6 +33,7 @@ export const game = {
   // Clicking empty space stamps the selected pattern; clicking a live cell clears a 3×3×3 block
   seedDensity: 0.5, // chance each cell comes alive when clicking with the random pattern
   seedRadius: 4, // clicked patterns are clipped to this many cells from the click on each axis
+  initDensity: 0.08, // chance each cell starts alive with the random pattern
 
   // Per-run counters, reset by initGrid
   generation: 0, // also the score
@@ -71,10 +72,15 @@ export function cellSpacing() {
   return 20 / Math.max(...game.dimensions);
 }
 
+// Phones/tablets: no keyboard, so user-facing text says tap/drag instead of keys
+export const isTouch = matchMedia('(pointer: coarse)').matches;
+
 // Contextual hints for #hint: the first whose `when` holds is shown
 const hints = [
   {
-    text: 'Click to seed cells and press Space (or click Play)',
+    text: isTouch
+      ? 'Tap to seed cells, then tap Play'
+      : 'Click to seed cells and press Space (or click Play)',
     when: () =>
       game.pattern === 'manual' && game.generation === 0 && game.isPaused,
   },

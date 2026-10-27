@@ -3,6 +3,7 @@
 
 import { lighting, effects } from './renderer.js';
 import { game } from './game-state.js';
+import { orbit } from './camera.js';
 
 const style = document.createElement('style');
 style.textContent = `
@@ -71,10 +72,14 @@ function addColor(parent, key) {
   });
 }
 
-function addToggle(parent, key) {
+function addCheckbox(parent, label, get, set) {
   const input = document.createElement('input');
-  Object.assign(input, { type: 'checkbox', checked: effects[key] });
-  addRow(parent, key, input, () => (effects[key] = input.checked));
+  Object.assign(input, { type: 'checkbox', checked: get() });
+  addRow(parent, label, input, () => set(input.checked));
+}
+
+function addToggle(parent, key) {
+  addCheckbox(parent, key, () => effects[key], (v) => (effects[key] = v));
 }
 
 const fx = addGroup('Effects');
@@ -121,6 +126,13 @@ addSlider(size, 'cellScaleCube', 0.1, 1, () => game.cellScaleCube, (v) => (game.
 addSlider(size, 'cellScaleSphere', 0.1, 1, () => game.cellScaleSphere, (v) => (game.cellScaleSphere = v));
 addValue(size, 'sizeJitterCube', 0, 1);
 addValue(size, 'sizeJitterSphere', 0, 1);
+
+const orbitGroup = addGroup('Orbit');
+addCheckbox(orbitGroup, 'orbit', () => orbit.on, (v) => (orbit.on = v));
+addCheckbox(orbitGroup, 'orbitReverse', () => orbit.reverse, (v) => (orbit.reverse = v));
+addSlider(orbitGroup, 'orbitSpeed', 0, 1, () => orbit.speed, (v) => (orbit.speed = v));
+addSlider(orbitGroup, 'orbitMaxSpin', 0.2, 20, () => orbit.maxSpin, (v) => (orbit.maxSpin = v));
+addSlider(orbitGroup, 'orbitSettle', 0.1, 5, () => orbit.settle, (v) => (orbit.settle = v));
 
 // Paste over `lighting` in renderer.js to save new defaults
 const readout = document.createElement('pre');

@@ -22,6 +22,11 @@ export let position = INIT_CAM.position;
 export let target = INIT_CAM.target;
 export let upVector = INIT_CAM.upVector;
 
+// Auto-orbit, tuned from dev-tuning.js. A drag flings the camera, then it eases back to the orbit speed
+export const orbit = { on: true, speed: 0.1, reverse: false, settle: 1.5, maxSpin: 14 };
+let spin = 0; // current orbit velocity, rad/s
+let dragged = 0; // angle dragged since the last tick
+
 export function updatePosition() {
   const theta = angle;
   const phi = elevation;
@@ -36,6 +41,7 @@ export function getViewMatrix() {
 
 export function rotate(dx, dy) {
   angle += dx * 0.01;
+  dragged += dx * 0.01;
   elevation = Math.max(
     -Math.PI / 2,
     Math.min(Math.PI / 2, elevation - dy * 0.01)
@@ -66,7 +72,23 @@ export function move(direction, step) {
   updatePosition();
 }
 
+export function tick(dt, dragging) {
+  if (dt <= 0) return;
+  if (dragging) {
+    // Smoothed, since mousemove events and frames don't line up one to one
+    spin += (dragged / dt - spin) * 0.5;
+    spin = Math.max(-orbit.maxSpin, Math.min(orbit.maxSpin, spin));
+  } else {
+    const target = orbit.on ? orbit.speed * (orbit.reverse ? -1 : 1) : 0;
+    spin += (target - spin) * (1 - Math.exp(-orbit.settle * dt));
+    angle += spin * dt;
+    updatePosition();
+  }
+  dragged = 0;
+}
+
 export function reset() {
+  spin = 0;
   elevation = INIT_CAM.elevation;
   radius = INIT_CAM.radius;
   angle = INIT_CAM.angle;

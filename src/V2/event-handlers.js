@@ -4,8 +4,15 @@ import { updateHud, togglePause } from './game-state.js';
 import { poke } from './game-logic.js';
 
 export let isDragging = false;
-export let lastMouseX, lastMouseY;
+const pointers = new Map(); // active pointer id -> { x, y }, so two fingers can pinch
 let downX, downY;
+let multiTouch = false; // gesture had a second finger at some point, so it's never a tap
+let pinchDist = 0;
+
+// Movement under this many px between down and up counts as a tap. Fingers wobble more than mice.
+// ponytail: untested on devices, tune on a phone
+const TAP_SLOP = { mouse: 4, pen: 6, touch: 10 };
+const PINCH_ZOOM = 10; // camera.zoom units per px of pinch, wheel notches are ~100
 
 // TODO: Double click to reset camera position
 
@@ -13,28 +20,52 @@ let restart;
 
 export function setupEventListeners(canvas, onRestart) {
   restart = onRestart;
-  canvas.addEventListener('mousedown', handleMouseDown);
-  canvas.addEventListener('mouseup', handleMouseUp);
-  canvas.addEventListener('mousemove', handleMouseMove);
+  // Pointer events + capture, so a drag that leaves the canvas still tracks and releases.
+  // Covers mouse, pen and touch; the canvas has touch-action: none so the page doesn't scroll instead
+  canvas.addEventListener('pointerdown', handlePointerDown);
+  canvas.addEventListener('pointerup', handlePointerUp);
+  canvas.addEventListener('pointermove', handlePointerMove);
+  // Fires after pointerup and on pointercancel, so all cleanup lives here
+  canvas.addEventListener('lostpointercapture', handlePointerEnd);
   canvas.addEventListener('wheel', handleWheel);
   canvas.addEventListener('dblclick', handleDoubleClick);
   window.addEventListener('keydown', handleKeyDown);
 }
 
-function handleMouseDown(event) {
+const pinchDistance = () => {
+  const [a, b] = pointers.values();
+  return Math.hypot(a.x - b.x, a.y - b.y);
+};
+
+function handlePointerDown(event) {
+  event.currentTarget.setPointerCapture(event.pointerId);
+  pointers.set(event.pointerId, { x: event.offsetX, y: event.offsetY });
   isDragging = true;
-  lastMouseX = downX = event.offsetX;
-  lastMouseY = downY = event.offsetY;
+  if (pointers.size === 1) {
+    multiTouch = false;
+    downX = event.offsetX;
+    downY = event.offsetY;
+  } else {
+    multiTouch = true;
+    if (pointers.size === 2) pinchDist = pinchDistance();
+  }
 }
 
 function handleDoubleClick(event) {
   camera.reset();
 }
 
-function handleMouseUp(event) {
-  isDragging = false;
-  // Barely moved: a click, not an orbit drag
-  if (Math.hypot(event.offsetX - downX, event.offsetY - downY) < 4) pokeAt(event);
+function handlePointerUp(event) {
+  // Barely moved, single pointer: a tap, not an orbit drag
+  const slop = TAP_SLOP[event.pointerType] ?? 4;
+  if (!multiTouch && Math.hypot(event.offsetX - downX, event.offsetY - downY) < slop) pokeAt(event);
+}
+
+function handlePointerEnd(event) {
+  pointers.delete(event.pointerId);
+  isDragging = pointers.size > 0;
+  // A third finger lifted: re-measure the remaining pair so the pinch doesn't jump
+  if (pointers.size === 2) pinchDist = pinchDistance();
 }
 
 function pokeAt(event) {
@@ -45,15 +76,20 @@ function pokeAt(event) {
   if (poke(origin, dir)) updateHud();
 }
 
-function handleMouseMove(event) {
-  if (isDragging) {
-    const dx = event.offsetX - lastMouseX;
-    const dy = event.offsetY - lastMouseY;
+function handlePointerMove(event) {
+  const last = pointers.get(event.pointerId);
+  if (!last) return;
+  const x = event.offsetX;
+  const y = event.offsetY;
+  pointers.set(event.pointerId, { x, y });
 
-    camera.rotate(dx, dy);
-
-    lastMouseX = event.offsetX;
-    lastMouseY = event.offsetY;
+  if (pointers.size === 1) {
+    camera.rotate(x - last.x, y - last.y);
+  } else if (pointers.size === 2) {
+    // ponytail: additive zoom like the wheel; scale radius by the distance ratio if pinch feels uneven across zoom levels
+    const dist = pinchDistance();
+    camera.zoom((pinchDist - dist) * PINCH_ZOOM);
+    pinchDist = dist;
   }
 }
 

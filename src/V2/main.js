@@ -1,7 +1,8 @@
 // main.js
 
 import { initGrid, updateGrid, endReason } from './game-logic.js';
-import { setupEventListeners } from './event-handlers.js';
+import { setupEventListeners, isDragging } from './event-handlers.js';
+import * as camera from './camera.js';
 import { game, updateHud, gameOver, togglePause } from './game-state.js';
 import { initRenderer, render, effects } from './renderer.js';
 import {
@@ -41,6 +42,7 @@ function init() {
 window.onload = init;
 
 let lastTimestamp = 0;
+let lastFrame = 0;
 
 function gameLoop(timestamp) {
   const msPerFrame = 1000 / game.fps;
@@ -57,13 +59,15 @@ function gameLoop(timestamp) {
       if (reason) gameOver(reason);
     }
     updateHud();
-    if (!effects.tween) render();
   }
 
-  // Tweened rendering runs every display frame, interpolating between steps and after clicks
-  if (effects.tween) {
-    render((timestamp - game.tweenStart) / msPerFrame);
-  }
+  // Auto-orbit and drag momentum. Clamp dt so a backgrounded tab doesn't jump
+  const dt = Math.min(timestamp - lastFrame, 100) / 1000;
+  lastFrame = timestamp;
+  camera.tick(dt, isDragging);
+
+  // Render every display frame so the orbit is smooth; tween interpolates between steps and after clicks
+  render(effects.tween ? (timestamp - game.tweenStart) / msPerFrame : 1);
 
   requestAnimationFrame(gameLoop);
 }

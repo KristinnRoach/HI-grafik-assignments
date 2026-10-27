@@ -30,6 +30,8 @@
         width: min(80svh, calc(100vw - 32px));
         height: auto;
         aspect-ratio: 1;
+        /* Drags and pinches go to the camera, not page scroll/zoom */
+        touch-action: none;
 
         z-index: -1;
       }
@@ -178,6 +180,10 @@
         flex-wrap: nowrap;
         margin-top: 1rem;
         column-gap: 1rem;
+      }
+      /* Touch scrubbing in ui.js: vertical drags step the value instead of scrolling */
+      .controls input[type='number'] {
+        touch-action: none;
       }
       .control-group {
         margin: 5px 0;
@@ -502,7 +508,7 @@
           <h2>GAME OVER</h2>
           <h3 id="game-over-reason"></h3>
           <p id="game-over-score"></p>
-          <p>Press R to restart</p>
+          <p id="game-over-restart">Press R to restart</p>
         </div>
       </div>
     </div>

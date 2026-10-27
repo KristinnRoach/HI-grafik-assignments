@@ -1,7 +1,7 @@
 // ui.js
 // HTML controls: syncing values to/from the DOM, input listeners, reset/restart.
 
-import { game, setShape, updateHud, save } from './game-state.js';
+import { game, setShape, updateHud, save, isTouch } from './game-state.js';
 import { initGrid, patterns } from './game-logic.js';
 import { setupGeometry } from './renderer.js';
 
@@ -72,6 +72,39 @@ export function setupControls() {
     setShape(e.target.value);
     save('shape');
     setupGeometry();
+  });
+
+  document.querySelectorAll('.controls input[type=number]').forEach(addTouchScrub);
+
+  // Touch devices have no arrow keys, R or space
+  if (isTouch) {
+    document.getElementById('how-to-play').innerHTML =
+      'Keep the population under 100%: change the Birth and Survival rules to steer it.<br />' +
+      'Drag the numbers up/down to adjust the rules.';
+    document.getElementById('game-over-restart').textContent = 'Tap Restart to play again';
+  }
+}
+
+// Touch: drag a number box up/down to step its value. A plain tap still focuses it and opens the
+// keyboard natively, since a drag doesn't count as a tap.
+// ponytail: untested on devices; tune SCRUB_PX on a phone
+const SCRUB_PX = 20; // finger travel per step
+function addTouchScrub(input) {
+  let startY, startValue;
+  input.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch') return;
+    input.setPointerCapture(e.pointerId);
+    startY = e.clientY;
+    startValue = parseInt(input.value) || 0;
+  });
+  input.addEventListener('pointermove', (e) => {
+    if (!input.hasPointerCapture(e.pointerId)) return;
+    let value = startValue + Math.round((startY - e.clientY) / SCRUB_PX);
+    if (input.min !== '') value = Math.max(value, Number(input.min));
+    if (input.max !== '') value = Math.min(value, Number(input.max));
+    if (String(value) === input.value) return;
+    input.value = value;
+    input.dispatchEvent(new Event('input')); // same path as typing, so rules/fps update and save
   });
 }
 

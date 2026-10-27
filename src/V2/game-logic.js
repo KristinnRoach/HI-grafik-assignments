@@ -174,7 +174,7 @@ function xyzOutOfBounds(x, y, z) {
 export const patterns = {
   random: {
     rules: { birth: [5, 7], survival: [2, 4, 6] },
-    offsets: () => cube(span()).filter(() => Math.random() < 0.5),
+    offsets: () => cube(span()).filter(() => Math.random() < game.initDensity),
     clickOffsets: () => cube(1).filter(() => Math.random() < game.seedDensity),
   },
   // Starts empty, the player seeds it by clicking
