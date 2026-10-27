@@ -111,6 +111,7 @@ function handleKeyDown(event) {
       break;
     case ' ':
       game.isPaused = !game.isPaused;
+      updateHud();
       event.preventDefault();
       break;
   }

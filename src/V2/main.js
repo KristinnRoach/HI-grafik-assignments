@@ -16,12 +16,24 @@ function init() {
   setupControls();
 
   const canvas = initRenderer();
-  setupEventListeners(canvas, () => {
+  const restart = () => {
     resetGameState();
     restartGame();
+  };
+  setupEventListeners(canvas, restart);
+  // Blur so a later space press doesn't also click the focused button
+  document.getElementById('restart').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    restart();
+  });
+  document.getElementById('play-pause').addEventListener('click', (e) => {
+    e.currentTarget.blur();
+    game.isPaused = !game.isPaused;
+    updateHud();
   });
 
   initGrid(game.pattern);
+  updateHud();
   requestAnimationFrame(gameLoop);
 }
 

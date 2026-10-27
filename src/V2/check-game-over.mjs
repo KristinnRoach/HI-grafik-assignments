@@ -3,6 +3,8 @@ import assert from 'node:assert';
 import { game } from './game-state.js';
 import { initGrid, updateGrid, endReason, poke } from './game-logic.js';
 
+game.isPaused = false; // the page starts paused
+
 function run(pattern, limit = 500) {
   initGrid(pattern);
   for (let i = 0; i < limit; i++) {

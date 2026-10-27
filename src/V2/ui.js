@@ -58,8 +58,9 @@ export function setupControls() {
 
   document
     .getElementById('patternSelect')
-    .addEventListener('change', function (e) {
-      game.pattern = e.target.value;
+    .addEventListener('change', function () {
+      resetGameState(); // reads the new pattern from the select
+      restartGame();
     });
 
   document.getElementById('shapeSelect').addEventListener('change', function (e) {
@@ -72,7 +73,6 @@ export function resetGameState() {
   document.getElementById('game-over').style.display = 'none';
   document.getElementById('count-down').style.display = 'none';
 
-  game.isPaused = true;
   game.isOver = true;
 
   const { fps, pattern, shape, birth, survival } = getHtmlValues();
@@ -94,8 +94,8 @@ export function resetGameState() {
 export function restartGame() {
   document.getElementById('game-over').style.display = 'none';
 
+  // isPaused is left alone: a restart keeps playing or stays paused
   game.isOver = false;
-  game.isPaused = false;
 
   initGrid(game.pattern);
   updateHud();

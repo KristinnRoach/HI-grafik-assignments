@@ -15,7 +15,7 @@ Serve the repo root over HTTP, since ES modules don't load from `file://`:
 python3 -m http.server 8123
 ```
 
-Then open http://localhost:8123/src/V2/index.html. Controls: `space` pauses and `r` restarts. To move the camera, drag the mouse, use the wheel to zoom, or press WASD; double-click resets it. Hidden extra: a click (without dragging) on a live cell clears a 3×3×3 block around it; a click on empty space stamps the selected pattern near the grid centre (the random pattern stamps a 3×3×3 block at `seedDensity`), clipped to `seedRadius` cells from the click. Patterns are offset lists in `patterns` (`game-logic.js`), shared by `initGrid` and clicks. The left/right arrow keys cycle focus through the input fields.
+Then open http://localhost:8123/src/V2/index.html. Controls: the page starts paused; `space` plays/pauses, and `r` (or the Restart button, for touch) restarts. Restarting or changing the pattern keeps the play/pause state. To move the camera, drag the mouse, use the wheel to zoom, or press WASD; double-click resets it. Hidden extra: a click (without dragging) on a live cell clears a 3×3×3 block around it; a click on empty space stamps the selected pattern near the grid centre (the random pattern stamps a 3×3×3 block at `seedDensity`), clipped to `seedRadius` cells from the click. Patterns are offset lists in `patterns` (`game-logic.js`), shared by `initGrid` and clicks. The left/right arrow keys cycle focus through the input fields.
 
 ## Files
 

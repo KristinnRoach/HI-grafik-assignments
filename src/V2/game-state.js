@@ -48,7 +48,7 @@ export const game = {
   shape: 'cube', // cube or sphere
 
   isOver: false,
-  isPaused: false,
+  isPaused: true, // starts paused, space or the Play button begins the run
 };
 
 export function setShape(shape) {
@@ -67,6 +67,9 @@ export function cellSpacing() {
 export function updateHud() {
   document.getElementById('generation').textContent = `Gen: ${game.generation}`;
   document.getElementById('best').textContent = `Best: ${game.best}`;
+  document.getElementById('play-pause').textContent = game.isPaused
+    ? 'Play'
+    : 'Pause';
   const population = document.getElementById('cell-count');
   population.textContent = `Population: ${Math.round(
     (game.activeCells / game.maxPopulation) * 100
