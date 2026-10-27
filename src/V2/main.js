@@ -53,6 +53,7 @@ function gameLoop(timestamp) {
     lastTimestamp = timestamp - (elapsed % msPerFrame);
     if (running) {
       updateGrid();
+      game.tweenStart = lastTimestamp;
       const reason = endReason();
       if (reason) gameOver(reason);
     }
@@ -60,9 +61,9 @@ function gameLoop(timestamp) {
     if (!effects.tween) render();
   }
 
-  // Tweened rendering runs every display frame, interpolating between steps
+  // Tweened rendering runs every display frame, interpolating between steps and after clicks
   if (effects.tween) {
-    render(running ? (timestamp - lastTimestamp) / msPerFrame : 1);
+    render((timestamp - game.tweenStart) / msPerFrame);
   }
 
   requestAnimationFrame(gameLoop);

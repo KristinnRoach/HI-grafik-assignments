@@ -83,6 +83,13 @@ export function poke(origin, dir) {
   const hit = pickCell(origin, dir);
   if (!hit) return false;
 
+  // Paused: previous grid = current one, so the renderer only tweens the clicked cells.
+  // ponytail: running clicks ride the step's tween; per-cell start times would need a shader attribute
+  if (game.isPaused) {
+    game.nextGrid = structuredClone(game.currentGrid);
+    game.tweenStart = performance.now();
+  }
+
   if (hit.kill) {
     stamp(cube(1), hit.cell, 0);
   } else {

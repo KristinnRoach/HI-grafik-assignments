@@ -13,6 +13,7 @@ const STORAGE_KEYS = {
 export const game = {
   currentGrid: [],
   nextGrid: [],
+  tweenStart: 0, // when the current grow/shrink animation began (a step or a click)
 
   activeCells: 0,
   outOfBoundsCells: 0,
