@@ -63,8 +63,8 @@ function handleWheel(event) {
 }
 
 function handleArrowKeys(event) {
-  // Get all input elements
-  const inputs = document.querySelectorAll('input');
+  // Get all focusable controls, in document order
+  const inputs = document.querySelectorAll('.controls :is(input, select, button)');
 
   // Find the index of the currently focused element
   const currentIndex = Array.from(inputs).indexOf(document.activeElement);
@@ -89,6 +89,17 @@ function handleKeyDown(event) {
   if ([37, 39].indexOf(event.keyCode) > -1) {
     event.preventDefault();
     handleArrowKeys(event);
+    return;
+  }
+
+  // Up/down on a focused select: step to the next option (wrapping) and apply it
+  const select = document.activeElement;
+  if (select instanceof HTMLSelectElement && select.id === 'shapeSelect' && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+    event.preventDefault();
+    const step = event.key === 'ArrowDown' ? 1 : -1;
+    const count = select.options.length;
+    select.selectedIndex = (select.selectedIndex + step + count) % count;
+    select.dispatchEvent(new Event('change'));
     return;
   }
 
