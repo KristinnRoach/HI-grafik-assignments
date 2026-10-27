@@ -1,48 +1,21 @@
 // game-logic.js
 
-import { countDown, abortCountDown, game, gameOver } from './game-state.js';
+import { game, cellSpacing } from './game-state.js';
 
 export function initGrid(pattern = 'random') {
-  switch (pattern) {
-    case 'random':
-      initializeRandom();
-      break;
-    case 'cross':
-      initializeCross();
-      break;
-    case 'block':
-      initializeBlock();
-      break;
-    case 'glider':
-      initializeGlider();
-      break;
-    case 'pulsar':
-      initializePulsar();
-      break;
-    case 'spaceship':
-      initializeSpaceship();
-      break;
-    case 'line':
-      initializeLine();
-      break;
-    case 'dotted-line':
-      initializeDottedLine();
-      break;
-    default:
-      initializeRandom();
-  }
-
-  game.nextGrid = Array(game.dimensions[0])
-    .fill()
-    .map(() =>
-      Array(game.dimensions[1])
-        .fill()
-        .map(() => Array(game.dimensions[2]).fill(0))
-    );
+  const { offsets, anchor = center } = patterns[pattern] ?? patterns.random;
+  game.currentGrid = createEmptyGrid();
+  stamp(offsets(), anchor());
+  game.nextGrid = createEmptyGrid();
 
   game.activeCells = game.currentGrid
     .flat(3)
     .filter((cell) => cell === 1).length;
+
+  game.generation = 0;
+  game.overLimitFor = 0;
+  game.recentStates = [];
+  game.isRepeating = false;
 }
 
 export function updateGrid() {
@@ -80,28 +53,71 @@ export function updateGrid() {
     }
   }
 
-  console.log('out of bounds cells', game.outOfBoundsCells);
-
   game.activeCells = newCellCount;
 
   [game.currentGrid, game.nextGrid] = [game.nextGrid, game.currentGrid];
+
+  game.generation++;
+  game.overLimitFor =
+    game.activeCells > game.maxPopulation ? game.overLimitFor + 1 : 0;
+
+  // ponytail: whole grid as a string key, fine at 16³; switch to a numeric hash for big grids
+  const key = game.currentGrid.flat(2).join('');
+  game.isRepeating = game.recentStates.includes(key);
+  game.recentStates = [...game.recentStates, key].slice(-game.stableWindow);
 }
 
-// if (newCellCount > 4492) {
-//   game.isPaused = true;
-// }
+// Why the run should end, or null to keep going. Checked after every generation.
+// Add new end conditions here.
+export function endReason() {
+  if (game.activeCells === 0) return 'DIED OUT';
+  if (game.overLimitFor >= game.overpopGrace) return 'OVERPOPULATED';
+  if (game.isRepeating) return 'STABILISED';
+  return null;
+}
 
-// if (newCellCount >= game.maxCells / 5 && !game.isPaused) {
-//   countDown();
-// }
+// Clear a 3×3×3 block around the first live cell a world-space ray hits,
+// or stamp the selected pattern in empty space if it hits none. Returns false if nothing happened.
+export function poke(origin, dir) {
+  if (game.isOver) return false;
+  const hit = pickCell(origin, dir);
+  if (!hit) return false;
 
-// if (game.isCountDown && newCellCount < game.maxCells / 5) {
-//   abortCountDown();
-// }
+  if (hit.kill) {
+    stamp(cube(1), hit.cell, 0);
+  } else {
+    const pattern = patterns[game.pattern] ?? patterns.random;
+    const offsets = (pattern.clickOffsets ?? pattern.offsets)().filter((o) =>
+      o.every((v) => Math.abs(v) <= game.seedRadius)
+    );
+    stamp(offsets, hit.cell);
+  }
+  game.activeCells = game.currentGrid.flat(2).reduce((a, b) => a + b, 0);
+  return true;
+}
+
+// First live cell along the ray (kill), else the in-grid cell nearest the grid centre, else null.
+// ponytail: fixed-step march (~800 samples per click), swap for a 3D DDA if it ever matters
+function pickCell(origin, dir) {
+  const spacing = cellSpacing();
+  const center = game.dimensions.map((d) => (d - 1) / 2);
+  const start = origin.map((v, i) => v / spacing + center[i]); // world -> grid units
+
+  let nearest = null;
+  let nearestDist = Infinity;
+  for (let t = 0; t < 200; t += 0.25) {
+    const [x, y, z] = start.map((v, i) => Math.round(v + dir[i] * t));
+    if (xyzOutOfBounds(x, y, z)) continue;
+    if (game.currentGrid[x][y][z]) return { cell: [x, y, z], kill: true };
+
+    const dist = Math.hypot(x - center[0], y - center[1], z - center[2]);
+    if (dist < nearestDist) [nearest, nearestDist] = [[x, y, z], dist];
+  }
+  return nearest && { cell: nearest, kill: false };
+}
 
 function countNeighbors(x, y, z) {
   let count = 0;
-  let outOfBoundsSet = new Set();
 
   for (let dx = -1; dx <= 1; dx++) {
     for (let dy = -1; dy <= 1; dy++) {
@@ -144,149 +160,98 @@ function xyzOutOfBounds(x, y, z) {
   );
 }
 
-function isGridStabilized(grid1, grid2) {
-  // TEMP make if same over x iterations
-  return grid1 == grid2;
-}
+/* Patterns: cell offsets around an anchor, stamped for the starting grid and on click */
 
-function outOfBounds(value, axis) {
-  return value < 0 || value >= game.dimensions[axis];
-}
+// anchor defaults to the grid centre; clickOffsets, if set, replaces offsets on click
+export const patterns = {
+  random: {
+    offsets: () => cube(span()).filter(() => Math.random() < 0.5),
+    clickOffsets: () => cube(1).filter(() => Math.random() < game.seedDensity),
+  },
+  cross: {
+    offsets: () => cube(span()).filter(([x, y, z]) => x === 0 || y === 0 || z === 0),
+  },
+  line: { offsets: () => steps(1).map((z) => [0, 0, z]) },
+  'dotted-line': { offsets: () => steps(2).map((z) => [0, 0, z]) },
+  block: { offsets: () => cube(1) },
+  glider: {
+    anchor: quarter,
+    offsets: () =>
+      twoPlanes([
+        [0, 1, 0],
+        [0, 0, 1],
+        [1, 1, 1],
+      ]),
+  },
+  spaceship: {
+    anchor: quarter,
+    offsets: () =>
+      twoPlanes([
+        [0, 1, 1, 1, 1],
+        [1, 0, 0, 0, 1],
+        [0, 0, 0, 0, 1],
+        [1, 0, 0, 1, 0],
+      ]),
+  },
+  pulsar: {
+    offsets: () => {
+      const arms = [-6, -1, 1, 6];
+      return arms.flatMap((a) =>
+        arms
+          .filter((b) => Math.abs(a) !== Math.abs(b))
+          .flatMap((b) => [
+            [a, b, 0],
+            [a, 0, b],
+            [0, a, b],
+          ])
+      );
+    },
+  },
+};
 
-/* Initializer patterns */
-
-function initializeRandom() {
-  game.currentGrid = Array(game.dimensions[0])
-    .fill()
-    .map(() =>
-      Array(game.dimensions[1])
-        .fill()
-        .map(() =>
-          Array(game.dimensions[2])
-            .fill()
-            .map(() => (Math.random() < 0.5 ? 1 : 0))
-        )
-    );
-}
-
-function initializeCross() {
-  game.currentGrid = Array(game.dimensions[0])
-    .fill()
-    .map((_, x) =>
-      Array(game.dimensions[1])
-        .fill()
-        .map((_, y) =>
-          Array(game.dimensions[2])
-            .fill()
-            .map((_, z) => {
-              const centerX = Math.floor(game.dimensions[0] / 2);
-              const centerY = Math.floor(game.dimensions[1] / 2);
-              const centerZ = Math.floor(game.dimensions[2] / 2);
-              return x === centerX || y === centerY || z === centerZ ? 1 : 0;
-            })
-        )
-    );
-}
-
-function initializeBlock() {
-  const centerX = Math.floor(game.dimensions[0] / 2);
-  const centerY = Math.floor(game.dimensions[1] / 2);
-  const centerZ = Math.floor(game.dimensions[2] / 2);
-
-  game.currentGrid = createEmptyGrid();
-
-  for (let x = centerX - 1; x <= centerX + 1; x++) {
-    for (let y = centerY - 1; y <= centerY + 1; y++) {
-      for (let z = centerZ - 1; z <= centerZ + 1; z++) {
-        game.currentGrid[x][y][z] = 1;
-      }
-    }
+// Set every in-bounds cell at anchor + offset to value
+function stamp(offsets, [ax, ay, az], value = 1) {
+  for (const [dx, dy, dz] of offsets) {
+    const [x, y, z] = [ax + dx, ay + dy, az + dz];
+    if (!xyzOutOfBounds(x, y, z)) game.currentGrid[x][y][z] = value;
   }
 }
 
-function initializeGlider() {
-  game.currentGrid = createEmptyGrid();
-
-  const patterns = [
-    [0, 1, 0],
-    [0, 0, 1],
-    [1, 1, 1],
-  ];
-
-  const startX = Math.floor(game.dimensions[0] / 4);
-  const startY = Math.floor(game.dimensions[1] / 4);
-  const startZ = Math.floor(game.dimensions[2] / 2);
-
-  for (let x = 0; x < patterns.length; x++) {
-    for (let y = 0; y < patterns[x].length; y++) {
-      game.currentGrid[startX + x][startY + y][startZ] = patterns[x][y];
-      game.currentGrid[startX + x][startY][startZ + y] = patterns[x][y];
-    }
-  }
+function center() {
+  return game.dimensions.map((d) => Math.floor(d / 2));
 }
 
-function initializePulsar() {
-  game.currentGrid = createEmptyGrid();
-
-  const centerX = Math.floor(game.dimensions[0] / 2);
-  const centerY = Math.floor(game.dimensions[1] / 2);
-  const centerZ = Math.floor(game.dimensions[2] / 2);
-
-  const offsets = [-6, -1, 1, 6];
-
-  offsets.forEach((x) => {
-    offsets.forEach((y) => {
-      if (Math.abs(x) !== Math.abs(y)) {
-        game.currentGrid[centerX + x][centerY + y][centerZ] = 1;
-        game.currentGrid[centerX + x][centerY][centerZ + y] = 1;
-        game.currentGrid[centerX][centerY + x][centerZ + y] = 1;
-      }
-    });
-  });
+// Glider and spaceship start a quarter in on x and y, so they have room to travel
+function quarter() {
+  return game.dimensions.map((d, i) => Math.floor(i === 2 ? d / 2 : d / 4));
 }
 
-function initializeSpaceship() {
-  game.currentGrid = createEmptyGrid();
-
-  const patterns = [
-    [0, 1, 1, 1, 1],
-    [1, 0, 0, 0, 1],
-    [0, 0, 0, 0, 1],
-    [1, 0, 0, 1, 0],
-  ];
-
-  const startX = Math.floor(game.dimensions[0] / 4);
-  const startY = Math.floor(game.dimensions[1] / 4);
-  const startZ = Math.floor(game.dimensions[2] / 2);
-
-  for (let x = 0; x < patterns.length; x++) {
-    for (let y = 0; y < patterns[x].length; y++) {
-      game.currentGrid[startX + x][startY + y][startZ] = patterns[x][y];
-      game.currentGrid[startX + x][startY][startZ + y] = patterns[x][y];
-    }
-  }
+// Big enough to reach across the grid from any anchor
+function span() {
+  return Math.max(...game.dimensions);
 }
 
-function initializeLine() {
-  game.currentGrid = createEmptyGrid();
-
-  const centerX = Math.floor(game.dimensions[0] / 2);
-  const centerY = Math.floor(game.dimensions[1] / 2);
-
-  for (let z = 0; z < game.dimensions[2]; z++) {
-    game.currentGrid[centerX][centerY][z] = 1;
-  }
+// Offsets from -span to span in the given step, for lines through the anchor
+function steps(step) {
+  const offsets = [];
+  for (let i = -span(); i <= span(); i += step) offsets.push(i);
+  return offsets;
 }
 
-function initializeDottedLine() {
-  game.currentGrid = createEmptyGrid();
+// Every offset in a cube of radius r
+function cube(r) {
+  const offsets = [];
+  for (let x = -r; x <= r; x++)
+    for (let y = -r; y <= r; y++)
+      for (let z = -r; z <= r; z++) offsets.push([x, y, z]);
+  return offsets;
+}
 
-  const centerX = Math.floor(game.dimensions[0] / 2);
-  const centerY = Math.floor(game.dimensions[1] / 2);
-
-  for (let z = 0; z < game.dimensions[2]; z += 2) {
-    game.currentGrid[centerX][centerY][z] = 1;
-  }
+// A 2D pattern drawn in two perpendicular planes that share the anchor's first row
+function twoPlanes(rows) {
+  return rows.flatMap((row, x) =>
+    row.flatMap((on, y) => (on ? [[x, y, 0], [x, 0, y]] : []))
+  );
 }
 
 function createEmptyGrid() {
@@ -298,16 +263,3 @@ function createEmptyGrid() {
         .map(() => Array(game.dimensions[2]).fill(0))
     );
 }
-
-// if (game.wrapping) {
-//   nx = (nx + game.dimensions[0]) % game.dimensions[0];
-//   ny = (ny + game.dimensions[1]) % game.dimensions[1];
-//   nz = (nz + game.dimensions[2]) % game.dimensions[2];
-// }
-
-// if (outOfBounds(nx, ny, nz)) {
-//   // if (boundariesKill) {
-//   //   count++;
-//   // }
-//   continue;
-// }

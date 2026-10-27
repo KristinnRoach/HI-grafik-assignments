@@ -10,11 +10,11 @@
 
     <style>
       body {
-        margin: 0 auto;
         color: rgba(101, 255, 84, 0.603);
-
-        min-height: 100vh;
-        max-height: 100vh;
+        
+        min-height: 100svh;
+        max-height: 100svh;
+        max-width: 100dvw; 
       }
 
       .canvas-container {
@@ -22,14 +22,14 @@
       }
 
       canvas {
-        width: 90vh;
-        height: 85vh;
-        margin: 0 auto;
-
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        /* Square, shrinking to fit narrow screens */
+        width: min(80svh, calc(100vw - 32px));
+        height: auto;
+        aspect-ratio: 1;
 
         z-index: -1;
       }
@@ -43,16 +43,46 @@
         flex-direction: row;
         column-gap: 5rem;
         font-size: 20px;
-        /* font-family: Arial, sans-serif; */
         color: rgba(101, 255, 84, 0.603);
       }
-      #cell-count #max-cells {
-        display: none;
-        z-index: -1;
+      
+      #how-to-play {
+        position: absolute;
+        top: calc(3% + 30px);
+        left: 50%;
+        transform: translateX(-50%);
+        margin: 0;
+        font-size: 14px;
+        white-space: nowrap;
+        text-align: center;
+        opacity: 0.8;
       }
 
       #count-down {
         display: none;
+        position: absolute;
+        top: calc(3% + 76px);
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 20px;
+        color: rgb(255, 90, 60);
+      }
+
+      .over-limit {
+        color: rgb(255, 90, 60);
+        animation: blink 0.8s steps(2, jump-none) infinite;
+      }
+
+      @keyframes blink {
+        to {
+          opacity: 0.75;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .over-limit {
+          animation: none;
+        }
       }
 
       #game-over {
@@ -71,27 +101,46 @@
         /* font-family: Arial, sans-serif; */
         font-size: 48px;
         font-weight: bold;
-        /* color: red; */
-        color: white;
         text-shadow: 2px 2px 4px #000000;
         pointer-events: none;
         display: none;
+        color:rgb(225, 30, 30);
 
-        mix-blend-mode: difference; /* hard-light;  */
+        background: rgba(0, 0, 0, 0.7);
+        padding: 1rem 2rem;
+        border-radius: 12px;
       }
 
-      #game-over-reason {
-        font-size: 24px;
-        /* color:rgb(225, 0, 0); */
+      #game-over h2,
+      #game-over h3,
+      #game-over p {
+        margin: 0.2em 0;
+        line-height: 1.4;
       }
+
+      #game-over > :first-child { margin-top: 1rem; }
+      #game-over > :last-child { margin-bottom: 1rem; }
 
       #game-over p {
         font-size: 24px;
-        /* color: rgb(255, 255, 255); */
+        font-weight: thin; 
+        color:rgb(230, 230, 230);
+      }
+
+      #game-over-reason {
+        font-size: 32px;
+        font-weight: bold; 
+      }
+
+      #game-over-score {
+        font-weight: thin;
+        color:rgb(230, 230, 230);
       }
 
       input,
-      select {
+      select,
+      #play-pause,
+      #restart {
         background-color: var(--color-surface-2);
         color: rgba(0, 210, 0, 1);
         border: 1px solid rgba(101, 255, 84, 0.603);
@@ -106,20 +155,73 @@
       }
 
       .controls {
-        margin: 0 auto;
-        margin-top: 1rem;
-        column-gap: 1rem;
         display: flex;
         flex-direction: row;
         align-items: center;
-        justify-content: center;
+        justify-content: space-evenly;
         flex-wrap: nowrap;
+        margin-top: 1rem;
+        column-gap: 1rem;
       }
       .control-group {
         margin: 5px 0;
+        white-space: nowrap;
       }
       label {
         margin-right: 10px;
+      }
+
+      #play-pause,
+      #restart {
+        cursor: pointer;
+      }
+
+      #play-pause {
+        min-width: 4.5em;
+      }
+
+      /* html prefix: shared.css and the tune panel's styles load later */
+      @media (max-width: 600px) {
+        html #dev-panel {
+          top: auto;
+          bottom: 16px;
+        }
+        html body {
+          max-height: none;
+          padding: 64px 16px 32px;
+        }
+        #cells {
+          top: 60px;
+          column-gap: 1.5rem;
+          font-size: 16px;
+          white-space: nowrap;
+        }
+        #how-to-play {
+          top: 86px;
+          width: calc(100vw - 32px);
+          white-space: normal;
+          font-size: 12px;
+        }
+        #count-down {
+          top: 140px;
+          width: calc(100vw - 32px);
+          text-align: center;
+          font-size: 16px;
+        }
+        #game-over {
+          font-size: 32px;
+          padding: 0.5rem 1rem;
+        }
+        #game-over-reason {
+          font-size: 24px;
+        }
+        #game-over p {
+          font-size: 16px;
+        }
+        .controls {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
       }
     </style>
 
@@ -130,46 +232,65 @@
       precision mediump float;
       
       in vec4 aPosition;
-      in vec4 aColor;
-      in vec3 aOffset;
+      in vec4 aInstance; // xyz: cell offset, w: fraction of live neighbours
       in vec3 aNormal;
+      in vec2 aTexCoord;
+      in float aState; // 1: born this step, -1: dying, 0: stable
 
       uniform vec3 uLightDirection;
       uniform mat4 uViewMatrix;
       uniform mat4 uProjection;
-      uniform mat3 uNormalMatrix;
       uniform float uCellScale;
+      uniform float uTween; // 0..1 progress between generations
+      uniform float uSizeJitter; // max relative size offset per cell, 0 = off
+      uniform float uBrightnessJitter; // max relative brightness offset per cell, 0 = off
+      uniform float uColorJitter; // max relative per-channel offset per cell, 0 = off
 
-      out vec4 vColor;
       out vec3 vNormal;
       out vec3 vLightDirection;
       out vec3 vViewPos;
+      out vec3 vUp;
+      out vec2 vTexCoord;
+      out float vNeighbors;
+      out vec3 vTint; // per-cell brightness and color multiplier
+      out vec3 vObjectPos; // unscaled model position, for seam-free surface detail
+      out vec3 vSeed; // per-cell offset into the surface pattern
 
+      // Stable 0..1 pseudo-random value per cell, keyed on its position
+      float hash(highp vec3 p)
+      {
+        return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+      }
+
+      // All lighting is done in view space, where the camera sits at the origin
       void
       main()
       {
-        // Calculate per-instance model matrix
-        mat4 modelMatrix = mat4(
-          uCellScale, 0.0, 0.0, 0.0, 
-          0.0, uCellScale, 0.0, 0.0, 
-          0.0, 0.0, uCellScale, 0.0, 
-          aOffset.x, aOffset.y, aOffset.z, 1.0
+        // Born cells grow in, dying cells shrink out
+        float t = smoothstep(0.0, 1.0, uTween);
+        float growth = aState > 0.5 ? t : aState < -0.5 ? 1.0 - t : 1.0;
+        growth *= 1.0 + uSizeJitter * (hash(aInstance.xyz) * 2.0 - 1.0);
+        float brightness = 1.0 + uBrightnessJitter * (hash(aInstance.xyz + 17.0) * 2.0 - 1.0);
+        vec3 channels = vec3(
+          hash(aInstance.xyz + 31.0),
+          hash(aInstance.xyz + 47.0),
+          hash(aInstance.xyz + 59.0)
         );
+        vTint = brightness * (1.0 + uColorJitter * (channels * 2.0 - 1.0));
+        vec4 viewPos = uViewMatrix * vec4(aPosition.xyz * uCellScale * growth + aInstance.xyz, 1.0);
+        gl_Position = uProjection * viewPos;
 
-        // Calculate modelView matrix
-        mat4 modelViewMatrix = uViewMatrix * modelMatrix;
-      
-        gl_Position = uProjection * modelViewMatrix * aPosition;
+        // Uniform scale + rigid view matrix, so no inverse-transpose needed
+        mat3 viewRot = mat3(uViewMatrix);
+        vNormal = viewRot * aNormal;
+        vLightDirection = viewRot * uLightDirection;
+        vViewPos = viewPos.xyz;
+        vUp = viewRot * vec3(0.0, 1.0, 0.0);
 
-        vViewPos = vec3(uViewMatrix * vec4(0.0, 0.0, 0.0, 1.0));
-
-        // Calculate normal matrix
-        mat3 normalMatrix = transpose(inverse(mat3(modelViewMatrix)));
-        vNormal = normalize(normalMatrix * aNormal);
-
-        vLightDirection = mat3(modelViewMatrix) * uLightDirection;
-
-        vColor = aColor;
+        vTexCoord = aTexCoord;
+        vObjectPos = aPosition.xyz;
+        vSeed = 10.0 * vec3(hash(aInstance.xyz + 71.0), hash(aInstance.xyz + 83.0), hash(aInstance.xyz + 97.0));
+        vNeighbors = aInstance.w;
       }
     </script>
 
@@ -177,49 +298,142 @@
     <script id="fragment-shader" type="x-shader/x-fragment">#version 300 es
       precision mediump float;
 
-      in vec4 vColor;
       in vec3 vNormal;
       in vec3 vLightDirection;
       in vec3 vViewPos;
+      in vec3 vUp;
+      in vec2 vTexCoord;
+      in float vNeighbors;
+      in vec3 vTint;
+      in vec3 vObjectPos;
+      in vec3 vSeed;
 
-      vec3 uLightColor = vec3(1.0, 1.0, 1.0);
+      uniform vec3 uSkyColor;
+      uniform vec3 uGroundColor;
+      uniform float uDiffuseWrap;
+      uniform float uOcclusionStrength;
+      uniform float uOcclusionDirect;
+      uniform vec3 uCellColor;
+      uniform float uLightIntensity;
+      uniform float uSpecularStrength;
+      uniform vec3 uHotColor;
+      uniform float uDensity; // 0 or 1, toggles density coloring
+      uniform float uDensityMax; // neighbour fraction that reads fully hot
+      uniform float uFog; // 0 or 1, toggles depth fog
+      uniform float uFogNear;
+      uniform float uFogFar;
+      uniform float uIsSphere; // 0 or 1, picks the surface detail
+      uniform float uSurfaceStrength; // 0 = off
+      uniform float uDetailWidth; // cube bevel or sphere cell-wall width
+      uniform float uCellDensity; // Voronoi cells per object-space unit
+      uniform float uRimStrength; // 0 = off
+      uniform float uBumpStrength; // 0 = off
+
+      const float shininess = 48.0;
+      const float gamma = 2.2;
 
       out vec4 fragColor;
 
+      // Pseudo-random 0..1 feature point inside a Voronoi cell
+      vec3 hash3(highp vec3 p)
+      {
+        p = vec3(dot(p, vec3(127.1, 311.7, 74.7)), dot(p, vec3(269.5, 183.3, 246.1)), dot(p, vec3(113.5, 271.9, 124.6)));
+        return fract(sin(p) * 43758.5453);
+      }
+
+      // F2 - F1 of 3D Worley noise: 0 on a cell wall, growing towards the cell centre
+      float cellWall(highp vec3 p)
+      {
+        highp vec3 cell = floor(p);
+        vec3 local = fract(p);
+        float f1 = 8.0;
+        float f2 = 8.0;
+        for (int x = -1; x <= 1; x++)
+        for (int y = -1; y <= 1; y++)
+        for (int z = -1; z <= 1; z++) {
+          vec3 offset = vec3(x, y, z);
+          float d = length(offset + hash3(cell + offset) - local);
+          if (d < f1) { f2 = f1; f1 = d; }
+          else if (d < f2) { f2 = d; }
+        }
+        return f2 - f1;
+      }
+
+      // Tilts n along the screen-space slope of height, so no tangents or normal map needed.
+      // Mikkelsen 2010, "Bump Mapping Unparametrized Surfaces on the GPU"
+      vec3 bumpNormal(vec3 n, vec3 pos, float height, float strength)
+      {
+        vec3 dpdx = dFdx(pos);
+        vec3 dpdy = dFdy(pos);
+        vec3 r1 = cross(dpdy, n);
+        vec3 r2 = cross(n, dpdx);
+        float det = dot(dpdx, r1);
+        vec3 grad = sign(det) * (dFdx(height) * r1 + dFdy(height) * r2);
+        return normalize(abs(det) * n - strength * grad);
+      }
+
+      // Blinn-Phong with hemisphere ambient, lit in linear space
       void main()
       {
-        // get the FragPos
-        vec3 FragPos = vec3(gl_FragCoord.x, gl_FragCoord.y, 0.0);
+        // Base color is authored in sRGB
+        // Crowded cells shift toward the hot color
+        float heat = uDensity * smoothstep(0.05, uDensityMax, vNeighbors);
+        vec3 albedo = pow(mix(uCellColor, uHotColor, heat), vec3(gamma)) * vTint;
 
-        vec3 normal = normalize(vNormal);
+        // Surface detail: cell walls on spheres (object space, so no UV seam or pole pinch),
+        // darkened edges on cubes. Also dims specular, so walls and edges read as matte
+        vec2 edge = min(vTexCoord, 1.0 - vTexCoord);
+        // Skipped when off: cellWall is the costliest part of the shader. Uniform condition,
+        // so the branch is coherent and the derivatives below stay valid
+        float detail = 1.0;
+        if (uSurfaceStrength + uBumpStrength > 0.0) {
+          detail = uIsSphere > 0.5 ? cellWall(vObjectPos * uCellDensity + vSeed) : min(edge.x, edge.y);
+        }
+        float height = smoothstep(0.0, uDetailWidth, detail); // 0 in walls and edges, 1 on the surface
+        float shade = mix(1.0, mix(0.5, 1.0, height), uSurfaceStrength);
+        albedo *= shade;
+
+        // Walls and edges become grooves the light responds to.
+        // Faded where height changes within a pixel, since the slope there is just noise
+        float bump = uBumpStrength * (1.0 - smoothstep(0.3, 0.8, fwidth(height)));
+        vec3 normal = bumpNormal(normalize(vNormal), vViewPos, height, bump);
         vec3 lightDir = normalize(vLightDirection);
-        vec3 lightColor = normalize(vec3(1.0, 1.0, 1.0)); // could have separate amb, diff, spec colors
+        vec3 viewDir = normalize(-vViewPos);
+        vec3 halfDir = normalize(lightDir + viewDir);
+        vec3 lightColor = vec3(1.0, 0.95, 0.85) * uLightIntensity;
 
-        float ambientStrength = 0.2;
-        vec3 ambient = ambientStrength * lightColor;
+        // Up-facing surfaces get sky light, down-facing get ground bounce
+        float skyFactor = dot(normal, normalize(vUp)) * 0.5 + 0.5;
+        vec3 ambient = mix(uGroundColor, uSkyColor, skyFactor);
 
-        float diffuseStrength = max(dot(lightDir, normal), 0.0); 
-        vec3 diffuse = diffuseStrength * lightColor;
+        // Wrapped diffuse softens the terminator
+        float diffuse = max((dot(normal, lightDir) + uDiffuseWrap) / (1.0 + uDiffuseWrap), 0.0);
+        float specular = dot(normal, lightDir) > 0.0
+          ? pow(max(dot(normal, halfDir), 0.0), shininess)
+          : 0.0;
 
+        // Crowded cells get less light: ambient fully, direct light by uOcclusionDirect
+        float occlusion = clamp(1.0 - uOcclusionStrength * vNeighbors, 0.05, 1.0);
+        ambient *= occlusion;
+        diffuse *= mix(1.0, occlusion, uOcclusionDirect);
 
-        // specular
-        vec3 viewDir = normalize(vViewPos - FragPos);
-        vec3 reflectDir = normalize(reflect(-lightDir, normal));
-        float specularStrength = normalize(max(dot(viewDir, reflectDir), 0.0) * 32.0); // should be power of 32
-        vec3 specular = normalize(specularStrength * lightColor);
+        // Fresnel rim: grazing angles pick up extra ambient, occluded along with it
+        float rim = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.0);
 
-        vec3 litColor = vColor.rgb * (ambient + diffuse); // + specular;
+        vec3 lit = albedo * (ambient + diffuse * lightColor)
+          + uSpecularStrength * shade * specular * lightColor
+          + uRimStrength * rim * ambient;
 
-        // fragColor = vec4(litColor, vColor.a);
-
-        fragColor = vec4(litColor, vColor.a);
-
-        // vec3 debugColor = 0.5 * normalize(vNormal) + 0.5;
-        // fragColor = vec4(debugColor, 1.0);
+        // Fade to transparent with distance, so far cells sink into the page background.
+        // Canvas is premultiplied alpha, so color is scaled by alpha too
+        float fog = uFog * smoothstep(uFogNear, uFogFar, -vViewPos.z);
+        fragColor = vec4(pow(lit, vec3(1.0 / gamma)) * (1.0 - fog), 1.0 - fog);
       }
     </script>
 
     <script type="module" src="./main.js"></script>
+    <!-- Dev-only lighting tuning panel, remove before deploy -->
+    <script type="module" src="./dev-tuning.js"></script>
   </head>
 
   <body>
@@ -260,10 +474,15 @@
 
     <div id="canvas-container">
       <div id="cells">
-        <div style="visibility: hidden" id="cell-count"></div>
-        <div style="visibility: hidden" id="count-down"></div>
-        <div style="visibility: hidden" id="max-cells"></div>
+        <div id="generation"></div>
+        <div id="cell-count"></div>
+        <div id="best"></div>
       </div>
+      <p id="how-to-play">
+        Keep the population under 100%: change the Birth and Survival rules to
+        steer it.<br />Arrow keys adjust the rules. Space plays/pauses, R restarts.
+      </p>
+      <div id="count-down"></div>
 
       <canvas id="gl-canvas" width="512" height="512">
         Oops ... your browser doesn't support the HTML5 canvas element
@@ -273,22 +492,23 @@
         <div id="game-over">
           <h2>GAME OVER</h2>
           <h3 id="game-over-reason"></h3>
-          <p>Press r to restart</p>
+          <p id="game-over-score"></p>
+          <p>Press R to restart</p>
         </div>
       </div>
     </div>
 
     <div class="controls">
       <div class="control-group">
-        <label for="birth">Birth:</label>
-        <input type="number" min="0" id="birth-1" />
-        <input type="number" min="0" id="birth-2" />
+        <label for="birth-1" title="Dead cell comes alive with N neighbors">Birth:</label>
+        <input type="number" min="0" id="birth-1" title="Birth Rule 1: Neighbor count that brings a dead cell to life." />
+        <input type="number" min="0" id="birth-2" title="Birth Rule 2: Neighbor count that brings a dead cell to life." />
       </div>
       <div class="control-group">
-        <label for="survival">Survival:</label>
-        <input type="number" id="survival-1" min="0" />
-        <input type="number" id="survival-2" min="0" />
-        <input type="number" id="survival-3" min="0" />
+        <label for="survival-1" title="Live cell stays alive with N neighbors">Survival:</label>
+        <input type="number" id="survival-1" title="Survival Rule 1: Neighbor count that keeps a live cell alive." min="0" />
+        <input type="number" id="survival-2" title="Survival Rule 2: Neighbor count that keeps a live cell alive." min="0" />
+        <input type="number" id="survival-3" title="Survival Rule 3: Neighbor count that keeps a live cell alive." min="0" />
       </div>
 
       <div class="control-group">
@@ -319,6 +539,11 @@
           <option value="cube">Cubes</option>
           <option value="sphere">Spheres</option>
         </select>
+      </div>
+
+      <div class="control-group">
+        <button id="play-pause" type="button">Play</button>
+        <button id="restart" type="button">Restart</button>
       </div>
     </div>
     <script src="../theme-toggle.js"></script>

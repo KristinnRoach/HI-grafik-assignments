@@ -7,18 +7,49 @@ export let gl, program;
 
 const bgColor = [0.0, 0.0, 0.0, 0.0];
 
-export const glPos = {
-  aColor: null,
+export const glLoc = {
   aPosition: null,
+  aInstance: null,
   aNormal: null,
-  uNormalMatrix: null,
-  uModelView: null,
+  aTexCoord: null,
+  aState: null,
   uProjection: null,
   uLightDirection: null,
   uViewMatrix: null,
   uCellScale: null,
-  uCellSpacing: null,
+  uSkyColor: null,
+  uGroundColor: null,
+  uDiffuseWrap: null,
+  uOcclusionStrength: null,
+  uCellColor: null,
+  uLightIntensity: null,
+  uSpecularStrength: null,
+  uOcclusionDirect: null,
+  uTween: null,
+  uSizeJitter: null,
+  uBrightnessJitter: null,
+  uColorJitter: null,
+  uHotColor: null,
+  uDensity: null,
+  uDensityMax: null,
+  uFog: null,
+  uFogNear: null,
+  uFogFar: null,
+  uIsSphere: null,
+  uSurfaceStrength: null,
+  uDetailWidth: null,
+  uCellDensity: null,
+  uRimStrength: null,
+  uBumpStrength: null,
 };
+
+export function getAllGlLocations() {
+  for (const name of Object.keys(glLoc)) {
+    glLoc[name] = name.startsWith('a')
+      ? gl.getAttribLocation(program, name)
+      : gl.getUniformLocation(program, name);
+  }
+}
 
 export function setupWebGL() {
   const canvas = getCanvas();
@@ -29,16 +60,26 @@ export function setupWebGL() {
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.enable(gl.DEPTH_TEST);
   gl.frontFace(gl.CCW);
-  // gl.enable(gl.CULL_FACE);
-  // gl.cullFace(gl.BACK);
+  gl.enable(gl.CULL_FACE);
+  gl.cullFace(gl.BACK);
 }
 
 export function createBuffer(data, attribute, size, usage = gl.STATIC_DRAW) {
   const buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, data, usage);
-  gl.vertexAttribPointer(attribute, size, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(attribute);
+  // Attributes the shader doesn't use get optimized out (location -1)
+  if (attribute >= 0) {
+    gl.vertexAttribPointer(attribute, size, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(attribute);
+  }
+  return buffer;
+}
+
+export function createIndexBuffer(data, usage = gl.STATIC_DRAW) {
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data, usage);
   return buffer;
 }
 
