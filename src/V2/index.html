@@ -269,6 +269,7 @@
       uniform float uDetailWidth; // cube bevel or sphere cell-wall width
       uniform float uCellDensity; // Voronoi cells per object-space unit
       uniform float uRimStrength; // 0 = off
+      uniform float uBumpStrength; // 0 = off
 
       const float shininess = 48.0;
       const float gamma = 2.2;
@@ -300,14 +301,22 @@
         return f2 - f1;
       }
 
+      // Tilts n along the screen-space slope of height, so no tangents or normal map needed.
+      // Mikkelsen 2010, "Bump Mapping Unparametrized Surfaces on the GPU"
+      vec3 bumpNormal(vec3 n, vec3 pos, float height, float strength)
+      {
+        vec3 dpdx = dFdx(pos);
+        vec3 dpdy = dFdy(pos);
+        vec3 r1 = cross(dpdy, n);
+        vec3 r2 = cross(n, dpdx);
+        float det = dot(dpdx, r1);
+        vec3 grad = sign(det) * (dFdx(height) * r1 + dFdy(height) * r2);
+        return normalize(abs(det) * n - strength * grad);
+      }
+
       // Blinn-Phong with hemisphere ambient, lit in linear space
       void main()
       {
-        vec3 normal = normalize(vNormal);
-        vec3 lightDir = normalize(vLightDirection);
-        vec3 viewDir = normalize(-vViewPos);
-        vec3 halfDir = normalize(lightDir + viewDir);
-
         // Base color is authored in sRGB
         // Crowded cells shift toward the hot color
         float heat = uDensity * smoothstep(0.05, uDensityMax, vNeighbors);
@@ -316,11 +325,23 @@
         // Surface detail: cell walls on spheres (object space, so no UV seam or pole pinch),
         // darkened edges on cubes. Also dims specular, so walls and edges read as matte
         vec2 edge = min(vTexCoord, 1.0 - vTexCoord);
-        float detail = uIsSphere > 0.5
-          ? cellWall(vObjectPos * uCellDensity + vSeed)
-          : min(edge.x, edge.y);
-        float shade = mix(1.0, mix(0.5, 1.0, smoothstep(0.0, uDetailWidth, detail)), uSurfaceStrength);
+        // Skipped when off: cellWall is the costliest part of the shader. Uniform condition,
+        // so the branch is coherent and the derivatives below stay valid
+        float detail = 1.0;
+        if (uSurfaceStrength + uBumpStrength > 0.0) {
+          detail = uIsSphere > 0.5 ? cellWall(vObjectPos * uCellDensity + vSeed) : min(edge.x, edge.y);
+        }
+        float height = smoothstep(0.0, uDetailWidth, detail); // 0 in walls and edges, 1 on the surface
+        float shade = mix(1.0, mix(0.5, 1.0, height), uSurfaceStrength);
         albedo *= shade;
+
+        // Walls and edges become grooves the light responds to.
+        // Faded where height changes within a pixel, since the slope there is just noise
+        float bump = uBumpStrength * (1.0 - smoothstep(0.3, 0.8, fwidth(height)));
+        vec3 normal = bumpNormal(normalize(vNormal), vViewPos, height, bump);
+        vec3 lightDir = normalize(vLightDirection);
+        vec3 viewDir = normalize(-vViewPos);
+        vec3 halfDir = normalize(lightDir + viewDir);
         vec3 lightColor = vec3(1.0, 0.95, 0.85) * uLightIntensity;
 
         // Up-facing surfaces get sky light, down-facing get ground bounce

@@ -78,13 +78,22 @@ function addToggle(parent, key) {
 }
 
 const fx = addGroup('Effects');
-['tween', 'densityColor', 'fog', 'jitter', 'surface'].forEach((key) => addToggle(fx, key));
-addValue(fx, 'surfaceStrengthCube', 0, 1);
-addValue(fx, 'surfaceStrengthSphere', 0, 1);
-addValue(fx, 'bevelWidth', 0.01, 0.5);
-addValue(fx, 'wallWidth', 0.01, 0.5);
-addValue(fx, 'cellDensity', 1, 16);
-addValue(fx, 'rimStrength', 0, 2);
+['tween', 'densityColor', 'fog', 'jitter'].forEach((key) => addToggle(fx, key));
+
+const cubeSurface = addGroup('Cube surface');
+addToggle(cubeSurface, 'surfaceCube');
+addValue(cubeSurface, 'surfaceStrengthCube', 0, 1);
+addValue(cubeSurface, 'bevelWidth', 0.01, 0.5);
+addValue(cubeSurface, 'rimStrengthCube', 0, 2);
+addValue(cubeSurface, 'bumpStrengthCube', 0, 0.3);
+
+const sphereSurface = addGroup('Sphere surface');
+addToggle(sphereSurface, 'surfaceSphere');
+addValue(sphereSurface, 'surfaceStrengthSphere', 0, 1);
+addValue(sphereSurface, 'wallWidth', 0.01, 0.5);
+addValue(sphereSurface, 'cellDensity', 1, 16);
+addValue(sphereSurface, 'rimStrengthSphere', 0, 2);
+addValue(sphereSurface, 'bumpStrengthSphere', 0, 0.3);
 
 const color = addGroup('Color');
 addColor(color, 'cellColor');

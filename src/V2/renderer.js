@@ -27,7 +27,9 @@ export const effects = {
   densityColor: true,
   fog: true,
   jitter: true, // per-cell random size, brightness and color
-  surface: true, // procedural surface detail (cube bevel, sphere cell walls) and fresnel rim
+  // Procedural surface detail (cube bevel, sphere cell walls), fresnel rim and bump, per shape
+  surfaceCube: false,
+  surfaceSphere: false,
 };
 
 // Tweakable at runtime by dev-tuning.js
@@ -52,13 +54,16 @@ export const lighting = {
   sizeJitterSphere: 0.2,
   brightnessJitter: 0.2, // max relative brightness offset per cell
   colorJitter: 0.2, // max relative per-channel offset per cell
-  // Surface detail darkness, 0 = plain albedo, per shape
+  // Surface, per shape. Strength is detail darkness (0 = plain albedo), bump is normal tilt (0 = flat shading)
   surfaceStrengthCube: 1,
+  bevelWidth: 0.15, // edge darkening, fraction of a face
+  rimStrengthCube: 0.5,
+  bumpStrengthCube: 0.05,
   surfaceStrengthSphere: 1,
-  bevelWidth: 0.15, // cube edge darkening, fraction of a face
-  wallWidth: 0.25, // sphere cell-wall softness
+  wallWidth: 0.25, // cell-wall softness
   cellDensity: 6, // Voronoi cells per unit, sphere diameter is 1; finer turns to aliased grain at play distance
-  rimStrength: 0.5,
+  rimStrengthSphere: 0.5,
+  bumpStrengthSphere: 0.05,
 };
 
 // Fraction of the 26 surrounding cells that are alive, used as cheap ambient occlusion
@@ -208,12 +213,14 @@ export function render(tween = 1) {
   gl.uniform1f(glLoc.uBrightnessJitter, effects.jitter ? lighting.brightnessJitter : 0);
   gl.uniform1f(glLoc.uColorJitter, effects.jitter ? lighting.colorJitter : 0);
   const isSphere = game.shape === 'sphere';
-  const surfaceStrength = isSphere ? lighting.surfaceStrengthSphere : lighting.surfaceStrengthCube;
+  const shapeKey = isSphere ? 'Sphere' : 'Cube'; // suffix of the per-shape surface settings
+  const surfaceOn = effects[`surface${shapeKey}`];
   gl.uniform1f(glLoc.uIsSphere, isSphere ? 1 : 0);
-  gl.uniform1f(glLoc.uSurfaceStrength, effects.surface ? surfaceStrength : 0);
+  gl.uniform1f(glLoc.uSurfaceStrength, surfaceOn ? lighting[`surfaceStrength${shapeKey}`] : 0);
   gl.uniform1f(glLoc.uDetailWidth, isSphere ? lighting.wallWidth : lighting.bevelWidth);
   gl.uniform1f(glLoc.uCellDensity, lighting.cellDensity);
-  gl.uniform1f(glLoc.uRimStrength, effects.surface ? lighting.rimStrength : 0);
+  gl.uniform1f(glLoc.uRimStrength, surfaceOn ? lighting[`rimStrength${shapeKey}`] : 0);
+  gl.uniform1f(glLoc.uBumpStrength, surfaceOn ? lighting[`bumpStrength${shapeKey}`] : 0);
 
   // Bind index buffer
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);

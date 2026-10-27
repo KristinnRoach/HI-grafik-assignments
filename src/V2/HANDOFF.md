@@ -31,12 +31,13 @@ Then open http://localhost:8123/src/V2/index.html. Controls: `space` pauses and 
 | `game-state.js` | `game` state object (incl. per-shape `cellScaleCube`/`cellScaleSphere`), countdown and game-over UI |
 | `event-handlers.js` | Keyboard and mouse input |
 | `camera.js` | Orbit camera |
-| `dev-tuning.js` | Collapsible "tune" panel (top right): effect toggles, colour pickers and sliders for `lighting`, grouped |
+| `dev-tuning.js` | Collapsible "tune" panel (top right): effect toggles, colour pickers and sliders for `lighting`, grouped (incl. separate cube and sphere surface groups) |
 
 ## Rendering
 
 - One instanced draw call per frame. Each cell sends a `vec4 aInstance`: xyz is its offset, w is the fraction of its 26 neighbours that are alive. It also sends `float aState` (1 born, -1 dying, 0 stable), compared against `game.nextGrid`, which holds the previous generation after `updateGrid`'s swap. `render()` rebuilds both in JS every frame.
 - `effects` toggles four looks: `tween` (cells grow/shrink between generations), `densityColor` (crowded cells shift toward `hotColor`), `fog` (fades to transparent, so it works in either theme) and `jitter` (per-cell size/brightness/color from a position hash in the vertex shader, with no extra buffers).
+- Surface detail (undecided whether to keep, nothing found worth keeping yet): `effects.surfaceCube`/`surfaceSphere`, both off by default. All procedural in the fragment shader, no textures: cubes darken toward face edges (UVs), spheres get Voronoi cell walls from 3D Worley noise on the object-space position (no UV seam). Plus a fresnel rim and derivative-based bump mapping (`bumpNormal`, Mikkelsen 2010) that turns edges/walls into grooves. Settings are per shape in `lighting` (`*Cube`/`*Sphere`, `bevelWidth`, `wallWidth`, `cellDensity`). When off, the shader skips the detail computation. At normal play distance `cellDensity` 6 reads as aliased grain, 2 reads as cells.
 - Lighting is calculated relative to the camera: Blinn-Phong with a sky/ground two-colour ambient, softened diffuse, and gamma correction (`cellColor` is sRGB; sky and ground colours are linear).
 - Ambient occlusion uses the neighbour fraction. Crowded cells get less ambient light, and less direct light scaled by `occlusionDirect`.
 - Back-face culling is on. Both meshes are wound counter-clockwise from outside. If you change the geometry, re-check the winding.
@@ -57,7 +58,6 @@ Then open http://localhost:8123/src/V2/index.html. Controls: `space` pauses and 
 
 ## Known issues
 
-- UVs are uploaded but nothing samples a texture yet.
 - The JS loops over every cell every frame. Fine at 33³; at much larger grids (GOL-wip tried 75³) it will stutter.
 
 ## Next steps
