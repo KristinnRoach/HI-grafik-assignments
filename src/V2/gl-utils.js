@@ -35,7 +35,11 @@ export const glLoc = {
   uFog: null,
   uFogNear: null,
   uFogFar: null,
-  uTextureStrength: null,
+  uIsSphere: null,
+  uSurfaceStrength: null,
+  uDetailWidth: null,
+  uCellDensity: null,
+  uRimStrength: null,
 };
 
 export function getAllGlLocations() {

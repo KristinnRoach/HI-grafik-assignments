@@ -27,7 +27,7 @@ export const effects = {
   densityColor: true,
   fog: true,
   jitter: true, // per-cell random size, brightness and color
-  texture: false, // texture test: procedural grayscale texture multiplied into albedo
+  surface: true, // procedural surface detail (cube bevel, sphere cell walls) and fresnel rim
 };
 
 // Tweakable at runtime by dev-tuning.js
@@ -52,62 +52,14 @@ export const lighting = {
   sizeJitterSphere: 0.2,
   brightnessJitter: 0.2, // max relative brightness offset per cell
   colorJitter: 0.2, // max relative per-channel offset per cell
-  // 0 = plain albedo, 1 = full texture, per shape
-  textureStrengthCube: 1,
-  textureStrengthSphere: 1,
+  // Surface detail darkness, 0 = plain albedo, per shape
+  surfaceStrengthCube: 1,
+  surfaceStrengthSphere: 1,
+  bevelWidth: 0.15, // cube edge darkening, fraction of a face
+  wallWidth: 0.25, // sphere cell-wall softness
+  cellDensity: 6, // Voronoi cells per unit, sphere diameter is 1; finer turns to aliased grain at play distance
+  rimStrength: 0.5,
 };
-
-// Texture test: grayscale patterns drawn on a canvas, so no image assets.
-// ponytail: try-out only; swap for real images if textures stay
-export const textureStyles = {
-  panel(ctx, n) {
-    ctx.fillStyle = '#eee';
-    ctx.fillRect(0, 0, n, n);
-    ctx.strokeStyle = '#999';
-    ctx.lineWidth = 16;
-    ctx.strokeRect(0, 0, n, n);
-    ctx.strokeStyle = '#444';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(0, 0, n, n);
-    ctx.fillStyle = '#666';
-    for (const [x, y] of [[20, 20], [n - 20, 20], [20, n - 20], [n - 20, n - 20]]) {
-      ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  },
-  grain(ctx, n) {
-    const grainSize = 2; // texels per noise sample; bigger = coarser grain
-    const m = n / grainSize;
-    const small = Object.assign(document.createElement('canvas'), { width: m, height: m });
-    const sctx = small.getContext('2d');
-    const img = sctx.createImageData(m, m);
-    for (let i = 0; i < img.data.length; i += 4) {
-      const v = 160 + Math.random() * 95;
-      img.data.set([v, v, v, 255], i);
-    }
-    sctx.putImageData(img, 0, 0);
-    // Upscaling with smoothing blends the samples into soft blotches
-    ctx.drawImage(small, 0, 0, n, n);
-  },
-};
-
-// Style per shape, a key of textureStyles. Kept out of `lighting` since the export readout is numbers only
-export const textureStyle = { cube: 'panel', sphere: 'grain' };
-const textures = {};
-
-export function setTexture(shape, style) {
-  textureStyle[shape] = style;
-  const n = 128; // power of two, for mipmaps
-  const canvas = Object.assign(document.createElement('canvas'), { width: n, height: n });
-  textureStyles[style](canvas.getContext('2d'), n);
-  if (textures[shape]) gl.deleteTexture(textures[shape]);
-  textures[shape] = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, textures[shape]);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
-  gl.generateMipmap(gl.TEXTURE_2D);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-}
 
 // Fraction of the 26 surrounding cells that are alive, used as cheap ambient occlusion
 function neighborFraction(grid, x, y, z) {
@@ -128,7 +80,6 @@ export function initRenderer() {
   getAllGlLocations();
 
   setupGeometry();
-  for (const [shape, style] of Object.entries(textureStyle)) setTexture(shape, style);
   // Filled every frame in render()
   instanceBuffer = createInstancedBuffer(new Float32Array(), glLoc.aInstance, 4);
   stateBuffer = createInstancedBuffer(new Float32Array(), glLoc.aState, 1);
@@ -256,10 +207,13 @@ export function render(tween = 1) {
   gl.uniform1f(glLoc.uSizeJitter, effects.jitter ? sizeJitter : 0);
   gl.uniform1f(glLoc.uBrightnessJitter, effects.jitter ? lighting.brightnessJitter : 0);
   gl.uniform1f(glLoc.uColorJitter, effects.jitter ? lighting.colorJitter : 0);
-  gl.bindTexture(gl.TEXTURE_2D, textures[game.shape]);
-  const textureStrength =
-    game.shape === 'sphere' ? lighting.textureStrengthSphere : lighting.textureStrengthCube;
-  gl.uniform1f(glLoc.uTextureStrength, effects.texture ? textureStrength : 0);
+  const isSphere = game.shape === 'sphere';
+  const surfaceStrength = isSphere ? lighting.surfaceStrengthSphere : lighting.surfaceStrengthCube;
+  gl.uniform1f(glLoc.uIsSphere, isSphere ? 1 : 0);
+  gl.uniform1f(glLoc.uSurfaceStrength, effects.surface ? surfaceStrength : 0);
+  gl.uniform1f(glLoc.uDetailWidth, isSphere ? lighting.wallWidth : lighting.bevelWidth);
+  gl.uniform1f(glLoc.uCellDensity, lighting.cellDensity);
+  gl.uniform1f(glLoc.uRimStrength, effects.surface ? lighting.rimStrength : 0);
 
   // Bind index buffer
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, geometryBuffers.indices);

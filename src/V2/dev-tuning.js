@@ -1,7 +1,7 @@
 // dev-tuning.js
 // Collapsible panel for tuning the look in the browser. Native <details>, so it starts collapsed with no toggle code.
 
-import { lighting, effects, textureStyles, textureStyle, setTexture } from './renderer.js';
+import { lighting, effects } from './renderer.js';
 import { game } from './game-state.js';
 
 const style = document.createElement('style');
@@ -78,16 +78,13 @@ function addToggle(parent, key) {
 }
 
 const fx = addGroup('Effects');
-['tween', 'densityColor', 'fog', 'jitter', 'texture'].forEach((key) => addToggle(fx, key));
-addValue(fx, 'textureStrengthCube', 0, 1);
-addValue(fx, 'textureStrengthSphere', 0, 1);
-for (const shape of ['cube', 'sphere']) {
-  const select = document.createElement('select');
-  select.innerHTML = Object.keys(textureStyles).map((k) => `<option>${k}</option>`).join('');
-  select.value = textureStyle[shape];
-  const label = `textureStyle${shape[0].toUpperCase()}${shape.slice(1)}`;
-  addRow(fx, label, select, () => setTexture(shape, select.value));
-}
+['tween', 'densityColor', 'fog', 'jitter', 'surface'].forEach((key) => addToggle(fx, key));
+addValue(fx, 'surfaceStrengthCube', 0, 1);
+addValue(fx, 'surfaceStrengthSphere', 0, 1);
+addValue(fx, 'bevelWidth', 0.01, 0.5);
+addValue(fx, 'wallWidth', 0.01, 0.5);
+addValue(fx, 'cellDensity', 1, 16);
+addValue(fx, 'rimStrength', 0, 2);
 
 const color = addGroup('Color');
 addColor(color, 'cellColor');

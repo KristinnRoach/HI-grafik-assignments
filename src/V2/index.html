@@ -195,6 +195,8 @@
       out vec2 vTexCoord;
       out float vNeighbors;
       out vec3 vTint; // per-cell brightness and color multiplier
+      out vec3 vObjectPos; // unscaled model position, for seam-free surface detail
+      out vec3 vSeed; // per-cell offset into the surface pattern
 
       // Stable 0..1 pseudo-random value per cell, keyed on its position
       float hash(highp vec3 p)
@@ -228,6 +230,8 @@
         vUp = viewRot * vec3(0.0, 1.0, 0.0);
 
         vTexCoord = aTexCoord;
+        vObjectPos = aPosition.xyz;
+        vSeed = 10.0 * vec3(hash(aInstance.xyz + 71.0), hash(aInstance.xyz + 83.0), hash(aInstance.xyz + 97.0));
         vNeighbors = aInstance.w;
       }
     </script>
@@ -243,6 +247,8 @@
       in vec2 vTexCoord;
       in float vNeighbors;
       in vec3 vTint;
+      in vec3 vObjectPos;
+      in vec3 vSeed;
 
       uniform vec3 uSkyColor;
       uniform vec3 uGroundColor;
@@ -258,13 +264,41 @@
       uniform float uFog; // 0 or 1, toggles depth fog
       uniform float uFogNear;
       uniform float uFogFar;
-      uniform sampler2D uTexture; // texture test, grayscale sRGB
-      uniform float uTextureStrength; // 0 = off
+      uniform float uIsSphere; // 0 or 1, picks the surface detail
+      uniform float uSurfaceStrength; // 0 = off
+      uniform float uDetailWidth; // cube bevel or sphere cell-wall width
+      uniform float uCellDensity; // Voronoi cells per object-space unit
+      uniform float uRimStrength; // 0 = off
 
       const float shininess = 48.0;
       const float gamma = 2.2;
 
       out vec4 fragColor;
+
+      // Pseudo-random 0..1 feature point inside a Voronoi cell
+      vec3 hash3(highp vec3 p)
+      {
+        p = vec3(dot(p, vec3(127.1, 311.7, 74.7)), dot(p, vec3(269.5, 183.3, 246.1)), dot(p, vec3(113.5, 271.9, 124.6)));
+        return fract(sin(p) * 43758.5453);
+      }
+
+      // F2 - F1 of 3D Worley noise: 0 on a cell wall, growing towards the cell centre
+      float cellWall(highp vec3 p)
+      {
+        highp vec3 cell = floor(p);
+        vec3 local = fract(p);
+        float f1 = 8.0;
+        float f2 = 8.0;
+        for (int x = -1; x <= 1; x++)
+        for (int y = -1; y <= 1; y++)
+        for (int z = -1; z <= 1; z++) {
+          vec3 offset = vec3(x, y, z);
+          float d = length(offset + hash3(cell + offset) - local);
+          if (d < f1) { f2 = f1; f1 = d; }
+          else if (d < f2) { f2 = d; }
+        }
+        return f2 - f1;
+      }
 
       // Blinn-Phong with hemisphere ambient, lit in linear space
       void main()
@@ -278,8 +312,15 @@
         // Crowded cells shift toward the hot color
         float heat = uDensity * smoothstep(0.05, uDensityMax, vNeighbors);
         vec3 albedo = pow(mix(uCellColor, uHotColor, heat), vec3(gamma)) * vTint;
-        vec3 texel = pow(texture(uTexture, vTexCoord).rgb, vec3(gamma));
-        albedo *= mix(vec3(1.0), texel, uTextureStrength);
+
+        // Surface detail: cell walls on spheres (object space, so no UV seam or pole pinch),
+        // darkened edges on cubes. Also dims specular, so walls and edges read as matte
+        vec2 edge = min(vTexCoord, 1.0 - vTexCoord);
+        float detail = uIsSphere > 0.5
+          ? cellWall(vObjectPos * uCellDensity + vSeed)
+          : min(edge.x, edge.y);
+        float shade = mix(1.0, mix(0.5, 1.0, smoothstep(0.0, uDetailWidth, detail)), uSurfaceStrength);
+        albedo *= shade;
         vec3 lightColor = vec3(1.0, 0.95, 0.85) * uLightIntensity;
 
         // Up-facing surfaces get sky light, down-facing get ground bounce
@@ -297,8 +338,12 @@
         ambient *= occlusion;
         diffuse *= mix(1.0, occlusion, uOcclusionDirect);
 
+        // Fresnel rim: grazing angles pick up extra ambient, occluded along with it
+        float rim = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.0);
+
         vec3 lit = albedo * (ambient + diffuse * lightColor)
-          + uSpecularStrength * specular * lightColor;
+          + uSpecularStrength * shade * specular * lightColor
+          + uRimStrength * rim * ambient;
 
         // Fade to transparent with distance, so far cells sink into the page background.
         // Canvas is premultiplied alpha, so color is scaled by alpha too
