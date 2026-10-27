@@ -14,8 +14,6 @@ let pinchDist = 0;
 const TAP_SLOP = { mouse: 4, pen: 6, touch: 10 };
 const PINCH_ZOOM = 10; // camera.zoom units per px of pinch, wheel notches are ~100
 
-// TODO: Double click to reset camera position
-
 let restart;
 
 export function setupEventListeners(canvas, onRestart) {
@@ -28,7 +26,6 @@ export function setupEventListeners(canvas, onRestart) {
   // Fires after pointerup and on pointercancel, so all cleanup lives here
   canvas.addEventListener('lostpointercapture', handlePointerEnd);
   canvas.addEventListener('wheel', handleWheel);
-  canvas.addEventListener('dblclick', handleDoubleClick);
   window.addEventListener('keydown', handleKeyDown);
 }
 
@@ -40,7 +37,8 @@ const pinchDistance = () => {
 function handlePointerDown(event) {
   event.currentTarget.setPointerCapture(event.pointerId);
   pointers.set(event.pointerId, { x: event.offsetX, y: event.offsetY });
-  isDragging = true;
+  // One pointer only becomes a drag past the tap slop (see handlePointerMove), so a tap doesn't stop the orbit
+  isDragging = pointers.size > 1;
   if (pointers.size === 1) {
     multiTouch = false;
     downX = event.offsetX;
@@ -49,10 +47,6 @@ function handlePointerDown(event) {
     multiTouch = true;
     if (pointers.size === 2) pinchDist = pinchDistance();
   }
-}
-
-function handleDoubleClick(event) {
-  camera.reset();
 }
 
 function handlePointerUp(event) {
@@ -84,6 +78,10 @@ function handlePointerMove(event) {
   pointers.set(event.pointerId, { x, y });
 
   if (pointers.size === 1) {
+    if (!isDragging) {
+      if (Math.hypot(x - downX, y - downY) < (TAP_SLOP[event.pointerType] ?? 4)) return;
+      isDragging = true;
+    }
     camera.rotate(x - last.x, y - last.y);
   } else if (pointers.size === 2) {
     // ponytail: additive zoom like the wheel; scale radius by the distance ratio if pinch feels uneven across zoom levels
@@ -155,6 +153,9 @@ function handleKeyDown(event) {
       break;
     case 'r':
       restart();
+      break;
+    case 'c':
+      camera.reset();
       break;
     case ' ':
       togglePause();

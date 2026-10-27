@@ -177,12 +177,6 @@ export const patterns = {
     offsets: () => cube(span()).filter(() => Math.random() < game.initDensity),
     clickOffsets: () => cube(1).filter(() => Math.random() < game.seedDensity),
   },
-  // Starts empty, the player seeds it by clicking
-  manual: {
-    rules: { birth: [5, 7], survival: [2, 4, 6] },
-    offsets: () => [],
-    clickOffsets: () => patterns.random.clickOffsets(),
-  },
   cross: {
     rules: { birth: [4, 8], survival: [7, 8, 9] },
     offsets: () => cube(span()).filter(([x, y, z]) => x === 0 || y === 0 || z === 0),
@@ -234,6 +228,12 @@ export const patterns = {
           ])
       );
     },
+  },
+  // Starts empty, the player seeds it by clicking
+  manual: {
+    rules: { birth: [5, 7], survival: [2, 4, 6] },
+    offsets: () => [],
+    clickOffsets: () => patterns.random.clickOffsets(),
   },
 };
 
