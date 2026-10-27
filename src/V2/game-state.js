@@ -53,7 +53,7 @@ export const game = {
   cellScaleCube: 0.9,
   cellScaleSphere: 0.9,
   pattern: load('pattern') || 'random', // validated against patterns by applyPattern in ui.js
-  shape: load('shape') === 'sphere' ? 'sphere' : 'cube',
+  shape: load('shape') === 'cube' ? 'cube' : 'sphere',
 
   isOver: false,
   isPaused: true, // starts paused, space or the Play button begins the run
