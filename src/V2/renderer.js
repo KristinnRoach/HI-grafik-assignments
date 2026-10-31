@@ -25,7 +25,7 @@ let stateBuffer;
 
 // Visual effect toggles, flipped by dev-tuning.js
 export const effects = {
-  tween: true, // render every frame, grow/shrink cells between generations
+  tween: false, // render every frame, grow/shrink cells between generations
   densityColor: true,
   fog: true,
   jitter: true, // per-cell random size, brightness and color

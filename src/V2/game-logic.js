@@ -15,7 +15,7 @@ export function initGrid(pattern = 'random') {
   game.generation = 0;
   game.overLimitFor = 0;
   game.recentStates = [];
-  game.isRepeating = false;
+  game.stableFor = 0;
 }
 
 export function updateGrid() {
@@ -63,7 +63,7 @@ export function updateGrid() {
 
   // ponytail: whole grid as a string key, fine at 16³; switch to a numeric hash for big grids
   const key = game.currentGrid.flat(2).join('');
-  game.isRepeating = game.recentStates.includes(key);
+  game.stableFor = game.recentStates.includes(key) ? game.stableFor + 1 : 0;
   game.recentStates = [...game.recentStates, key].slice(-game.stableWindow);
 }
 
@@ -72,7 +72,8 @@ export function updateGrid() {
 export function endReason() {
   if (game.activeCells === 0) return 'DIED OUT';
   if (game.overLimitFor >= game.overpopGrace) return 'OVERPOPULATED';
-  if (game.isRepeating) return 'STABILISED';
+  // Disabled for now: a stabilised grid shows a hint instead (hints in game-state.js)
+  // if (game.stableFor > 0) return 'STABILISED';
   return null;
 }
 

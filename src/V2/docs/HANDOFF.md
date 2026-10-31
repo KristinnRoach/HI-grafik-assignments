@@ -60,7 +60,7 @@ Then open http://localhost:8123/src/V2/index.html.
 
 ## Game over
 
-- `endReason()` in `game-logic.js` is the one place that decides when a run ends: died out, `overpopGrace` consecutive generations above `maxPopulation`, or the grid repeating one of the last `stableWindow` grids. Tunables live in `game` (`game-state.js`).
+- `endReason()` in `game-logic.js` is the one place that decides when a run ends: died out, `overpopGrace` consecutive generations above `maxPopulation`, or the grid repeating one of the last `stableWindow` grids (currently commented out; `game.stableFor` drives a hint instead after `stableHintAfter` generations). Tunables live in `game` (`game-state.js`).
 - Score = `game.generation`; best is kept in `localStorage` (`gol-best`), along with speed, shape and pattern (`gol-fps`, `gol-shape`, `gol-pattern`) via `load`/`save` in `game-state.js`. A saved pattern's default rules are loaded on startup by `applyPattern` in `ui.js`.
 - `node src/V2/check-game-over.mjs` runs every pattern headlessly (with `game.rules`, not each pattern's own rules) and asserts the end conditions and click behaviour.
 

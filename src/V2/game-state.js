@@ -27,8 +27,9 @@ export const game = {
 
   // Game-over tuning
   maxPopulation: Math.round(MAX_CELLS / 5),
-  overpopGrace: 10, // generations allowed above maxPopulation before game over
+  overpopGrace: 20, // generations allowed above maxPopulation before game over
   stableWindow: 4, // a grid repeating any of the last N grids counts as stabilised
+  stableHintAfter: 10, // stabilised generations in a row before the hint shows
 
   // Clicking empty space stamps the selected pattern; clicking a live cell clears a 3×3×3 block
   seedDensity: 0.5, // chance each cell comes alive when clicking with the random pattern
@@ -40,7 +41,7 @@ export const game = {
   generation: 0, // also the score
   overLimitFor: 0, // consecutive generations above maxPopulation
   recentStates: [], // keys of the last stableWindow grids
-  isRepeating: false,
+  stableFor: 0, // consecutive stabilised generations
 
   best: Number(load('best')) || 0,
 
@@ -74,7 +75,7 @@ export function cellSpacing() {
 }
 
 // Phones/tablets: no keyboard, so user-facing text says tap/drag instead of keys
-export const isTouch = matchMedia('(pointer: coarse)').matches;
+export const isTouch = globalThis.matchMedia?.('(pointer: coarse)').matches ?? false; // no matchMedia in Node (check-game-over.mjs)
 
 // Contextual hints for #hint: the first whose `when` holds is shown
 const hints = [
@@ -84,6 +85,10 @@ const hints = [
       : 'Click to seed cells and press Space (or click Play)',
     when: () =>
       game.pattern === 'manual' && game.generation === 0 && game.isPaused,
+  },
+  {
+    text: `Stabilised, change the rules or ${isTouch ? 'tap' : 'click'} to seed cells`,
+    when: () => game.stableFor >= game.stableHintAfter && !game.isOver,
   },
 ];
 
@@ -113,7 +118,7 @@ export function updateHud() {
   const warn = game.overLimitFor > 0 && !game.isOver;
   warning.style.display = warn ? 'block' : 'none';
   warning.textContent = `Overpopulated! Change the rules to thin it out: ${
-    game.overpopGrace - game.overLimitFor
+    Math.round((game.overpopGrace - game.overLimitFor) / 2)
   }`;
 
   const hint = hints.find((h) => h.when());
