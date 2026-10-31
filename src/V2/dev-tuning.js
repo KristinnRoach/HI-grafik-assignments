@@ -7,7 +7,7 @@ import { orbit } from './camera.js';
 
 const style = document.createElement('style');
 style.textContent = `
-  #dev-panel { position: fixed; top: 60px; right: 16px; z-index: 10; font: 12px monospace; color: #9f9; }
+  #dev-panel { position: fixed; top: 16px; right: 16px; z-index: 10; font: 12px monospace; color: #9f9; }
   #dev-panel > summary { list-style: none; cursor: pointer; text-align: right; opacity: 0.4; }
   #dev-panel > summary:hover, #dev-panel[open] > summary { opacity: 1; }
   #dev-panel .body { margin-top: 4px; padding: 8px 10px; min-width: fit-content; width: 300px; max-height: calc(100vh - 100px); overflow-y: auto;

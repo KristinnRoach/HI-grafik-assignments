@@ -11,15 +11,13 @@
     <style>
       :root {
         /* Square, shrinking to fit narrow screens */
-        --canvas-width: min(80svh, calc(100vw - 32px));
+        --canvas-width: min(80svh, calc(100dvw - 32px));
       }
 
       body {
-        color: rgba(101, 255, 84, 0.603);
         box-sizing: border-box; /* the 100svh height includes shared.css's padding */
-        min-height: 100svh; 
-        max-height: 100svh; 
-        max-width: 100dvw; 
+        min-height: 100svh;
+        max-height: 100svh;
       }
 
       /* Containing block for the overlays (#cells, #count-down, #hint, #game-over), so they sit on the canvas */
@@ -29,17 +27,11 @@
       }
 
       canvas {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
         width: var(--canvas-width);
         height: auto;
         aspect-ratio: 1;
         /* Drags and pinches go to the camera, not page scroll/zoom */
         touch-action: none;
-
-        z-index: -1;
       }
 
       #cells {
@@ -50,28 +42,28 @@
         /* Fixed equal columns + same-width digits, so changing numbers don't shift the layout */
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        width: min(48rem, calc(100vw - 32px));
         text-align: center;
         font-variant-numeric: tabular-nums;
-        white-space: nowrap; 
-        font-size: 1.2em;
+        white-space: nowrap;
+        /* Scales with the canvas so each nowrap stat keeps fitting its column */
+        font-size: clamp(10px, calc(var(--canvas-width) / 40), 24px);
         color: rgba(101, 255, 84, 0.603);
         width: var(--canvas-width);
       }
 
       #top-bar-container {
-        display: flex; 
+        display: flex;
         justify-content: space-between;
-        flex-wrap: wrap; 
+        flex-wrap: wrap;
         row-gap: 4px;
-        width: 100%; 
-        margin-bottom: 10px; 
+        margin-bottom: 10px;
         width: var(--canvas-width);
       }
       
       #how-to-play {
         margin: 0;
-        font-size: 14px;
+        /* Scales with the canvas so the nowrap line keeps fitting its width */
+        font-size: clamp(12px, calc(var(--canvas-width) / 45), 18px);
         white-space: nowrap;
         text-align: center;
         opacity: 0.8;
@@ -80,10 +72,9 @@
 
       #play-pause-restart-container
       {
-        display: flex; 
-        flex-direction: row;
-        gap: 0.3rem; 
-        width: 100%; 
+        display: flex;
+        gap: 0.3rem;
+        width: 100%;
         justify-content: space-between;
         align-items: center;
       }
@@ -137,14 +128,7 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-
         text-align: center;
-        /* font-family: Arial, sans-serif; */
         font-size: 48px;
         font-weight: bold;
         text-shadow: 2px 2px 4px #000000;
@@ -169,18 +153,13 @@
 
       #game-over p {
         font-size: 24px;
-        font-weight: thin; 
+        font-weight: 300;
         color:rgb(230, 230, 230);
       }
 
       #game-over-reason {
         font-size: 32px;
-        font-weight: bold; 
-      }
-
-      #game-over-score {
-        font-weight: thin;
-        color:rgb(230, 230, 230);
+        font-weight: bold;
       }
 
       input,
@@ -202,23 +181,19 @@
 
       .controls {
         display: flex;
-        flex-direction: row;
         align-items: center;
         justify-content: space-evenly;
-        flex-wrap: nowrap;
         margin-top: 1rem;
         column-gap: 1rem;
         width: var(--canvas-width);
+        /* No accidental text selection or iOS long-press callout while scrubbing */
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
       }
       /* Touch scrubbing in ui.js: vertical drags step the value instead of scrolling */
       .controls input[type='number'] {
         touch-action: none;
-      }
-      /* No accidental text selection or iOS long-press callout while scrubbing */
-      .controls {
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
       }
       /* Desktop Safari can block typing in inputs under user-select: none; touch selection is stopped in ui.js */
       .controls input {
@@ -244,22 +219,18 @@
 
       /* html prefix: shared.css and the tune panel's styles load later */
       @media (max-width: 600px) {
-        html #dev-panel {
-          top: auto;
-          bottom: 16px;
-        }
         html body {
           max-height: none;
           padding: 64px 16px 32px;
         }
-        /* Columns are too narrow for one line here, so each stat wraps to label over value */
-        #cells {
-          font-size: 16px;
-        }
         #how-to-play {
-          width: calc(100vw - 32px);
           white-space: normal;
-          font-size: 12px;
+        }
+        #best {
+          display: none;
+        }
+        #cells {
+          grid-template-columns: repeat(2, 1fr);
         }
         #hint {
           top: calc(3% + 48px);
@@ -286,7 +257,8 @@
         }
         .controls {
           flex-wrap: wrap;
-          justify-content: center;
+          justify-content: flex-start;
+          row-gap: 8px;
         }
       }
     </style>
