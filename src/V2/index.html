@@ -10,9 +10,10 @@
 
     <style>
       :root {
-        /* Square, shrinking to fit narrow screens */
-        --canvas-width: min(72svh, calc(100dvw - 32px));
-        /* One size for the HUD and controls text, scaled with the canvas so nowrap lines fit */
+        /* Square: fills the height left after body padding, top bar and controls, or the width on narrow screens.
+           ponytail: 308px is the measured chrome height; retune if the top bar or controls grow */
+        --canvas-width: max(240px, min(calc(100svh - 308px), calc(100dvw - 32px)));
+        /* One size for the HUD and controls text, scaled with the canvas */
         --text-size: clamp(12px, calc(var(--canvas-width) / 45), 18px);
       }
 
@@ -21,12 +22,6 @@
       #canvas-container,
       .controls {
         font-size: var(--text-size);
-      }
-
-      body {
-        box-sizing: border-box; /* the 100svh height includes shared.css's padding */
-        min-height: 100svh;
-        max-height: 100svh;
       }
 
       /* Containing block for the overlays (#cells, #count-down, #hint, #game-over), so they sit on the canvas */
@@ -69,8 +64,8 @@
       
       #how-to-play {
         margin: 0;
-        white-space: nowrap;
         text-align: center;
+        text-wrap: balance;
         opacity: 0.8;
         width: var(--canvas-width);
       }
@@ -185,14 +180,21 @@
       .controls {
         display: flex;
         align-items: center;
-        justify-content: space-evenly;
+        flex-wrap: wrap;
+        justify-content: center;
         margin-top: 1rem;
-        column-gap: 1rem;
-        width: var(--canvas-width);
+        gap: 8px 1rem;
+        /* Wider than the canvas so each of the two rows fits on one line on desktop */
+        width: 100%;
         /* No accidental text selection or iOS long-press callout while scrubbing */
         -webkit-user-select: none;
         user-select: none;
         -webkit-touch-callout: none;
+      }
+      /* Rules on one row, pattern and shape on the next, instead of whatever wraps last */
+      .row-break {
+        flex-basis: 100%;
+        margin-bottom: -8px; /* cancel the extra row gap the empty line adds */
       }
       /* Touch scrubbing in ui.js: vertical drags step the value instead of scrolling */
       .controls input[type='number'] {
@@ -223,11 +225,7 @@
       /* html prefix: shared.css and the tune panel's styles load later */
       @media (max-width: 600px) {
         html body {
-          max-height: none;
           padding: 64px 16px 32px;
-        }
-        #how-to-play {
-          white-space: normal;
         }
         #best {
           display: none;
@@ -255,11 +253,6 @@
         }
         #game-over p {
           font-size: 16px;
-        }
-        .controls {
-          flex-wrap: wrap;
-          justify-content: flex-start;
-          row-gap: 8px;
         }
       }
     </style>
@@ -556,6 +549,8 @@
         <!-- <label for="cell-scale">Scale:</label>
       <input type="number" id="cell-scale" min="0.0001" step="0.1" /> -->
       </div>
+
+      <div class="row-break"></div>
 
       <div class="control-group">
         <label for="patternSelect">Pattern:</label>
