@@ -11,7 +11,16 @@
     <style>
       :root {
         /* Square, shrinking to fit narrow screens */
-        --canvas-width: min(80svh, calc(100dvw - 32px));
+        --canvas-width: min(72svh, calc(100dvw - 32px));
+        /* One size for the HUD and controls text, scaled with the canvas so nowrap lines fit */
+        --text-size: clamp(12px, calc(var(--canvas-width) / 45), 18px);
+      }
+
+      /* Form controls keep their own size: under 16px iOS zooms on focus */
+      #top-bar-container,
+      #canvas-container,
+      .controls {
+        font-size: var(--text-size);
       }
 
       body {
@@ -45,8 +54,6 @@
         text-align: center;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
-        /* Scales with the canvas so each nowrap stat keeps fitting its column */
-        font-size: clamp(10px, calc(var(--canvas-width) / 40), 24px);
         color: rgba(101, 255, 84, 0.603);
         width: var(--canvas-width);
       }
@@ -62,8 +69,6 @@
       
       #how-to-play {
         margin: 0;
-        /* Scales with the canvas so the nowrap line keeps fitting its width */
-        font-size: clamp(12px, calc(var(--canvas-width) / 45), 18px);
         white-space: nowrap;
         text-align: center;
         opacity: 0.8;
@@ -85,7 +90,6 @@
         top: calc(3% + 36px);
         left: 50%;
         transform: translateX(-50%);
-        font-size: 20px;
         color: rgb(255, 90, 60);
       }
 
@@ -97,7 +101,6 @@
         transform: translateX(-50%);
         margin: 0;
         padding: 0.4em 1em;
-        font-size: 20px;
         white-space: nowrap;
         color: rgb(101, 255, 84);
         background: rgba(0, 0, 0, 0.7);
@@ -237,13 +240,11 @@
           width: calc(100vw - 64px);
           white-space: normal;
           text-align: center;
-          font-size: 16px;
         }
         #count-down {
           top: calc(3% + 48px);
           width: calc(100vw - 32px);
           text-align: center;
-          font-size: 16px;
         }
         #game-over {
           font-size: 32px;
