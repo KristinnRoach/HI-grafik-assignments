@@ -17,8 +17,9 @@
         max-width: 100dvw; 
       }
 
-      .canvas-container {
-        place-items: center;
+      /* Containing block for the overlays (#cells, #count-down, #hint, #game-over), so they sit on the canvas */
+      #canvas-container {
+        position: relative;
       }
 
       canvas {
@@ -41,29 +42,30 @@
         top: 3%;
         left: 50%;
         transform: translateX(-50%);
-        display: flex;
-        flex-direction: row;
-        column-gap: 5rem;
-        font-size: 20px;
+        /* Fixed equal columns + same-width digits, so changing numbers don't shift the layout */
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        width: min(48rem, calc(100vw - 32px));
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap; 
+        font-size: 1.2em;
         color: rgba(101, 255, 84, 0.603);
       }
       
       #how-to-play {
-        position: absolute;
-        top: calc(3% + 30px);
-        left: 50%;
-        transform: translateX(-50%);
         margin: 0;
+        margin-bottom: 14px; 
         font-size: 14px;
         white-space: nowrap;
         text-align: center;
         opacity: 0.8;
-      }
+       }
 
       #count-down {
         display: none;
         position: absolute;
-        top: calc(3% + 76px);
+        top: calc(3% + 36px);
         left: 50%;
         transform: translateX(-50%);
         font-size: 20px;
@@ -73,7 +75,7 @@
       /* Shares #count-down's slot: hints show while paused, the warning only while running */
       #hint {
         position: absolute;
-        top: calc(5% + 76px);
+        top: calc(5% + 36px);
         left: 50%;
         transform: translateX(-50%);
         margin: 0;
@@ -223,27 +225,24 @@
           max-height: none;
           padding: 64px 16px 32px;
         }
+        /* Columns are too narrow for one line here, so each stat wraps to label over value */
         #cells {
-          top: 60px;
-          column-gap: 1.5rem;
           font-size: 16px;
-          white-space: nowrap;
         }
         #how-to-play {
-          top: 86px;
           width: calc(100vw - 32px);
           white-space: normal;
           font-size: 12px;
         }
         #hint {
-          top: 140px;
+          top: calc(3% + 48px);
           width: calc(100vw - 64px);
           white-space: normal;
           text-align: center;
           font-size: 16px;
         }
         #count-down {
-          top: 140px;
+          top: calc(3% + 48px);
           width: calc(100vw - 32px);
           text-align: center;
           font-size: 16px;
@@ -502,16 +501,17 @@
       >← Back</a
     >
 
+    <p id="how-to-play">
+      Keep the population under 100%: change the Birth and Survival rules to
+      steer it.<br />Arrow keys adjust the rules. Space plays/pauses, R restarts.
+    </p>
+
     <div id="canvas-container">
       <div id="cells">
         <div id="generation"></div>
         <div id="cell-count"></div>
         <div id="best"></div>
       </div>
-      <p id="how-to-play">
-        Keep the population under 100%: change the Birth and Survival rules to
-        steer it.<br />Arrow keys adjust the rules. Space plays/pauses, R restarts.
-      </p>
       <div id="count-down"></div>
       <p id="hint" hidden></p>
 

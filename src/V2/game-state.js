@@ -100,8 +100,8 @@ export function togglePause() {
 }
 
 export function updateHud() {
-  document.getElementById('generation').textContent = `Gen: ${game.generation}`;
-  document.getElementById('best').textContent = `Best: ${game.best}`;
+  document.getElementById('generation').textContent = `Generation: ${game.generation}`;
+  document.getElementById('best').textContent = `High Score: ${game.best}`;
   document.getElementById('play-pause').textContent = game.isPaused
     ? 'Play'
     : 'Pause';
