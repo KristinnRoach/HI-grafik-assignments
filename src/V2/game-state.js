@@ -102,17 +102,19 @@ export function togglePause() {
 export function updateHud() {
   document.getElementById('generation').textContent = `Generation: ${game.generation}`;
   document.getElementById('best').textContent = `High Score: ${game.best}`;
-  document.getElementById('play-pause').textContent = game.isPaused
-    ? 'Play'
-    : 'Pause';
+  const playPause = document.getElementById('play-pause');
+  playPause.textContent = game.isPaused ? 'Play' : 'Pause';
+  // Nothing to play: an empty grid (togglePause's guard) or a finished run, where Play again takes over
+  playPause.disabled = game.isOver || (game.isPaused && game.activeCells === 0);
+
+  const ratio = game.activeCells / game.maxPopulation;
+  const overLimit = ratio > 1;
   const population = document.getElementById('cell-count');
-  population.textContent = `Population: ${Math.round(
-    (game.activeCells / game.maxPopulation) * 100
-  )}%`;
-  population.classList.toggle(
-    'over-limit',
-    game.activeCells > game.maxPopulation
-  );
+  population.textContent = `Population: ${Math.round(ratio * 100)}%`;
+  population.classList.toggle('over-limit', overLimit);
+  const meter = document.getElementById('pop-meter');
+  meter.style.setProperty('--pop', Math.min(ratio, 1));
+  meter.classList.toggle('over-limit', overLimit);
 
   const warning = document.getElementById('count-down');
   const warn = game.overLimitFor > 0 && !game.isOver;

@@ -42,6 +42,13 @@ Then open http://localhost:8123/src/V2/index.html.
 | `camera.js` | Orbit camera, auto-orbit and drag momentum |
 | `dev-tuning.js` | Collapsible "tune" panel (top right): effect toggles, colour pickers and sliders for `lighting`, grouped (incl. separate cube and sphere surface groups) |
 
+## Styling
+
+- Colours for the HUD, controls and overlays are tokens at the top of the `<style>` in `index.html` (`--accent*`, `--danger`, `--overlay-bg`). Change the palette there, not per rule.
+- `.primary` marks the filled button for the next action (Play, Play again). `#play-pause` is disabled while the grid is empty or the run is over.
+- `#pop-meter` is a bar under the HUD; `updateHud` sets its `--pop` (0..1) and toggles `.over-limit` on it alongside the population text.
+- `#game-over` is sized in `em` off `--text-size`, so it scales with the canvas without breakpoint overrides. Only its `#play-again` button takes pointer events.
+
 ## Rendering
 
 - One instanced draw call per frame. Each cell sends a `vec4 aInstance`: xyz is its offset, w is the fraction of its 26 neighbours that are alive. It also sends `float aState` (1 born, -1 dying, 0 stable), compared against `game.nextGrid`, which holds the previous generation after `updateGrid`'s swap. `render()` rebuilds both in JS every frame.

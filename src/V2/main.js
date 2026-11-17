@@ -25,10 +25,12 @@ function init() {
   };
   setupEventListeners(canvas, restart);
   // Blur so a later space press doesn't also click the focused button
-  document.getElementById('restart').addEventListener('click', (e) => {
-    e.currentTarget.blur();
-    restart();
-  });
+  for (const id of ['restart', 'play-again']) {
+    document.getElementById(id).addEventListener('click', (e) => {
+      e.currentTarget.blur();
+      restart();
+    });
+  }
   document.getElementById('play-pause').addEventListener('click', (e) => {
     e.currentTarget.blur();
     togglePause();
