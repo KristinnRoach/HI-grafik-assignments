@@ -81,7 +81,7 @@ export function setupControls() {
     document.getElementById('how-to-play').innerHTML =
       'Keep the population under 100%: change the Birth and Survival rules to steer it.<br />' +
       'Drag the numbers up/down to adjust the rules.';
-    document.getElementById('game-over-restart').textContent = 'Tap Restart to play again';
+    document.getElementById('game-over-restart').hidden = true; // the Play again button covers it
   }
 }
 

@@ -24,7 +24,8 @@ Then open http://localhost:8123/src/V2/index.html.
 ## UX hints
 
 - `#how-to-play` is always visible: the goal plus the main keys (touch gets its own text in `ui.js`). Keep it short; don't add every shortcut there (`c` is deliberately left out).
-- `#hint` shows one contextual line at a time: the first entry in `hints` (`game-state.js`) whose `when` holds. It shares its slot with the overpopulation countdown. Add new interaction help here rather than new UI; `.controls` is already crowded.
+- `#hint` shows one contextual line at a time: the first entry in `hints` (`game-state.js`) whose `when` holds. It sits at the bottom of the canvas and shares its slot and `.banner` pill style with the overpopulation countdown (`#count-down`, danger colours). Add new interaction help here rather than new UI; `.controls` is already crowded.
+- The overpopulation countdown and stabilised hint are switched off by `SHOW_WARNING_BANNERS` in `game-state.js`; the population colour and blink carry those warnings for now.
 
 ## Files
 
@@ -41,6 +42,13 @@ Then open http://localhost:8123/src/V2/index.html.
 | `event-handlers.js` | Keyboard and pointer input (mouse, pen, touch, pinch) |
 | `camera.js` | Orbit camera, auto-orbit and drag momentum |
 | `dev-tuning.js` | Collapsible "tune" panel (top right): effect toggles, colour pickers and sliders for `lighting`, grouped (incl. separate cube and sphere surface groups) |
+
+## Styling
+
+- Colours for the HUD, controls and overlays are tokens at the top of the `<style>` in `index.html` (`--accent*`, `--danger`, `--overlay-bg`). Change the palette there, not per rule.
+- `.primary` marks the filled button for the next action (Play, Play again). `#play-pause` is disabled while the grid is empty or the run is over.
+- `#population` (text + `#pop-meter` bar) sits at the bottom of the canvas. `updateHud` sets `--pop` (0..1) on it, where CSS turns it into `--pop-color` (`--cold` blue below 33%, `--accent` green 33-67%, blending to `--danger` red at 100%) for both the text and the bar fill. Both blink (`.blink`) when over the limit, or while running below `game.lowPopulation` (10%) or stabilised.
+- `#game-over` is sized in `em` off `--text-size`, so it scales with the canvas without breakpoint overrides. Only its `#play-again` button takes pointer events.
 
 ## Rendering
 

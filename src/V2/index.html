@@ -15,6 +15,15 @@
         --canvas-width: max(240px, min(calc(100svh - 308px), calc(100dvw - 32px)));
         /* One size for the HUD and controls text, scaled with the canvas */
         --text-size: clamp(12px, calc(var(--canvas-width) / 45), 18px);
+
+        /* Game palette: every HUD, control and overlay colour comes from here */
+        --accent: rgb(101, 255, 84);
+        --accent-text: rgb(0, 210, 0);
+        --accent-muted: rgba(101, 255, 84, 0.6);
+        --accent-faint: rgba(101, 255, 84, 0.15);
+        --danger: rgb(255, 90, 60);
+        --cold: rgb(70, 150, 255); /* underpopulated: close to dying out */
+        --overlay-bg: rgba(0, 0, 0, 0.75);
       }
 
       /* Form controls keep their own size: under 16px iOS zooms on focus */
@@ -24,7 +33,7 @@
         font-size: var(--text-size);
       }
 
-      /* Containing block for the overlays (#cells, #count-down, #hint, #game-over), so they sit on the canvas */
+      /* Containing block for the overlays (#cells, #population, #count-down, #hint, #game-over), so they sit on the canvas */
       #canvas-container {
         position: relative;
         width: var(--canvas-width);
@@ -45,12 +54,56 @@
         transform: translateX(-50%);
         /* Fixed equal columns + same-width digits, so changing numbers don't shift the layout */
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         text-align: center;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
-        color: rgba(101, 255, 84, 0.603);
+        color: var(--accent-muted);
         width: var(--canvas-width);
+      }
+
+      /* Bottom of the canvas: population text over its meter */
+      #population {
+        position: absolute;
+        bottom: 4%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        /* Population colour from --pop (0..1, set in updateHud): blue below 33% (dying out),
+           green 33-67%, red toward 100%. Shared by #cell-count and the #pop-meter fill */
+        --cold-mix: clamp(0%, calc((0.33 - var(--pop, 0)) * 303%), 100%);
+        --hot-mix: clamp(0%, calc((var(--pop, 0) - 0.67) * 303%), 100%);
+        /* oklch: green to red passes through yellow/orange instead of muddy olive */
+        --pop-color: color-mix(
+          in oklch,
+          color-mix(in oklch, var(--accent), var(--cold) var(--cold-mix)),
+          var(--danger) var(--hot-mix)
+        );
+      }
+
+      #cell-count {
+        color: var(--pop-color);
+      }
+
+      /* Fill width and colour follow --pop */
+      #pop-meter {
+        height: 5px;
+        margin-top: 0.4em;
+        border-radius: 3px;
+        background: color-mix(in srgb, var(--color-fg) 12%, transparent);
+        overflow: hidden;
+      }
+
+      #pop-meter::before {
+        content: '';
+        display: block;
+        height: 100%;
+        width: calc(var(--pop, 0) * 100%);
+        background: var(--pop-color);
+        transition: width 200ms ease-out, background-color 200ms ease-out;
       }
 
       #top-bar-container {
@@ -79,17 +132,8 @@
         align-items: center;
       }
 
-      #count-down {
-        display: none;
-        position: absolute;
-        top: calc(3% + 36px);
-        left: 50%;
-        transform: translateX(-50%);
-        color: rgb(255, 90, 60);
-      }
-
-      /* Shares #count-down's slot: hints show while paused, the warning only while running */
-      #hint {
+      /* One pill under the top HUD: #hint while paused, #count-down (overpopulation) only while running */
+      .banner {
         position: absolute;
         top: calc(5% + 36px);
         left: 50%;
@@ -97,14 +141,21 @@
         margin: 0;
         padding: 0.4em 1em;
         white-space: nowrap;
-        color: rgb(101, 255, 84);
-        background: rgba(0, 0, 0, 0.7);
-        border: 1px solid rgba(101, 255, 84, 0.6);
+        color: var(--accent);
+        background: var(--overlay-bg);
+        border: 1px solid var(--accent-muted);
         border-radius: 8px;
       }
 
-      .over-limit {
-        color: rgb(255, 90, 60);
+      #count-down {
+        display: none;
+        font-weight: 600;
+        color: var(--danger);
+        border-color: var(--danger);
+      }
+
+      /* Population text and meter while the run is in danger, see updateHud */
+      .blink {
         animation: blink 0.8s steps(2, jump-none) infinite;
       }
 
@@ -115,58 +166,88 @@
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .over-limit {
+        .blink {
           animation: none;
         }
       }
 
+      /* Sized in em off --text-size, so it scales with the canvas without per-breakpoint overrides */
       #game-over {
         position: absolute;
-
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        text-align: center;
-        font-size: 48px;
-        font-weight: bold;
-        text-shadow: 2px 2px 4px #000000;
-        pointer-events: none;
         display: none;
-        color:rgb(225, 30, 30);
-
-        background: rgba(0, 0, 0, 0.7);
-        padding: 1rem 2rem;
+        min-width: 60%;
+        padding: 1.5em 2em;
+        text-align: center;
+        background: var(--overlay-bg);
+        border: 1px solid var(--danger);
         border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        /* Drags still reach the canvas; only the button takes clicks */
+        pointer-events: none;
+        animation: pop-in 250ms ease-out;
       }
 
-      #game-over h2,
-      #game-over h3,
-      #game-over p {
-        margin: 0.2em 0;
-        line-height: 1.4;
+      @keyframes pop-in {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.92);
+        }
       }
 
-      #game-over > :first-child { margin-top: 1rem; }
-      #game-over > :last-child { margin-bottom: 1rem; }
+      /* Zero specificity, so the per-element margins below win */
+      :where(#game-over) > * {
+        margin: 0;
+        line-height: 1.3;
+      }
 
-      #game-over p {
-        font-size: 24px;
-        font-weight: 300;
-        color:rgb(230, 230, 230);
+      #game-over h2 {
+        font-size: 2.4em;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        color: var(--danger);
       }
 
       #game-over-reason {
-        font-size: 32px;
-        font-weight: bold;
+        margin-top: 0.2em;
+        font-size: 1em;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        color: var(--danger);
+      }
+
+      #game-over-score {
+        margin-top: 1em;
+        font-size: 1.3em;
+        color: var(--color-fg);
+      }
+
+      #play-again {
+        margin-top: 1.2em;
+        pointer-events: auto;
+      }
+
+      .key-hint {
+        margin-top: 0.5em;
+        font-size: 0.85em;
+        opacity: 0.6;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #game-over {
+          animation: none;
+        }
       }
 
       input,
       select,
-      #play-pause,
-      #restart {
+      button {
         background-color: var(--color-surface-2);
-        color: rgba(0, 210, 0, 1);
-        border: 1px solid rgba(101, 255, 84, 0.603);
+        color: var(--accent-text);
+        border: 1px solid var(--accent-muted);
         border-radius: 5px;
         padding: 5px;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 1);
@@ -212,14 +293,49 @@
       label {
         margin-right: 10px;
       }
+      .unit {
+        margin-left: 6px;
+        opacity: 0.6;
+      }
 
-      #play-pause,
-      #restart {
+      button {
         cursor: pointer;
+        padding: 5px 14px;
+        transition: background-color var(--transition-fast), border-color var(--transition-fast);
+      }
+
+      button:hover:not(:disabled),
+      input:hover,
+      select:hover {
+        border-color: var(--accent);
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible {
+        outline-color: var(--accent);
+      }
+
+      /* Primary actions: filled, so the next step is obvious */
+      .primary {
+        background-color: var(--accent-text);
+        border-color: var(--accent);
+        color: var(--color-bg);
+        font-weight: 600;
+        text-shadow: none;
+      }
+
+      .primary:hover:not(:disabled) {
+        background-color: var(--accent);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.4;
       }
 
       #play-pause {
-        min-width: 4.5em;
+        min-width: 5.5em;
       }
 
       /* html prefix: shared.css and the tune panel's styles load later */
@@ -227,32 +343,11 @@
         html body {
           padding: 64px 16px 32px;
         }
-        #best {
-          display: none;
-        }
-        #cells {
-          grid-template-columns: repeat(2, 1fr);
-        }
-        #hint {
-          top: calc(3% + 48px);
-          width: calc(100vw - 64px);
+        .banner {
+          width: 85%;
+          box-sizing: border-box;
           white-space: normal;
           text-align: center;
-        }
-        #count-down {
-          top: calc(3% + 48px);
-          width: calc(100vw - 32px);
-          text-align: center;
-        }
-        #game-over {
-          font-size: 32px;
-          padding: 0.5rem 1rem;
-        }
-        #game-over-reason {
-          font-size: 24px;
-        }
-        #game-over p {
-          font-size: 16px;
         }
       }
     </style>
@@ -501,7 +596,7 @@
       </p>
 
       <div id="play-pause-restart-container" class="control-group">
-        <button id="play-pause" type="button">Play</button>
+        <button id="play-pause" class="primary" type="button">Play</button>
         <button id="restart" type="button">Restart</button>
       </div>
     </div>
@@ -509,11 +604,14 @@
     <div id="canvas-container">
       <div id="cells">
         <div id="generation"></div>
-        <div id="cell-count"></div>
         <div id="best"></div>
       </div>
-      <div id="count-down"></div>
-      <p id="hint" hidden></p>
+      <div id="population">
+        <div id="cell-count"></div>
+        <div id="pop-meter" aria-hidden="true"></div>
+      </div>
+      <div id="count-down" class="banner"></div>
+      <p id="hint" class="banner" hidden></p>
 
       <canvas id="gl-canvas" width="512" height="512">
         Oops ... your browser doesn't support the HTML5 canvas element
@@ -521,25 +619,28 @@
 
       <div id="game-over-container">
         <div id="game-over">
-          <h2>GAME OVER</h2>
+          <h2>Game over</h2>
           <h3 id="game-over-reason"></h3>
           <p id="game-over-score"></p>
-          <p id="game-over-restart">Press R to restart</p>
+          <button id="play-again" class="primary" type="button">Play again</button>
+          <p id="game-over-restart" class="key-hint">or press R</p>
         </div>
       </div>
     </div>
 
     <div class="controls">
       <div class="control-group">
-        <label for="birth-1" title="Dead cell comes alive with N neighbors">Birth:</label>
+        <label for="birth-1" title="Dead cell comes alive with N neighbors">Born with</label>
         <input type="number" min="0" id="birth-1" title="Birth Rule 1: Neighbor count that brings a dead cell to life." />
         <input type="number" min="0" id="birth-2" title="Birth Rule 2: Neighbor count that brings a dead cell to life." />
+        <span class="unit">neighbours</span>
       </div>
       <div class="control-group">
-        <label for="survival-1" title="Live cell stays alive with N neighbors">Survival:</label>
+        <label for="survival-1" title="Live cell stays alive with N neighbors">Survives with</label>
         <input type="number" id="survival-1" title="Survival Rule 1: Neighbor count that keeps a live cell alive." min="0" />
         <input type="number" id="survival-2" title="Survival Rule 2: Neighbor count that keeps a live cell alive." min="0" />
         <input type="number" id="survival-3" title="Survival Rule 3: Neighbor count that keeps a live cell alive." min="0" />
+        <span class="unit">neighbours</span>
       </div>
 
       <div class="control-group">

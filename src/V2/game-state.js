@@ -30,6 +30,7 @@ export const game = {
   overpopGrace: 20, // generations allowed above maxPopulation before game over
   stableWindow: 4, // a grid repeating any of the last N grids counts as stabilised
   stableHintAfter: 10, // stabilised generations in a row before the hint shows
+  lowPopulation: 0.1, // fraction of maxPopulation below which the meter warns of dying out
 
   // Clicking empty space stamps the selected pattern; clicking a live cell clears a 3×3×3 block
   seedDensity: 0.5, // chance each cell comes alive when clicking with the random pattern
@@ -77,6 +78,12 @@ export function cellSpacing() {
 // Phones/tablets: no keyboard, so user-facing text says tap/drag instead of keys
 export const isTouch = globalThis.matchMedia?.('(pointer: coarse)').matches ?? false; // no matchMedia in Node (check-game-over.mjs)
 
+// ponytail: overpopulation and stabilised banners hidden while the population colour and blink carry
+// the warning; flip to true to bring them back
+const SHOW_WARNING_BANNERS = false;
+
+const isStabilised = () => game.stableFor >= game.stableHintAfter && !game.isOver;
+
 // Contextual hints for #hint: the first whose `when` holds is shown
 const hints = [
   {
@@ -88,7 +95,7 @@ const hints = [
   },
   {
     text: `Stabilised, change the rules or ${isTouch ? 'tap' : 'click'} to seed cells`,
-    when: () => game.stableFor >= game.stableHintAfter && !game.isOver,
+    when: () => SHOW_WARNING_BANNERS && isStabilised(),
   },
 ];
 
@@ -102,20 +109,24 @@ export function togglePause() {
 export function updateHud() {
   document.getElementById('generation').textContent = `Generation: ${game.generation}`;
   document.getElementById('best').textContent = `High Score: ${game.best}`;
-  document.getElementById('play-pause').textContent = game.isPaused
-    ? 'Play'
-    : 'Pause';
+  const playPause = document.getElementById('play-pause');
+  playPause.textContent = game.isPaused ? 'Play' : 'Pause';
+  // Nothing to play: an empty grid (togglePause's guard) or a finished run, where Play again takes over
+  playPause.disabled = game.isOver || (game.isPaused && game.activeCells === 0);
+
+  const ratio = game.activeCells / game.maxPopulation;
   const population = document.getElementById('cell-count');
-  population.textContent = `Population: ${Math.round(
-    (game.activeCells / game.maxPopulation) * 100
-  )}%`;
-  population.classList.toggle(
-    'over-limit',
-    game.activeCells > game.maxPopulation
-  );
+  population.textContent = `Population: ${Math.round(ratio * 100)}%`;
+  // --pop drives the text and meter colour (CSS on #population)
+  document.getElementById('population').style.setProperty('--pop', Math.min(ratio, 1));
+  // Low population and stabilising only warn while running, so paused setups and small patterns stay calm
+  const running = !game.isPaused && !game.isOver;
+  const danger = ratio > 1 || (running && (ratio < game.lowPopulation || isStabilised()));
+  population.classList.toggle('blink', danger);
+  document.getElementById('pop-meter').classList.toggle('blink', danger);
 
   const warning = document.getElementById('count-down');
-  const warn = game.overLimitFor > 0 && !game.isOver;
+  const warn = SHOW_WARNING_BANNERS && game.overLimitFor > 0 && !game.isOver;
   warning.style.display = warn ? 'block' : 'none';
   warning.textContent = `Overpopulated! Change the rules to thin it out: ${
     Math.round((game.overpopGrace - game.overLimitFor) / 2)
