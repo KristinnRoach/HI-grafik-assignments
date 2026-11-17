@@ -30,6 +30,7 @@ export const game = {
   overpopGrace: 20, // generations allowed above maxPopulation before game over
   stableWindow: 4, // a grid repeating any of the last N grids counts as stabilised
   stableHintAfter: 10, // stabilised generations in a row before the hint shows
+  lowPopulation: 0.1, // fraction of maxPopulation below which the meter warns of dying out
 
   // Clicking empty space stamps the selected pattern; clicking a live cell clears a 3×3×3 block
   seedDensity: 0.5, // chance each cell comes alive when clicking with the random pattern
@@ -77,6 +78,8 @@ export function cellSpacing() {
 // Phones/tablets: no keyboard, so user-facing text says tap/drag instead of keys
 export const isTouch = globalThis.matchMedia?.('(pointer: coarse)').matches ?? false; // no matchMedia in Node (check-game-over.mjs)
 
+const isStabilised = () => game.stableFor >= game.stableHintAfter && !game.isOver;
+
 // Contextual hints for #hint: the first whose `when` holds is shown
 const hints = [
   {
@@ -88,7 +91,7 @@ const hints = [
   },
   {
     text: `Stabilised, change the rules or ${isTouch ? 'tap' : 'click'} to seed cells`,
-    when: () => game.stableFor >= game.stableHintAfter && !game.isOver,
+    when: isStabilised,
   },
 ];
 
@@ -108,13 +111,15 @@ export function updateHud() {
   playPause.disabled = game.isOver || (game.isPaused && game.activeCells === 0);
 
   const ratio = game.activeCells / game.maxPopulation;
-  const overLimit = ratio > 1;
   const population = document.getElementById('cell-count');
   population.textContent = `Population: ${Math.round(ratio * 100)}%`;
-  population.classList.toggle('over-limit', overLimit);
-  const meter = document.getElementById('pop-meter');
-  meter.style.setProperty('--pop', Math.min(ratio, 1));
-  meter.classList.toggle('over-limit', overLimit);
+  // --pop drives the text and meter colour (CSS on #cells)
+  document.getElementById('cells').style.setProperty('--pop', Math.min(ratio, 1));
+  // Low population and stabilising only warn while running, so paused setups and small patterns stay calm
+  const running = !game.isPaused && !game.isOver;
+  const danger = ratio > 1 || (running && (ratio < game.lowPopulation || isStabilised()));
+  population.classList.toggle('blink', danger);
+  document.getElementById('pop-meter').classList.toggle('blink', danger);
 
   const warning = document.getElementById('count-down');
   const warn = game.overLimitFor > 0 && !game.isOver;

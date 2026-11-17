@@ -24,7 +24,7 @@ Then open http://localhost:8123/src/V2/index.html.
 ## UX hints
 
 - `#how-to-play` is always visible: the goal plus the main keys (touch gets its own text in `ui.js`). Keep it short; don't add every shortcut there (`c` is deliberately left out).
-- `#hint` shows one contextual line at a time: the first entry in `hints` (`game-state.js`) whose `when` holds. It shares its slot with the overpopulation countdown. Add new interaction help here rather than new UI; `.controls` is already crowded.
+- `#hint` shows one contextual line at a time: the first entry in `hints` (`game-state.js`) whose `when` holds. It sits at the bottom of the canvas and shares its slot and `.banner` pill style with the overpopulation countdown (`#count-down`, danger colours). Add new interaction help here rather than new UI; `.controls` is already crowded.
 
 ## Files
 
@@ -46,7 +46,7 @@ Then open http://localhost:8123/src/V2/index.html.
 
 - Colours for the HUD, controls and overlays are tokens at the top of the `<style>` in `index.html` (`--accent*`, `--danger`, `--overlay-bg`). Change the palette there, not per rule.
 - `.primary` marks the filled button for the next action (Play, Play again). `#play-pause` is disabled while the grid is empty or the run is over.
-- `#pop-meter` is a bar under the HUD; `updateHud` sets its `--pop` (0..1) and toggles `.over-limit` on it alongside the population text.
+- `#pop-meter` is a bar under the HUD. `updateHud` sets `--pop` (0..1) on `#cells`, where CSS turns it into `--pop-color` (`--cold` blue below 33%, `--accent` green 33-67%, blending to `--danger` red at 100%) for both the population text and the meter fill. Both blink (`.blink`) when over the limit, or while running below `game.lowPopulation` (10%) or stabilised.
 - `#game-over` is sized in `em` off `--text-size`, so it scales with the canvas without breakpoint overrides. Only its `#play-again` button takes pointer events.
 
 ## Rendering
