@@ -33,7 +33,7 @@
         font-size: var(--text-size);
       }
 
-      /* Containing block for the overlays (#cells, #count-down, #hint, #game-over), so they sit on the canvas */
+      /* Containing block for the overlays (#cells, #population, #count-down, #hint, #game-over), so they sit on the canvas */
       #canvas-container {
         position: relative;
         width: var(--canvas-width);
@@ -54,12 +54,24 @@
         transform: translateX(-50%);
         /* Fixed equal columns + same-width digits, so changing numbers don't shift the layout */
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         text-align: center;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         color: var(--accent-muted);
         width: var(--canvas-width);
+      }
+
+      /* Bottom of the canvas: population text over its meter */
+      #population {
+        position: absolute;
+        bottom: 4%;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
         /* Population colour from --pop (0..1, set in updateHud): blue below 33% (dying out),
            green 33-67%, red toward 100%. Shared by #cell-count and the #pop-meter fill */
         --cold-mix: clamp(0%, calc((0.33 - var(--pop, 0)) * 303%), 100%);
@@ -76,11 +88,8 @@
         color: var(--pop-color);
       }
 
-      /* Spans the HUD row; fill width and colour follow --pop */
+      /* Fill width and colour follow --pop */
       #pop-meter {
-        grid-column: 1 / -1;
-        justify-self: center;
-        width: 60%;
         height: 5px;
         margin-top: 0.4em;
         border-radius: 3px;
@@ -123,10 +132,10 @@
         align-items: center;
       }
 
-      /* One pill at the bottom of the canvas: #hint while paused, #count-down (overpopulation) only while running */
+      /* One pill under the top HUD: #hint while paused, #count-down (overpopulation) only while running */
       .banner {
         position: absolute;
-        bottom: 4%;
+        top: calc(5% + 36px);
         left: 50%;
         transform: translateX(-50%);
         margin: 0;
@@ -333,12 +342,6 @@
       @media (max-width: 600px) {
         html body {
           padding: 64px 16px 32px;
-        }
-        #best {
-          display: none;
-        }
-        #cells {
-          grid-template-columns: repeat(2, 1fr);
         }
         .banner {
           width: 85%;
@@ -601,8 +604,10 @@
     <div id="canvas-container">
       <div id="cells">
         <div id="generation"></div>
-        <div id="cell-count"></div>
         <div id="best"></div>
+      </div>
+      <div id="population">
+        <div id="cell-count"></div>
         <div id="pop-meter" aria-hidden="true"></div>
       </div>
       <div id="count-down" class="banner"></div>

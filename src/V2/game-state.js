@@ -78,6 +78,10 @@ export function cellSpacing() {
 // Phones/tablets: no keyboard, so user-facing text says tap/drag instead of keys
 export const isTouch = globalThis.matchMedia?.('(pointer: coarse)').matches ?? false; // no matchMedia in Node (check-game-over.mjs)
 
+// ponytail: overpopulation and stabilised banners hidden while the population colour and blink carry
+// the warning; flip to true to bring them back
+const SHOW_WARNING_BANNERS = false;
+
 const isStabilised = () => game.stableFor >= game.stableHintAfter && !game.isOver;
 
 // Contextual hints for #hint: the first whose `when` holds is shown
@@ -91,7 +95,7 @@ const hints = [
   },
   {
     text: `Stabilised, change the rules or ${isTouch ? 'tap' : 'click'} to seed cells`,
-    when: isStabilised,
+    when: () => SHOW_WARNING_BANNERS && isStabilised(),
   },
 ];
 
@@ -113,8 +117,8 @@ export function updateHud() {
   const ratio = game.activeCells / game.maxPopulation;
   const population = document.getElementById('cell-count');
   population.textContent = `Population: ${Math.round(ratio * 100)}%`;
-  // --pop drives the text and meter colour (CSS on #cells)
-  document.getElementById('cells').style.setProperty('--pop', Math.min(ratio, 1));
+  // --pop drives the text and meter colour (CSS on #population)
+  document.getElementById('population').style.setProperty('--pop', Math.min(ratio, 1));
   // Low population and stabilising only warn while running, so paused setups and small patterns stay calm
   const running = !game.isPaused && !game.isOver;
   const danger = ratio > 1 || (running && (ratio < game.lowPopulation || isStabilised()));
@@ -122,7 +126,7 @@ export function updateHud() {
   document.getElementById('pop-meter').classList.toggle('blink', danger);
 
   const warning = document.getElementById('count-down');
-  const warn = game.overLimitFor > 0 && !game.isOver;
+  const warn = SHOW_WARNING_BANNERS && game.overLimitFor > 0 && !game.isOver;
   warning.style.display = warn ? 'block' : 'none';
   warning.textContent = `Overpopulated! Change the rules to thin it out: ${
     Math.round((game.overpopGrace - game.overLimitFor) / 2)
